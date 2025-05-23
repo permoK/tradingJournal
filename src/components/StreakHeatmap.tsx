@@ -132,10 +132,11 @@ const StreakHeatmap: React.FC<StreakHeatmapProps> = ({ userId }) => {
 
     // Generate day labels (Mon, Tue, etc.)
     const dayLabels = [];
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
     for (let d = 0; d < days; d++) {
       const day = addDays(startDay, d);
       dayLabels.push(
-        <div key={`label-${d}`} className="text-xs text-slate-600 h-4 flex items-center justify-start w-4 pr-2">
+        <div key={`label-${d}`} className="text-[10px] sm:text-xs text-slate-600 h-3 sm:h-4 flex items-center justify-start w-3 sm:w-4 pr-1 sm:pr-2">
           {format(day, 'EEE').charAt(0)}
         </div>
       );
@@ -172,7 +173,7 @@ const StreakHeatmap: React.FC<StreakHeatmapProps> = ({ userId }) => {
         weekCells.push(
           <div
             key={`cell-${w}-${d}`}
-            className={`w-3.5 h-3.5 ${bgColor} ${border} rounded-sm m-[1px] cursor-pointer hover:ring-1 hover:ring-slate-400 transition-all`}
+            className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${bgColor} ${border} rounded-sm m-[1px] cursor-pointer hover:ring-1 hover:ring-slate-400 transition-all`}
             title={`${format(date, 'MMM d, yyyy')}: ${activities.length} activities`}
             onClick={() => handleCellClick(dateStr, activities)}
           />
@@ -208,14 +209,14 @@ const StreakHeatmap: React.FC<StreakHeatmapProps> = ({ userId }) => {
     return (
       <div className="flex flex-col">
         {/* Month labels */}
-        <div className="flex mb-1 ml-6">
+        <div className="flex mb-1 ml-5 sm:ml-6">
           {monthLabels.map((label, index) => (
             <div
               key={`month-${index}`}
-              className="text-xs text-slate-600"
+              className="text-[10px] sm:text-xs text-slate-600"
               style={{
                 position: 'absolute',
-                left: `${label.position * 16 + 20}px`
+                left: `${label.position * (window.innerWidth < 640 ? 14 : 16) + 20}px`
               }}
             >
               {label.month}
@@ -245,11 +246,11 @@ const StreakHeatmap: React.FC<StreakHeatmapProps> = ({ userId }) => {
     const date = parseISO(selectedDate);
 
     return (
-      <div className="mt-4 bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-        <div className="flex items-center mb-3">
-          <div className="w-1 h-6 bg-indigo-600 rounded-full mr-2"></div>
-          <h4 className="font-semibold text-slate-900 text-base">
-            Activities on {format(date, 'MMMM d, yyyy')}
+      <div className="mt-4 bg-white p-3 sm:p-4 rounded-lg border border-slate-200 shadow-sm">
+        <div className="flex items-center mb-2 sm:mb-3">
+          <div className="w-1 h-5 sm:h-6 bg-indigo-600 rounded-full mr-2"></div>
+          <h4 className="font-semibold text-slate-900 text-sm sm:text-base">
+            Activities on {format(date, window.innerWidth < 640 ? 'MMM d, yyyy' : 'MMMM d, yyyy')}
           </h4>
         </div>
         <ul className="space-y-2">
@@ -260,29 +261,29 @@ const StreakHeatmap: React.FC<StreakHeatmapProps> = ({ userId }) => {
             let icon = null;
 
             if (activity.type === 'learning') {
-              icon = <FiBook className={`${iconColor} mr-2 text-sm`} />;
+              icon = <FiBook className={`${iconColor} mr-1.5 sm:mr-2 text-xs sm:text-sm`} />;
             } else if (activity.type === 'trading') {
               iconColor = 'text-emerald-700';
               bgColor = 'bg-emerald-50';
               borderColor = 'border-emerald-100';
-              icon = <FiBarChart2 className={`${iconColor} mr-2 text-sm`} />;
+              icon = <FiBarChart2 className={`${iconColor} mr-1.5 sm:mr-2 text-xs sm:text-sm`} />;
             } else if (activity.type === 'journal') {
               iconColor = 'text-violet-700';
               bgColor = 'bg-violet-50';
               borderColor = 'border-violet-100';
-              icon = <FiFileText className={`${iconColor} mr-2 text-sm`} />;
+              icon = <FiFileText className={`${iconColor} mr-1.5 sm:mr-2 text-xs sm:text-sm`} />;
             }
 
             return (
               <li
                 key={activity.id}
-                className={`${bgColor} p-2 rounded-md flex justify-between items-center border ${borderColor} hover:shadow-sm transition-shadow`}
+                className={`${bgColor} p-1.5 sm:p-2 rounded-md flex justify-between items-center border ${borderColor} hover:shadow-sm transition-shadow`}
               >
                 <div className="flex items-center">
                   {icon}
-                  <span className="text-slate-900 font-medium text-sm">{activity.title}</span>
+                  <span className="text-slate-900 font-medium text-xs sm:text-sm">{activity.title}</span>
                 </div>
-                <span className={`text-xs ${iconColor} font-semibold px-2 py-1 rounded-full bg-white border ${borderColor}`}>
+                <span className={`text-[10px] sm:text-xs ${iconColor} font-semibold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full bg-white border ${borderColor}`}>
                   {activity.time}
                 </span>
               </li>
@@ -304,23 +305,23 @@ const StreakHeatmap: React.FC<StreakHeatmapProps> = ({ userId }) => {
         <h3 className="text-lg font-semibold text-slate-900">Activity Heatmap</h3>
       </div>
 
-      <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+      <div className="bg-white p-3 sm:p-4 rounded-lg border border-slate-200 shadow-sm">
         <div className="overflow-x-auto relative">
-          <div className="flex justify-center w-full">
+          <div className="flex justify-start sm:justify-center w-full min-w-[500px]">
             {generateCalendarGrid()}
           </div>
         </div>
 
-        <div className="flex justify-end items-center mt-4 text-xs">
-          <span className="text-slate-600 mr-2">Less</span>
+        <div className="flex justify-between sm:justify-end items-center mt-3 sm:mt-4 text-xs">
+          <span className="text-slate-600 mr-1 sm:mr-2">Less</span>
           <div className="flex">
-            <div className="w-3 h-3 bg-slate-100 mr-[3px] border border-slate-200 rounded-sm"></div>
-            <div className="w-3 h-3 bg-emerald-200 mr-[3px] border border-slate-200 rounded-sm"></div>
-            <div className="w-3 h-3 bg-emerald-300 mr-[3px] border border-slate-200 rounded-sm"></div>
-            <div className="w-3 h-3 bg-emerald-400 mr-[3px] border border-slate-200 rounded-sm"></div>
-            <div className="w-3 h-3 bg-emerald-600 border border-slate-200 rounded-sm"></div>
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-slate-100 mr-[2px] sm:mr-[3px] border border-slate-200 rounded-sm"></div>
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-emerald-200 mr-[2px] sm:mr-[3px] border border-slate-200 rounded-sm"></div>
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-emerald-300 mr-[2px] sm:mr-[3px] border border-slate-200 rounded-sm"></div>
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-emerald-400 mr-[2px] sm:mr-[3px] border border-slate-200 rounded-sm"></div>
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-emerald-600 border border-slate-200 rounded-sm"></div>
           </div>
-          <span className="text-slate-600 ml-2">More</span>
+          <span className="text-slate-600 ml-1 sm:ml-2">More</span>
         </div>
       </div>
 

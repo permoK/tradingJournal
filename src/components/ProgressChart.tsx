@@ -1,14 +1,14 @@
 'use client';
 
 import React from 'react';
-import { 
-  Chart as ChartJS, 
-  CategoryScale, 
-  LinearScale, 
-  BarElement, 
-  Title, 
-  Tooltip, 
-  Legend 
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 
@@ -35,30 +35,37 @@ const ProgressChart: React.FC<ProgressChartProps> = ({
   inProgressCounts,
   notStartedCounts
 }) => {
+  // Use window.innerWidth to determine if we're on mobile
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
   const options = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
         position: 'bottom' as const,
+        align: 'center' as const,
         labels: {
           usePointStyle: true,
-          padding: 20,
+          padding: isMobile ? 10 : 20,
+          boxWidth: isMobile ? 8 : 10,
+          boxHeight: isMobile ? 8 : 10,
           font: {
-            size: 12
+            size: isMobile ? 10 : 12
           }
         }
       },
       tooltip: {
         backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        padding: 12,
+        padding: isMobile ? 8 : 12,
         titleFont: {
-          size: 14
+          size: isMobile ? 12 : 14
         },
         bodyFont: {
-          size: 13
+          size: isMobile ? 11 : 13
         },
-        cornerRadius: 4
+        cornerRadius: 4,
+        displayColors: !isMobile
       }
     },
     scales: {
@@ -66,13 +73,23 @@ const ProgressChart: React.FC<ProgressChartProps> = ({
         stacked: true,
         grid: {
           display: false
+        },
+        ticks: {
+          font: {
+            size: isMobile ? 10 : 12
+          },
+          maxRotation: isMobile ? 45 : 0,
+          minRotation: isMobile ? 45 : 0
         }
       },
       y: {
         stacked: true,
         beginAtZero: true,
         ticks: {
-          precision: 0
+          precision: 0,
+          font: {
+            size: isMobile ? 10 : 12
+          }
         }
       }
     }
@@ -102,8 +119,24 @@ const ProgressChart: React.FC<ProgressChartProps> = ({
     ]
   };
 
+  // Use useEffect to handle window resize events for responsive charts
+  const [windowWidth, setWindowWidth] = React.useState<number>(
+    typeof window !== 'undefined' ? window.innerWidth : 1024
+  );
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   return (
-    <div className="h-64">
+    <div className="h-64 md:h-72">
       <Bar options={options} data={data} />
     </div>
   );

@@ -1,14 +1,14 @@
 'use client';
 
 import React from 'react';
-import { 
-  Chart as ChartJS, 
-  CategoryScale, 
-  LinearScale, 
-  PointElement, 
-  LineElement, 
-  Title, 
-  Tooltip, 
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
   Legend,
   Filler
 } from 'chart.js';
@@ -45,21 +45,31 @@ const TradePerformanceChart: React.FC<TradePerformanceChartProps> = ({
     []
   );
 
+  // Use window.innerWidth to determine if we're on mobile
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
   const options = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
         position: 'top' as const,
+        labels: {
+          boxWidth: isMobile ? 8 : 10,
+          boxHeight: isMobile ? 8 : 10,
+          font: {
+            size: isMobile ? 10 : 12
+          }
+        }
       },
       tooltip: {
         backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        padding: 12,
+        padding: isMobile ? 8 : 12,
         titleFont: {
-          size: 14
+          size: isMobile ? 12 : 14
         },
         bodyFont: {
-          size: 13
+          size: isMobile ? 11 : 13
         },
         cornerRadius: 4,
         callbacks: {
@@ -73,11 +83,30 @@ const TradePerformanceChart: React.FC<TradePerformanceChartProps> = ({
       x: {
         grid: {
           display: false
+        },
+        ticks: {
+          font: {
+            size: isMobile ? 10 : 12
+          },
+          maxRotation: isMobile ? 45 : 0,
+          minRotation: isMobile ? 45 : 0,
+          // Show fewer labels on mobile
+          callback: function(value: any, index: number, values: any[]) {
+            if (isMobile) {
+              return index % 2 === 0 ? this.getLabelForValue(value) : '';
+            }
+            return this.getLabelForValue(value);
+          }
         }
       },
       y: {
         grid: {
           color: 'rgba(0, 0, 0, 0.05)'
+        },
+        ticks: {
+          font: {
+            size: isMobile ? 10 : 12
+          }
         }
       }
     },
@@ -86,8 +115,8 @@ const TradePerformanceChart: React.FC<TradePerformanceChartProps> = ({
         tension: 0.3 // Smoother curve
       },
       point: {
-        radius: 4,
-        hoverRadius: 6
+        radius: isMobile ? 3 : 4,
+        hoverRadius: isMobile ? 5 : 6
       }
     }
   };
@@ -108,8 +137,24 @@ const TradePerformanceChart: React.FC<TradePerformanceChartProps> = ({
     ]
   };
 
+  // Use useEffect to handle window resize events for responsive charts
+  const [windowWidth, setWindowWidth] = React.useState<number>(
+    typeof window !== 'undefined' ? window.innerWidth : 1024
+  );
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   return (
-    <div className="h-64">
+    <div className="h-64 md:h-72">
       <Line options={options} data={data} />
     </div>
   );

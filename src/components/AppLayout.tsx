@@ -1,9 +1,9 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { FiHome, FiBook, FiBarChart2, FiFileText, FiUsers, FiSettings, FiLogOut } from 'react-icons/fi';
+import { FiHome, FiBook, FiBarChart2, FiFileText, FiUsers, FiSettings, FiLogOut, FiX } from 'react-icons/fi';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -12,6 +12,7 @@ interface AppLayoutProps {
 export default function AppLayout({ children }: AppLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // For demo purposes, we'll simulate a user is always logged in
   const user = { id: '1', email: 'demo@example.com' };
@@ -20,6 +21,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const handleSignOut = async () => {
     // For demo purposes, we'll just redirect to the home page
     router.push('/');
+  };
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
   };
 
   const navItems = [
@@ -93,7 +98,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
         </div>
       </div>
 
-      {/* Mobile header */}
+      {/* Mobile header and menu */}
       <div className="flex flex-col flex-1 overflow-hidden">
         <div className="md:hidden">
           <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-slate-200 shadow-sm">
@@ -101,7 +106,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
               Deriv Progress Tracker
             </Link>
             {/* Mobile menu button */}
-            <button className="p-2 text-slate-600 rounded-md hover:text-slate-900 hover:bg-slate-100 border border-transparent hover:border-slate-200">
+            <button
+              onClick={toggleMobileMenu}
+              className="p-2 text-slate-600 rounded-md hover:text-slate-900 hover:bg-slate-100 border border-transparent hover:border-slate-200"
+              aria-label="Toggle mobile menu"
+            >
               <svg
                 className="w-6 h-6"
                 fill="none"
@@ -117,6 +126,71 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 ></path>
               </svg>
             </button>
+          </div>
+
+          {/* Mobile menu drawer */}
+          <div className={`fixed inset-0 z-40 flex md:hidden transform ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out`}>
+            {/* Overlay */}
+            <div
+              className={`fixed inset-0 bg-slate-900 bg-opacity-50 transition-opacity ${mobileMenuOpen ? 'opacity-100' : 'opacity-0'}`}
+              onClick={toggleMobileMenu}
+              aria-hidden="true"
+            ></div>
+
+            {/* Drawer panel */}
+            <div className="relative flex flex-col w-4/5 max-w-xs bg-white h-full shadow-xl">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+                <Link href="/dashboard" className="text-lg font-semibold text-slate-900">
+                  Deriv Progress Tracker
+                </Link>
+                <button
+                  onClick={toggleMobileMenu}
+                  className="p-2 text-slate-600 rounded-md hover:text-slate-900 hover:bg-slate-100"
+                  aria-label="Close menu"
+                >
+                  <FiX className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto pt-5 pb-4">
+                <nav className="px-4 space-y-1">
+                  {navItems.map((item) => {
+                    const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className={`flex items-center px-3 py-3 text-base font-medium rounded-md group ${
+                          isActive
+                            ? 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                            : 'text-slate-800 hover:bg-slate-100 border border-transparent'
+                        }`}
+                        onClick={toggleMobileMenu}
+                      >
+                        <item.icon
+                          className={`mr-3 h-5 w-5 ${
+                            isActive ? 'text-indigo-700' : 'text-slate-600 group-hover:text-slate-800'
+                          }`}
+                        />
+                        {item.name}
+                      </Link>
+                    );
+                  })}
+                </nav>
+                <div className="px-4 mt-6">
+                  <button
+                    onClick={() => {
+                      toggleMobileMenu();
+                      handleSignOut();
+                    }}
+                    className="flex items-center w-full px-3 py-3 text-base font-medium text-slate-800 rounded-md hover:bg-red-50 hover:text-red-700 border border-transparent hover:border-red-100 group transition-colors"
+                  >
+                    <FiLogOut className="w-5 h-5 mr-3 text-slate-600 group-hover:text-red-600" />
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

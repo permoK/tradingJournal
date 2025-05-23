@@ -215,37 +215,117 @@ export default function Trading() {
             </Link>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Market</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Entry</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Exit</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">P/L</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-slate-200">
-                {filteredTrades.map(trade => (
-                  <tr key={trade.id} className="hover:bg-slate-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 font-medium">
-                      {format(new Date(trade.trade_date), 'MMM d, yyyy')}
-                      {trade.is_private && (
-                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800 border border-slate-200">
-                          <FiEyeOff className="mr-1" size={10} />
-                          Private
+          <div>
+            {/* Desktop table view */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Market</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Type</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Entry</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Exit</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">P/L</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-slate-200">
+                  {filteredTrades.map(trade => (
+                    <tr key={trade.id} className="hover:bg-slate-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 font-medium">
+                        {format(new Date(trade.trade_date), 'MMM d, yyyy')}
+                        {trade.is_private && (
+                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800 border border-slate-200">
+                            <FiEyeOff className="mr-1" size={10} />
+                            Private
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{trade.market}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{trade.trade_type}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{trade.entry_price}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{trade.exit_price || '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <span className={`${
+                          trade.profit_loss > 0
+                            ? 'text-emerald-600 font-semibold'
+                            : trade.profit_loss < 0
+                              ? 'text-red-600 font-semibold'
+                              : 'text-slate-900'
+                        }`}>
+                          {trade.profit_loss !== null ? (trade.profit_loss > 0 ? '+' : '') + trade.profit_loss.toFixed(2) : '-'}
                         </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{trade.market}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{trade.trade_type}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{trade.entry_price}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{trade.exit_price || '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                          trade.status === 'open'
+                            ? 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                            : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                        }`}>
+                          {trade.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end gap-3">
+                          <Link
+                            href={`/trading/edit/${trade.id}`}
+                            className="text-indigo-600 hover:text-indigo-900 p-1 hover:bg-indigo-50 rounded-full"
+                            title="Edit trade"
+                          >
+                            <FiEdit2 size={18} />
+                          </Link>
+                          <button
+                            onClick={() => deleteTrade(trade.id)}
+                            className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded-full"
+                            title="Delete trade"
+                          >
+                            <FiTrash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile card view */}
+            <div className="md:hidden divide-y divide-slate-200">
+              {filteredTrades.map(trade => (
+                <div key={trade.id} className="p-4 hover:bg-slate-50">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <div className="font-medium text-slate-900">
+                        {format(new Date(trade.trade_date), 'MMM d, yyyy')}
+                        {trade.is_private && (
+                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800 border border-slate-200">
+                            <FiEyeOff className="mr-1" size={10} />
+                            Private
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-sm text-slate-700 mt-1">{trade.market} • {trade.trade_type}</div>
+                    </div>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                      trade.status === 'open'
+                        ? 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                        : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                    }`}>
+                      {trade.status}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                    <div>
+                      <span className="text-slate-600">Entry:</span> {trade.entry_price}
+                    </div>
+                    <div>
+                      <span className="text-slate-600">Exit:</span> {trade.exit_price || '-'}
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-slate-600">P/L:</span>{' '}
                       <span className={`${
                         trade.profit_loss > 0
                           ? 'text-emerald-600 font-semibold'
@@ -255,38 +335,28 @@ export default function Trading() {
                       }`}>
                         {trade.profit_loss !== null ? (trade.profit_loss > 0 ? '+' : '') + trade.profit_loss.toFixed(2) : '-'}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                        trade.status === 'open'
-                          ? 'bg-indigo-100 text-indigo-800 border border-indigo-200'
-                          : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                      }`}>
-                        {trade.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex justify-end gap-3">
-                        <Link
-                          href={`/trading/edit/${trade.id}`}
-                          className="text-indigo-600 hover:text-indigo-900 p-1 hover:bg-indigo-50 rounded-full"
-                          title="Edit trade"
-                        >
-                          <FiEdit2 size={18} />
-                        </Link>
-                        <button
-                          onClick={() => deleteTrade(trade.id)}
-                          className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded-full"
-                          title="Delete trade"
-                        >
-                          <FiTrash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-3 border-t border-slate-100 pt-2">
+                    <Link
+                      href={`/trading/edit/${trade.id}`}
+                      className="text-indigo-600 hover:text-indigo-900 p-2 hover:bg-indigo-50 rounded-full"
+                      title="Edit trade"
+                    >
+                      <FiEdit2 size={18} />
+                    </Link>
+                    <button
+                      onClick={() => deleteTrade(trade.id)}
+                      className="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded-full"
+                      title="Delete trade"
+                    >
+                      <FiTrash2 size={18} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
