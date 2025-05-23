@@ -3,14 +3,16 @@
 import { useEffect, useState } from 'react';
 import { useAuth, useProfile, useUserProgress, useLearningTopics } from '@/lib/hooks';
 import AppLayout from '@/components/AppLayout';
-import { FiBook, FiBarChart2, FiFileText, FiUsers, FiAward } from 'react-icons/fi';
+import { FiBook, FiBarChart2, FiFileText, FiUsers, FiAward, FiCalendar } from 'react-icons/fi';
 import { format } from 'date-fns';
 import Link from 'next/link';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Chart as ChartJS, ArcElement, Tooltip as ChartTooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
+import StreakHeatmap from '@/components/StreakHeatmap';
+import ProgressChart from '@/components/ProgressChart';
 
 // Register Chart.js components
-ChartJS.register(ArcElement, Tooltip, Legend);
+ChartJS.register(ArcElement, ChartTooltip, Legend);
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -21,6 +23,10 @@ export default function Dashboard() {
   const [completedTopics, setCompletedTopics] = useState(0);
   const [inProgressTopics, setInProgressTopics] = useState(0);
   const [notStartedTopics, setNotStartedTopics] = useState(0);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [categoryCompletedCounts, setCategoryCompletedCounts] = useState<number[]>([]);
+  const [categoryInProgressCounts, setCategoryInProgressCounts] = useState<number[]>([]);
+  const [categoryNotStartedCounts, setCategoryNotStartedCounts] = useState<number[]>([]);
 
   useEffect(() => {
     if (!progressLoading && !topicsLoading && progress && topics) {
@@ -31,6 +37,38 @@ export default function Dashboard() {
       setCompletedTopics(completed);
       setInProgressTopics(inProgress);
       setNotStartedTopics(notStarted);
+
+      // Process category data for the chart
+      const uniqueCategories = Array.from(new Set(topics.map(topic => topic.category)));
+      setCategories(uniqueCategories);
+
+      // Calculate counts for each category
+      const completedByCategory: number[] = [];
+      const inProgressByCategory: number[] = [];
+      const notStartedByCategory: number[] = [];
+
+      uniqueCategories.forEach(category => {
+        const topicsInCategory = topics.filter(topic => topic.category === category);
+        const topicIds = topicsInCategory.map(topic => topic.id);
+
+        const completedCount = progress.filter(p =>
+          topicIds.includes(p.topic_id) && p.status === 'completed'
+        ).length;
+
+        const inProgressCount = progress.filter(p =>
+          topicIds.includes(p.topic_id) && p.status === 'in_progress'
+        ).length;
+
+        const notStartedCount = topicsInCategory.length - completedCount - inProgressCount;
+
+        completedByCategory.push(completedCount);
+        inProgressByCategory.push(inProgressCount);
+        notStartedByCategory.push(notStartedCount);
+      });
+
+      setCategoryCompletedCounts(completedByCategory);
+      setCategoryInProgressCounts(inProgressByCategory);
+      setCategoryNotStartedCounts(notStartedByCategory);
     }
   }, [progress, topics, progressLoading, topicsLoading]);
 
@@ -130,22 +168,51 @@ export default function Dashboard() {
           <div className="space-y-3">
             <Link href="/learning" className="flex items-center p-3 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors">
               <FiBook className="text-indigo-600 mr-3" />
-              <span className="text-slate-700">Continue Learning</span>
+              <span className="text-slate-800 font-medium">Continue Learning</span>
             </Link>
             <Link href="/trading/new" className="flex items-center p-3 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors">
               <FiBarChart2 className="text-emerald-600 mr-3" />
-              <span className="text-slate-700">Record a Trade</span>
+              <span className="text-slate-800 font-medium">Record a Trade</span>
             </Link>
             <Link href="/journal/new" className="flex items-center p-3 bg-violet-50 rounded-lg hover:bg-violet-100 transition-colors">
               <FiFileText className="text-violet-600 mr-3" />
-              <span className="text-slate-700">Write in Journal</span>
+              <span className="text-slate-800 font-medium">Write in Journal</span>
             </Link>
             <Link href="/community" className="flex items-center p-3 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors">
               <FiUsers className="text-amber-600 mr-3" />
-              <span className="text-slate-700">View Community</span>
+              <span className="text-slate-800 font-medium">View Community</span>
             </Link>
           </div>
         </div>
+      </div>
+
+      {/* Progress by Category */}
+      <div className="bg-white p-6 rounded-lg shadow-sm mb-8 border border-slate-200">
+        <div className="flex items-center mb-4">
+          <FiBook className="text-indigo-600 mr-2" />
+          <h2 className="text-lg font-semibold text-slate-800">Progress by Category</h2>
+        </div>
+        {categories.length > 0 ? (
+          <ProgressChart
+            categories={categories}
+            completedCounts={categoryCompletedCounts}
+            inProgressCounts={categoryInProgressCounts}
+            notStartedCounts={categoryNotStartedCounts}
+          />
+        ) : (
+          <div className="h-64 flex items-center justify-center text-slate-500">
+            No category data available
+          </div>
+        )}
+      </div>
+
+      {/* Activity Heatmap */}
+      <div className="bg-white p-6 rounded-lg shadow-sm mb-8 border border-slate-200">
+        <div className="flex items-center mb-4">
+          <FiCalendar className="text-indigo-600 mr-2" />
+          <h2 className="text-lg font-semibold text-slate-800">Your Activity</h2>
+        </div>
+        {user && <StreakHeatmap userId={user.id} />}
       </div>
 
       {/* Achievements */}

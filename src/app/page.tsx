@@ -17,25 +17,25 @@ export default function Home() {
                 <svg className="h-6 w-6 text-emerald-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <span className="text-slate-700">Track your learning progress</span>
+                <span className="text-slate-800 font-medium">Track your learning progress</span>
               </li>
               <li className="flex items-start">
                 <svg className="h-6 w-6 text-emerald-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <span className="text-slate-700">Keep a private trading journal</span>
+                <span className="text-slate-800 font-medium">Keep a private trading journal</span>
               </li>
               <li className="flex items-start">
                 <svg className="h-6 w-6 text-emerald-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <span className="text-slate-700">Share insights with friends</span>
+                <span className="text-slate-800 font-medium">Share insights with friends</span>
               </li>
               <li className="flex items-start">
                 <svg className="h-6 w-6 text-emerald-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <span className="text-slate-700">Build consistency with streak tracking</span>
+                <span className="text-slate-800 font-medium">Build consistency with streak tracking</span>
               </li>
             </ul>
           </div>
