@@ -44,16 +44,16 @@ export default function AppLayout({ children }: AppLayoutProps) {
   }
 
   return (
-    <div className="flex h-screen bg-slate-100">
+    <div className="flex h-screen bg-slate-50">
       {/* Sidebar */}
       <div className="hidden md:flex md:flex-shrink-0">
         <div className="flex flex-col w-64">
-          <div className="flex flex-col flex-grow pt-5 overflow-y-auto bg-white border-r border-slate-200">
+          <div className="flex flex-col flex-grow pt-5 overflow-y-auto bg-white border-r border-slate-200 shadow-sm">
             <div className="flex flex-col flex-shrink-0 px-4">
-              <Link href="/dashboard" className="text-lg font-semibold text-slate-800">
+              <Link href="/dashboard" className="text-lg font-semibold text-slate-900">
                 Deriv Progress Tracker
               </Link>
-              <p className="text-sm text-slate-500">Master trading together</p>
+              <p className="text-sm text-slate-600 font-medium">Master trading together</p>
             </div>
             <div className="flex flex-col flex-grow px-4 mt-5">
               <nav className="flex-1 space-y-1">
@@ -63,15 +63,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     <Link
                       key={item.name}
                       href={item.href}
-                      className={`flex items-center px-2 py-2 text-sm font-medium rounded-md group ${
+                      className={`flex items-center px-3 py-2 text-sm font-medium rounded-md group ${
                         isActive
-                          ? 'bg-indigo-100 text-indigo-700'
-                          : 'text-slate-700 hover:bg-slate-100'
+                          ? 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                          : 'text-slate-800 hover:bg-slate-100 border border-transparent'
                       }`}
                     >
                       <item.icon
                         className={`mr-3 h-5 w-5 ${
-                          isActive ? 'text-indigo-700' : 'text-slate-500 group-hover:text-slate-700'
+                          isActive ? 'text-indigo-700' : 'text-slate-600 group-hover:text-slate-800'
                         }`}
                       />
                       {item.name}
@@ -82,9 +82,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
               <div className="mt-auto">
                 <button
                   onClick={handleSignOut}
-                  className="flex items-center w-full px-2 py-2 mt-2 text-sm font-medium text-slate-700 rounded-md hover:bg-slate-100 group"
+                  className="flex items-center w-full px-3 py-2 mt-2 text-sm font-medium text-slate-800 rounded-md hover:bg-red-50 hover:text-red-700 border border-transparent hover:border-red-100 group transition-colors"
                 >
-                  <FiLogOut className="w-5 h-5 mr-3 text-slate-500 group-hover:text-slate-700" />
+                  <FiLogOut className="w-5 h-5 mr-3 text-slate-600 group-hover:text-red-600" />
                   Sign Out
                 </button>
               </div>
@@ -96,12 +96,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
       {/* Mobile header */}
       <div className="flex flex-col flex-1 overflow-hidden">
         <div className="md:hidden">
-          <div className="flex items-center justify-between px-4 py-2 bg-white border-b border-slate-200">
-            <Link href="/dashboard" className="text-lg font-semibold text-slate-800">
+          <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-slate-200 shadow-sm">
+            <Link href="/dashboard" className="text-lg font-semibold text-slate-900">
               Deriv Progress Tracker
             </Link>
             {/* Mobile menu button */}
-            <button className="p-2 text-slate-500 rounded-md hover:text-slate-700 hover:bg-slate-100">
+            <button className="p-2 text-slate-600 rounded-md hover:text-slate-900 hover:bg-slate-100 border border-transparent hover:border-slate-200">
               <svg
                 className="w-6 h-6"
                 fill="none"
@@ -121,7 +121,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
         </div>
 
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto bg-slate-100">
+        <main className="flex-1 overflow-y-auto bg-slate-50">
           <div className="py-6">
             <div className="px-4 mx-auto max-w-7xl sm:px-6 md:px-8">
               {children}

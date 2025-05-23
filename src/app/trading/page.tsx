@@ -95,14 +95,14 @@ export default function Trading() {
     <AppLayout>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Trading Log</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl font-bold text-slate-900">Trading Journal</h1>
+          <p className="text-slate-700 font-medium">
             Track and analyze your Deriv trades
           </p>
         </div>
         <Link
           href="/trading/new"
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 shadow-sm border border-indigo-700 hover:border-indigo-800"
         >
           <FiPlus className="mr-2" />
           New Trade
@@ -112,30 +112,30 @@ export default function Trading() {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
-          <h3 className="text-sm font-medium text-slate-500">Total Trades</h3>
-          <p className="text-2xl font-bold text-slate-800">{filteredTrades.length}</p>
+          <h3 className="text-sm font-medium text-slate-600">Total Trades</h3>
+          <p className="text-2xl font-bold text-slate-900">{filteredTrades.length}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
-          <h3 className="text-sm font-medium text-slate-500">Total P/L</h3>
-          <p className={`text-2xl font-bold ${totalProfitLoss > 0 ? 'text-emerald-600' : totalProfitLoss < 0 ? 'text-red-600' : 'text-slate-800'}`}>
+          <h3 className="text-sm font-medium text-slate-600">Total P/L</h3>
+          <p className={`text-2xl font-bold ${totalProfitLoss > 0 ? 'text-emerald-600' : totalProfitLoss < 0 ? 'text-red-600' : 'text-slate-900'}`}>
             {totalProfitLoss > 0 ? '+' : ''}{totalProfitLoss.toFixed(2)}
           </p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
-          <h3 className="text-sm font-medium text-slate-500">Win Rate</h3>
-          <p className="text-2xl font-bold text-slate-800">{winRate.toFixed(1)}%</p>
+          <h3 className="text-sm font-medium text-slate-600">Win Rate</h3>
+          <p className="text-2xl font-bold text-slate-900">{winRate.toFixed(1)}%</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
-          <h3 className="text-sm font-medium text-slate-500">Open Trades</h3>
-          <p className="text-2xl font-bold text-slate-800">{filteredTrades.filter(trade => trade.status === 'open').length}</p>
+          <h3 className="text-sm font-medium text-slate-600">Open Trades</h3>
+          <p className="text-2xl font-bold text-slate-900">{filteredTrades.filter(trade => trade.status === 'open').length}</p>
         </div>
       </div>
 
       {/* Performance Chart */}
       <div className="bg-white p-6 rounded-lg shadow-sm mb-6 border border-slate-200">
         <div className="flex items-center mb-4">
-          <FiTrendingUp className="text-indigo-600 mr-2" />
-          <h2 className="text-lg font-semibold text-slate-800">Performance Trend</h2>
+          <FiTrendingUp className="text-indigo-700 mr-2" />
+          <h2 className="text-lg font-semibold text-slate-900">Performance Trend</h2>
         </div>
         {performanceData.length > 0 ? (
           <TradePerformanceChart
@@ -143,7 +143,7 @@ export default function Trading() {
             profitLossData={performanceData}
           />
         ) : (
-          <div className="h-64 flex items-center justify-center text-slate-500">
+          <div className="h-64 flex items-center justify-center text-slate-700 font-medium">
             No performance data available. Complete some trades to see your performance trend.
           </div>
         )}
@@ -206,10 +206,10 @@ export default function Trading() {
       <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-slate-200">
         {filteredTrades.length === 0 ? (
           <div className="p-6 text-center">
-            <p className="text-slate-500">No trades found</p>
+            <p className="text-slate-700 font-medium">No trades found</p>
             <Link
               href="/trading/new"
-              className="inline-block mt-2 text-indigo-600 hover:underline"
+              className="inline-block mt-2 text-indigo-700 hover:text-indigo-900 font-medium"
             >
               Record your first trade
             </Link>
@@ -219,63 +219,67 @@ export default function Trading() {
             <table className="min-w-full divide-y divide-slate-200">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Market</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Entry</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Exit</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">P/L</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Market</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Type</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Entry</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Exit</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">P/L</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-slate-200">
                 {filteredTrades.map(trade => (
                   <tr key={trade.id} className="hover:bg-slate-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 font-medium">
                       {format(new Date(trade.trade_date), 'MMM d, yyyy')}
                       {trade.is_private && (
-                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">
+                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800 border border-slate-200">
                           <FiEyeOff className="mr-1" size={10} />
                           Private
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">{trade.market}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">{trade.trade_type}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">{trade.entry_price}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">{trade.exit_price || '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{trade.market}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{trade.trade_type}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{trade.entry_price}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{trade.exit_price || '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <span className={`${
                         trade.profit_loss > 0
-                          ? 'text-emerald-600 font-medium'
+                          ? 'text-emerald-600 font-semibold'
                           : trade.profit_loss < 0
-                            ? 'text-red-600 font-medium'
-                            : 'text-slate-800'
+                            ? 'text-red-600 font-semibold'
+                            : 'text-slate-900'
                       }`}>
                         {trade.profit_loss !== null ? (trade.profit_loss > 0 ? '+' : '') + trade.profit_loss.toFixed(2) : '-'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        trade.status === 'open' ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800'
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                        trade.status === 'open'
+                          ? 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                          : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
                       }`}>
                         {trade.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex justify-end gap-2">
+                      <div className="flex justify-end gap-3">
                         <Link
                           href={`/trading/edit/${trade.id}`}
-                          className="text-indigo-600 hover:text-indigo-900"
+                          className="text-indigo-600 hover:text-indigo-900 p-1 hover:bg-indigo-50 rounded-full"
+                          title="Edit trade"
                         >
-                          <FiEdit2 />
+                          <FiEdit2 size={18} />
                         </Link>
                         <button
                           onClick={() => deleteTrade(trade.id)}
-                          className="text-red-600 hover:text-red-900"
+                          className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded-full"
+                          title="Delete trade"
                         >
-                          <FiTrash2 />
+                          <FiTrash2 size={18} />
                         </button>
                       </div>
                     </td>

@@ -11,31 +11,31 @@ import Link from 'next/link';
 export default function Journal() {
   const { user, loading: authLoading } = useAuth();
   const { entries, loading: entriesLoading } = useJournalEntries(user?.id);
-  
+
   const [showPrivate, setShowPrivate] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   const isLoading = authLoading || entriesLoading;
 
   // Filter entries based on privacy setting and search term
   const filteredEntries = entries.filter(entry => {
     const matchesPrivacy = showPrivate || !entry.is_private;
-    const matchesSearch = 
-      entry.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const matchesSearch =
+      entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       entry.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (entry.tags && entry.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())));
-    
+
     return matchesPrivacy && matchesSearch;
   });
 
   const deleteEntry = async (entryId: string) => {
     if (!confirm('Are you sure you want to delete this journal entry?')) return;
-    
+
     const { error } = await supabase
       .from('journal_entries')
       .delete()
       .eq('id', entryId);
-    
+
     if (error) {
       console.error('Error deleting entry:', error);
       alert('Failed to delete entry');
@@ -46,7 +46,7 @@ export default function Journal() {
     return (
       <AppLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="w-12 h-12 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
         </div>
       </AppLayout>
     );
@@ -56,14 +56,14 @@ export default function Journal() {
     <AppLayout>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Trading Journal</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl font-bold text-slate-900">Trading Journal</h1>
+          <p className="text-slate-700 font-medium">
             Record your thoughts, insights, and lessons learned
           </p>
         </div>
         <Link
           href="/journal/new"
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 border border-indigo-700"
         >
           <FiPlus className="mr-2" />
           New Entry
@@ -79,22 +79,22 @@ export default function Journal() {
               placeholder="Search entries..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
             />
           </div>
           <div className="flex items-center">
             <button
               onClick={() => setShowPrivate(!showPrivate)}
-              className="flex items-center px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              className="flex items-center px-4 py-2 border border-slate-300 rounded-md hover:bg-slate-50 text-slate-700 font-medium"
             >
               {showPrivate ? (
                 <>
-                  <FiEyeOff className="mr-2" />
+                  <FiEyeOff className="mr-2 text-slate-600" />
                   Hide Private
                 </>
               ) : (
                 <>
-                  <FiEye className="mr-2" />
+                  <FiEye className="mr-2 text-slate-600" />
                   Show Private
                 </>
               )}
@@ -107,10 +107,10 @@ export default function Journal() {
       <div className="space-y-4">
         {filteredEntries.length === 0 ? (
           <div className="bg-white p-6 rounded-lg shadow-sm text-center">
-            <p className="text-gray-500">No journal entries found</p>
+            <p className="text-slate-700 font-medium">No journal entries found</p>
             <Link
               href="/journal/new"
-              className="inline-block mt-2 text-blue-600 hover:underline"
+              className="inline-block mt-2 text-indigo-700 font-medium hover:underline"
             >
               Create your first entry
             </Link>
@@ -120,11 +120,11 @@ export default function Journal() {
             <div key={entry.id} className="bg-white p-6 rounded-lg shadow-sm">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="text-lg font-semibold">{entry.title}</h3>
-                  <p className="text-sm text-gray-500 mb-2">
+                  <h3 className="text-lg font-semibold text-slate-900">{entry.title}</h3>
+                  <p className="text-sm text-slate-600 mb-2">
                     {format(new Date(entry.created_at), 'MMMM d, yyyy')}
                     {entry.is_private && (
-                      <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                      <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-200 text-slate-800">
                         <FiEyeOff className="mr-1" />
                         Private
                       </span>
@@ -146,22 +146,22 @@ export default function Journal() {
                   </button>
                 </div>
               </div>
-              
-              <div className="mt-2 prose max-w-none">
-                {entry.content.length > 300 
-                  ? `${entry.content.substring(0, 300)}...` 
+
+              <div className="mt-2 prose max-w-none text-slate-800">
+                {entry.content.length > 300
+                  ? `${entry.content.substring(0, 300)}...`
                   : entry.content}
               </div>
-              
+
               {entry.content.length > 300 && (
                 <Link
                   href={`/journal/${entry.id}`}
-                  className="inline-block mt-2 text-blue-600 hover:underline"
+                  className="inline-block mt-2 text-indigo-700 font-medium hover:underline"
                 >
                   Read more
                 </Link>
               )}
-              
+
               {entry.tags && entry.tags.length > 0 && (
                 <div className="mt-4 flex flex-wrap gap-2">
                   {entry.tags.map(tag => (

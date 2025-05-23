@@ -99,16 +99,16 @@ export default function Dashboard() {
   return (
     <AppLayout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">Welcome, {profile?.username || 'Trader'}!</h1>
-        <p className="text-slate-600">
-          {format(new Date(), 'EEEE, MMMM d, yyyy')} • Your current streak: {profile?.streak_count || 0} days
+        <h1 className="text-2xl font-bold text-slate-900">Welcome, {profile?.username || 'Trader'}!</h1>
+        <p className="text-slate-700 font-medium">
+          {format(new Date(), 'EEEE, MMMM d, yyyy')} • Your current streak: <span className="text-indigo-700 font-semibold">{profile?.streak_count || 0} days</span>
         </p>
       </div>
 
       {/* Progress Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-          <h2 className="text-lg font-semibold mb-4 text-slate-800">Learning Progress</h2>
+          <h2 className="text-lg font-semibold mb-4 text-slate-900">Learning Progress</h2>
           <div className="flex justify-center">
             <div className="w-48 h-48">
               <Doughnut data={progressData} />
@@ -116,71 +116,71 @@ export default function Dashboard() {
           </div>
           <div className="mt-4 grid grid-cols-3 gap-2 text-center text-sm">
             <div>
-              <div className="font-semibold text-emerald-600">{completedTopics}</div>
-              <div className="text-slate-500">Completed</div>
+              <div className="font-semibold text-emerald-600 text-lg">{completedTopics}</div>
+              <div className="text-slate-700 font-medium">Completed</div>
             </div>
             <div>
-              <div className="font-semibold text-indigo-600">{inProgressTopics}</div>
-              <div className="text-slate-500">In Progress</div>
+              <div className="font-semibold text-indigo-600 text-lg">{inProgressTopics}</div>
+              <div className="text-slate-700 font-medium">In Progress</div>
             </div>
             <div>
-              <div className="font-semibold text-slate-600">{notStartedTopics}</div>
-              <div className="text-slate-500">Not Started</div>
+              <div className="font-semibold text-slate-700 text-lg">{notStartedTopics}</div>
+              <div className="text-slate-700 font-medium">Not Started</div>
             </div>
           </div>
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-          <h2 className="text-lg font-semibold mb-4 text-slate-800">Recent Activity</h2>
+          <h2 className="text-lg font-semibold mb-4 text-slate-900">Recent Activity</h2>
           <div className="space-y-4">
             <div className="flex items-start">
-              <div className="bg-indigo-100 p-2 rounded-full mr-3">
-                <FiBook className="text-indigo-600" />
+              <div className="bg-indigo-100 p-2 rounded-full mr-3 border border-indigo-200">
+                <FiBook className="text-indigo-700" />
               </div>
               <div>
-                <p className="font-medium text-slate-700">Completed "Introduction to Deriv"</p>
-                <p className="text-sm text-slate-500">2 days ago</p>
+                <p className="font-medium text-slate-800">Completed "Introduction to Deriv"</p>
+                <p className="text-sm text-slate-600 font-medium">2 days ago</p>
               </div>
             </div>
             <div className="flex items-start">
-              <div className="bg-emerald-100 p-2 rounded-full mr-3">
-                <FiBarChart2 className="text-emerald-600" />
+              <div className="bg-emerald-100 p-2 rounded-full mr-3 border border-emerald-200">
+                <FiBarChart2 className="text-emerald-700" />
               </div>
               <div>
-                <p className="font-medium text-slate-700">Recorded a new trade</p>
-                <p className="text-sm text-slate-500">3 days ago</p>
+                <p className="font-medium text-slate-800">Recorded a new trade</p>
+                <p className="text-sm text-slate-600 font-medium">3 days ago</p>
               </div>
             </div>
             <div className="flex items-start">
-              <div className="bg-violet-100 p-2 rounded-full mr-3">
-                <FiFileText className="text-violet-600" />
+              <div className="bg-violet-100 p-2 rounded-full mr-3 border border-violet-200">
+                <FiFileText className="text-violet-700" />
               </div>
               <div>
-                <p className="font-medium text-slate-700">Added a journal entry</p>
-                <p className="text-sm text-slate-500">4 days ago</p>
+                <p className="font-medium text-slate-800">Added a journal entry</p>
+                <p className="text-sm text-slate-600 font-medium">4 days ago</p>
               </div>
             </div>
           </div>
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-          <h2 className="text-lg font-semibold mb-4 text-slate-800">Quick Actions</h2>
+          <h2 className="text-lg font-semibold mb-4 text-slate-900">Quick Actions</h2>
           <div className="space-y-3">
-            <Link href="/learning" className="flex items-center p-3 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors">
-              <FiBook className="text-indigo-600 mr-3" />
-              <span className="text-slate-800 font-medium">Continue Learning</span>
+            <Link href="/learning" className="flex items-center p-3 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors border border-indigo-100 hover:border-indigo-200">
+              <FiBook className="text-indigo-700 mr-3" />
+              <span className="text-slate-900 font-medium">Continue Learning</span>
             </Link>
-            <Link href="/trading/new" className="flex items-center p-3 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors">
-              <FiBarChart2 className="text-emerald-600 mr-3" />
-              <span className="text-slate-800 font-medium">Record a Trade</span>
+            <Link href="/trading/new" className="flex items-center p-3 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors border border-emerald-100 hover:border-emerald-200">
+              <FiBarChart2 className="text-emerald-700 mr-3" />
+              <span className="text-slate-900 font-medium">Record a Trade</span>
             </Link>
-            <Link href="/journal/new" className="flex items-center p-3 bg-violet-50 rounded-lg hover:bg-violet-100 transition-colors">
-              <FiFileText className="text-violet-600 mr-3" />
-              <span className="text-slate-800 font-medium">Write in Journal</span>
+            <Link href="/journal/new" className="flex items-center p-3 bg-violet-50 rounded-lg hover:bg-violet-100 transition-colors border border-violet-100 hover:border-violet-200">
+              <FiFileText className="text-violet-700 mr-3" />
+              <span className="text-slate-900 font-medium">Write in Journal</span>
             </Link>
-            <Link href="/community" className="flex items-center p-3 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors">
-              <FiUsers className="text-amber-600 mr-3" />
-              <span className="text-slate-800 font-medium">View Community</span>
+            <Link href="/community" className="flex items-center p-3 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors border border-amber-100 hover:border-amber-200">
+              <FiUsers className="text-amber-700 mr-3" />
+              <span className="text-slate-900 font-medium">View Community</span>
             </Link>
           </div>
         </div>
@@ -189,8 +189,8 @@ export default function Dashboard() {
       {/* Progress by Category */}
       <div className="bg-white p-6 rounded-lg shadow-sm mb-8 border border-slate-200">
         <div className="flex items-center mb-4">
-          <FiBook className="text-indigo-600 mr-2" />
-          <h2 className="text-lg font-semibold text-slate-800">Progress by Category</h2>
+          <FiBook className="text-indigo-700 mr-2" />
+          <h2 className="text-lg font-semibold text-slate-900">Progress by Category</h2>
         </div>
         {categories.length > 0 ? (
           <ProgressChart
@@ -200,52 +200,48 @@ export default function Dashboard() {
             notStartedCounts={categoryNotStartedCounts}
           />
         ) : (
-          <div className="h-64 flex items-center justify-center text-slate-500">
+          <div className="h-64 flex items-center justify-center text-slate-700 font-medium">
             No category data available
           </div>
         )}
       </div>
 
       {/* Activity Heatmap */}
-      <div className="bg-white p-6 rounded-lg shadow-sm mb-8 border border-slate-200">
-        <div className="flex items-center mb-4">
-          <FiCalendar className="text-indigo-600 mr-2" />
-          <h2 className="text-lg font-semibold text-slate-800">Your Activity</h2>
-        </div>
+      <div className="bg-white p-6 rounded-lg shadow-sm mb-8 border border-slate-200 w-full">
         {user && <StreakHeatmap userId={user.id} />}
       </div>
 
       {/* Achievements */}
       <div className="bg-white p-6 rounded-lg shadow-sm mb-8 border border-slate-200">
-        <h2 className="text-lg font-semibold mb-4 text-slate-800">Achievements</h2>
+        <h2 className="text-lg font-semibold mb-4 text-slate-900">Achievements</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="flex flex-col items-center p-4 bg-slate-50 rounded-lg border border-slate-200">
-            <div className="bg-amber-100 p-3 rounded-full mb-2">
-              <FiAward className="text-amber-600 text-xl" />
+          <div className="flex flex-col items-center p-4 bg-amber-50 rounded-lg border border-amber-200">
+            <div className="bg-amber-100 p-3 rounded-full mb-2 border border-amber-200">
+              <FiAward className="text-amber-700 text-xl" />
             </div>
-            <span className="font-medium text-center text-slate-700">First Login</span>
-            <span className="text-xs text-slate-500">Completed</span>
+            <span className="font-medium text-center text-slate-800">First Login</span>
+            <span className="text-xs text-amber-700 font-semibold">Completed</span>
+          </div>
+          <div className="flex flex-col items-center p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+            <div className="bg-indigo-100 p-3 rounded-full mb-2 border border-indigo-200">
+              <FiAward className="text-indigo-700 text-xl" />
+            </div>
+            <span className="font-medium text-center text-slate-800">5-Day Streak</span>
+            <span className="text-xs text-indigo-700 font-semibold">In Progress</span>
+          </div>
+          <div className="flex flex-col items-center p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+            <div className="bg-emerald-100 p-3 rounded-full mb-2 border border-emerald-200">
+              <FiAward className="text-emerald-700 text-xl" />
+            </div>
+            <span className="font-medium text-center text-slate-800">Complete 10 Lessons</span>
+            <span className="text-xs text-emerald-700 font-semibold">In Progress</span>
           </div>
           <div className="flex flex-col items-center p-4 bg-slate-50 rounded-lg border border-slate-200">
-            <div className="bg-slate-200 p-3 rounded-full mb-2">
-              <FiAward className="text-slate-500 text-xl" />
+            <div className="bg-slate-200 p-3 rounded-full mb-2 border border-slate-300">
+              <FiAward className="text-slate-600 text-xl" />
             </div>
-            <span className="font-medium text-center text-slate-700">5-Day Streak</span>
-            <span className="text-xs text-slate-500">In Progress</span>
-          </div>
-          <div className="flex flex-col items-center p-4 bg-slate-50 rounded-lg border border-slate-200">
-            <div className="bg-slate-200 p-3 rounded-full mb-2">
-              <FiAward className="text-slate-500 text-xl" />
-            </div>
-            <span className="font-medium text-center text-slate-700">Complete 10 Lessons</span>
-            <span className="text-xs text-slate-500">In Progress</span>
-          </div>
-          <div className="flex flex-col items-center p-4 bg-slate-50 rounded-lg border border-slate-200">
-            <div className="bg-slate-200 p-3 rounded-full mb-2">
-              <FiAward className="text-slate-500 text-xl" />
-            </div>
-            <span className="font-medium text-center text-slate-700">Record 5 Trades</span>
-            <span className="text-xs text-slate-500">Not Started</span>
+            <span className="font-medium text-center text-slate-800">Record 5 Trades</span>
+            <span className="text-xs text-slate-600 font-semibold">Not Started</span>
           </div>
         </div>
       </div>
