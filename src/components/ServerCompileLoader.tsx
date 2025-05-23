@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 export default function ServerCompileLoader() {
   const [isCompiling, setIsCompiling] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
   const [compilationProgress, setCompilationProgress] = useState(0);
+  const loaderShownTimeRef = useRef<number | null>(null);
 
   // Detect compilation through various methods
   useEffect(() => {
@@ -37,17 +38,39 @@ export default function ServerCompileLoader() {
         clearInterval(progressInterval);
       }
 
-      setCompilationProgress(0);
+      // Start with a small initial progress
+      setCompilationProgress(5);
+
+      // Define progress stages for a more realistic simulation
+      const stages = [
+        { target: 30, speed: 200, increment: 1 },   // Initial quick progress
+        { target: 60, speed: 300, increment: 0.8 }, // Medium progress
+        { target: 85, speed: 500, increment: 0.5 }, // Slower progress
+        { target: 95, speed: 800, increment: 0.2 }  // Very slow at the end
+      ];
+
+      let currentStage = 0;
 
       progressInterval = setInterval(() => {
         setCompilationProgress(prev => {
-          // Slowly increase progress, but never reach 100% until compilation is done
-          if (prev < 90) {
-            return prev + Math.random() * 5;
+          const stage = stages[currentStage];
+
+          // Move to next stage if we've reached the target
+          if (prev >= stage.target && currentStage < stages.length - 1) {
+            currentStage++;
+            // Adjust interval speed for the new stage
+            if (progressInterval) {
+              clearInterval(progressInterval);
+              progressInterval = setInterval(() => {
+                setCompilationProgress(p => Math.min(p + stages[currentStage].increment, stages[currentStage].target));
+              }, stages[currentStage].speed);
+            }
           }
-          return prev;
+
+          // Slowly increase progress, but never exceed the current stage target
+          return Math.min(prev + stage.increment, stage.target);
         });
-      }, 300);
+      }, stages[0].speed);
     };
 
     // Function to stop progress simulation
@@ -57,13 +80,13 @@ export default function ServerCompileLoader() {
         progressInterval = null;
       }
 
-      // Complete the progress to 100%
+      // Animate to 100% with a smooth transition
       setCompilationProgress(100);
 
-      // Reset after animation completes
+      // Reset after animation completes and loader is hidden
       setTimeout(() => {
         setCompilationProgress(0);
-      }, 500);
+      }, 2000);
     };
 
     // Connect to WebSocket for HMR events
@@ -155,22 +178,52 @@ export default function ServerCompileLoader() {
     };
   }, []);
 
-  // Show loader with a slight delay to avoid flashing for quick compilations
+  // Show loader with a longer delay to avoid flashing for quick compilations
+  // and ensure a minimum display time once shown
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    let showTimer: NodeJS.Timeout;
+    let hideTimer: NodeJS.Timeout;
+
+    const SHOW_DELAY = 1200; // Delay before showing loader (1.2 seconds)
+    const MIN_DISPLAY_TIME = 1500; // Minimum time to display loader once shown (1.5 seconds)
 
     if (isCompiling) {
-      timer = setTimeout(() => {
+      // Use a longer delay to prevent showing the loader for fast compilations
+      showTimer = setTimeout(() => {
         setShowLoader(true);
-      }, 300); // Show loader after 300ms of compilation
+        // Record the time when the loader was shown
+        loaderShownTimeRef.current = Date.now();
+      }, SHOW_DELAY);
     } else {
-      setShowLoader(false);
+      // When compilation is done, check if we need to keep the loader visible
+      // to meet the minimum display time
+      if (showLoader && loaderShownTimeRef.current) {
+        const elapsedTime = Date.now() - loaderShownTimeRef.current;
+
+        if (elapsedTime < MIN_DISPLAY_TIME) {
+          // If the loader hasn't been shown for the minimum time,
+          // wait before hiding it
+          hideTimer = setTimeout(() => {
+            setShowLoader(false);
+            loaderShownTimeRef.current = null;
+          }, MIN_DISPLAY_TIME - elapsedTime);
+        } else {
+          // If it's been shown long enough, hide it immediately
+          setShowLoader(false);
+          loaderShownTimeRef.current = null;
+        }
+      } else {
+        // If the loader wasn't shown yet, just reset
+        setShowLoader(false);
+        loaderShownTimeRef.current = null;
+      }
     }
 
     return () => {
-      clearTimeout(timer);
+      clearTimeout(showTimer);
+      clearTimeout(hideTimer);
     };
-  }, [isCompiling]);
+  }, [isCompiling, showLoader]);
 
   // Add keyboard shortcut to dismiss the loader
   useEffect(() => {
@@ -202,7 +255,10 @@ export default function ServerCompileLoader() {
         <div className="w-full h-2 bg-slate-200 rounded-full mt-4 overflow-hidden">
           <div
             className="h-full bg-indigo-600 transition-all duration-300 ease-out"
-            style={{ width: `${compilationProgress}%` }}
+            style={{
+              width: `${compilationProgress}%`,
+              transition: 'width 0.5s ease-out'
+            }}
           ></div>
         </div>
       </div>
