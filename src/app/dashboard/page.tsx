@@ -101,7 +101,7 @@ export default function Dashboard() {
       <div className="mb-4 sm:mb-6">
         <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Welcome, {profile?.username || 'Trader'}!</h1>
         <p className="text-slate-700 font-medium text-sm sm:text-base">
-          {format(new Date(), window.innerWidth < 640 ? 'EEE, MMM d, yyyy' : 'EEEE, MMMM d, yyyy')} •
+          {format(new Date(), 'EEEE, MMMM d, yyyy')} •
           <span className="text-indigo-700 font-semibold ml-1">Streak: {profile?.streak_count || 0} days</span>
         </p>
       </div>
