@@ -76,19 +76,19 @@ export default function Learning() {
 
     switch (status) {
       case 'completed':
-        return <FiCheckCircle className="text-emerald-600 text-xl" />;
+        return <FiCheckCircle className="text-emerald-600 text-lg sm:text-xl" />;
       case 'in_progress':
-        return <FiClock className="text-indigo-600 text-xl" />;
+        return <FiClock className="text-indigo-600 text-lg sm:text-xl" />;
       default:
-        return <FiCircle className="text-slate-400 text-xl" />;
+        return <FiCircle className="text-slate-400 text-lg sm:text-xl" />;
     }
   };
 
   if (isLoading) {
     return (
       <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="w-12 h-12 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
+        <div className="flex items-center justify-center h-48 sm:h-64">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 border-3 sm:border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
         </div>
       </AppLayout>
     );
@@ -96,24 +96,24 @@ export default function Learning() {
 
   return (
     <AppLayout>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Learning Path</h1>
-        <p className="text-slate-700 font-medium">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Learning Path</h1>
+        <p className="text-slate-700 font-medium text-sm sm:text-base">
           Track your progress through Deriv trading concepts
         </p>
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-5 rounded-lg shadow-sm mb-6 border border-slate-200">
-        <div className="flex flex-col md:flex-row gap-4">
+      <div className="bg-white p-4 sm:p-5 rounded-lg shadow-sm mb-4 sm:mb-6 border border-slate-200">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-slate-800 mb-1">
+            <label className="block text-xs sm:text-sm font-medium text-slate-800 mb-1">
               <FiFilter className="inline mr-1" /> Status
             </label>
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
+              className="w-full p-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
             >
               <option value="all">All</option>
               <option value="completed">Completed</option>
@@ -122,13 +122,13 @@ export default function Learning() {
             </select>
           </div>
           <div className="flex-1">
-            <label className="block text-sm font-medium text-slate-800 mb-1">
+            <label className="block text-xs sm:text-sm font-medium text-slate-800 mb-1">
               <FiFilter className="inline mr-1" /> Category
             </label>
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
+              className="w-full p-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
             >
               <option value="all">All Categories</option>
               {categories.map(category => (
@@ -142,8 +142,8 @@ export default function Learning() {
       {/* Learning Topics */}
       <div className="space-y-4">
         {filteredTopics.length === 0 ? (
-          <div className="bg-white p-6 rounded-lg shadow-sm text-center border border-slate-200">
-            <p className="text-slate-700 font-medium">No topics match your filters</p>
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm text-center border border-slate-200">
+            <p className="text-slate-700 font-medium text-sm sm:text-base">No topics match your filters</p>
           </div>
         ) : (
           filteredTopics.map(topic => {
@@ -151,28 +151,28 @@ export default function Learning() {
             const status = topicProgress?.status || 'not_started';
 
             return (
-              <div key={topic.id} className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+              <div key={topic.id} className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-slate-200">
                 <div className="flex items-start">
-                  <div className="mr-4 mt-1">
+                  <div className="mr-3 sm:mr-4 mt-1">
                     {getStatusIcon(topic.id)}
                   </div>
                   <div className="flex-1">
-                    <div className="flex justify-between items-start">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-0">
                       <div>
-                        <h3 className="text-lg font-semibold text-slate-900">{topic.title}</h3>
-                        <div className="flex gap-2 mt-1 mb-2">
-                          <span className="inline-block px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 rounded-full border border-indigo-200">
+                        <h3 className="text-base sm:text-lg font-semibold text-slate-900">{topic.title}</h3>
+                        <div className="flex flex-wrap gap-2 mt-1 mb-2">
+                          <span className="inline-block px-2 py-0.5 sm:py-1 text-xs font-medium bg-indigo-100 text-indigo-800 rounded-full border border-indigo-200">
                             {topic.category}
                           </span>
-                          <span className="inline-block px-2 py-1 text-xs font-medium bg-violet-100 text-violet-800 rounded-full border border-violet-200">
+                          <span className="inline-block px-2 py-0.5 sm:py-1 text-xs font-medium bg-violet-100 text-violet-800 rounded-full border border-violet-200">
                             {topic.difficulty}
                           </span>
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 self-start">
                         <button
                           onClick={() => updateProgress(topic.id, 'in_progress')}
-                          className={`px-3 py-1 text-sm rounded-md border ${
+                          className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-md border ${
                             status === 'in_progress'
                               ? 'bg-indigo-600 text-white border-indigo-700'
                               : 'bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-100'
@@ -182,7 +182,7 @@ export default function Learning() {
                         </button>
                         <button
                           onClick={() => updateProgress(topic.id, 'completed')}
-                          className={`px-3 py-1 text-sm rounded-md border ${
+                          className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-md border ${
                             status === 'completed'
                               ? 'bg-emerald-600 text-white border-emerald-700'
                               : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
@@ -192,7 +192,7 @@ export default function Learning() {
                         </button>
                       </div>
                     </div>
-                    <p className="text-slate-700">{topic.description}</p>
+                    <p className="text-sm sm:text-base text-slate-700">{topic.description}</p>
                   </div>
                 </div>
               </div>
