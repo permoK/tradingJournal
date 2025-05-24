@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth, useProfile } from '@/lib/hooks';
+import { useProfile } from '@/lib/hooks';
+import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
 import { supabase } from '@/lib/supabase';
 import { FiUser, FiLock, FiSave } from 'react-icons/fi';

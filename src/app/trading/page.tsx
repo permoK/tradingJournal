@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth, useTrades } from '@/lib/hooks';
+import { useTrades } from '@/lib/hooks';
+import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
 import { supabase } from '@/lib/supabase';
 import { FiPlus, FiEye, FiEyeOff, FiEdit2, FiTrash2, FiFilter, FiTrendingUp } from 'react-icons/fi';

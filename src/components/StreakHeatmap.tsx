@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { format, addDays, startOfWeek, subMonths, parseISO } from 'date-fns';
+import { useActivityLogs } from '@/lib/hooks';
 import { FiBook, FiBarChart2, FiFileText } from 'react-icons/fi';
 
 interface Activity {
@@ -23,97 +24,44 @@ interface StreakHeatmapProps {
 
 const StreakHeatmap: React.FC<StreakHeatmapProps> = ({ userId }) => {
   const [activityData, setActivityData] = useState<ActivityData[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedActivities, setSelectedActivities] = useState<Activity[]>([]);
 
+  const { activities, loading } = useActivityLogs(userId);
+
   useEffect(() => {
-    // In a real app, this would fetch data from your API
-    const fetchActivityData = async () => {
-      setLoading(true);
+    if (!activities.length) {
+      setActivityData([]);
+      return;
+    }
 
-      // For demo purposes, we'll generate random activity data for the last 3 months
-      const endDate = new Date();
-      const startDate = subMonths(endDate, 3);
-
-      // Generate random activity
-      const data: ActivityData[] = [];
-      let currentDate = startDate;
-
-      const activityTypes = ['learning', 'trading', 'journal'] as const;
-      const learningTitles = [
-        'Completed "Introduction to Deriv"',
-        'Started "Technical Analysis Basics"',
-        'Completed "Risk Management Strategies"',
-        'Reviewed "Trading Psychology"'
-      ];
-      const tradingTitles = [
-        'Recorded EUR/USD trade',
-        'Closed BTC/USD position',
-        'Opened Gold trade',
-        'Updated trade journal'
-      ];
-      const journalTitles = [
-        'Added new journal entry',
-        'Updated trading reflections',
-        'Documented market analysis',
-        'Noted trading mistakes'
-      ];
-
-      while (currentDate <= endDate) {
-        // Higher probability of activity on weekdays
-        const isWeekday = currentDate.getDay() > 0 && currentDate.getDay() < 6;
-        const randomFactor = isWeekday ? 0.7 : 0.3;
-
-        // Random activity level (0-4)
-        if (Math.random() < randomFactor) {
-          const count = Math.floor(Math.random() * 4) + 1; // 1-4 activities
-          const dateActivities: Activity[] = [];
-
-          // Generate random activities for this day
-          for (let i = 0; i < count; i++) {
-            const typeIndex = Math.floor(Math.random() * activityTypes.length);
-            const type = activityTypes[typeIndex];
-
-            let title = '';
-            if (type === 'learning') {
-              title = learningTitles[Math.floor(Math.random() * learningTitles.length)];
-            } else if (type === 'trading') {
-              title = tradingTitles[Math.floor(Math.random() * tradingTitles.length)];
-            } else {
-              title = journalTitles[Math.floor(Math.random() * journalTitles.length)];
-            }
-
-            // Random time between 8am and 6pm
-            const hour = 8 + Math.floor(Math.random() * 10);
-            const minute = Math.floor(Math.random() * 60);
-            const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-
-            dateActivities.push({
-              id: `activity-${format(currentDate, 'yyyyMMdd')}-${i}`,
-              type,
-              title,
-              time: timeStr
-            });
-          }
-
-          data.push({
-            date: format(currentDate, 'yyyy-MM-dd'),
-            count,
-            activities: dateActivities
-          });
-        }
-
-        // Move to next day
-        currentDate = addDays(currentDate, 1);
+    // Group activities by date
+    const groupedByDate = activities.reduce((acc, activity) => {
+      const dateStr = activity.activity_date;
+      if (!acc[dateStr]) {
+        acc[dateStr] = [];
       }
 
-      setActivityData(data);
-      setLoading(false);
-    };
+      // Convert database activity to component format
+      acc[dateStr].push({
+        id: activity.id,
+        type: activity.activity_type,
+        title: activity.activity_title,
+        time: format(parseISO(activity.created_at), 'HH:mm')
+      });
 
-    fetchActivityData();
-  }, [userId]);
+      return acc;
+    }, {} as Record<string, Activity[]>);
+
+    // Convert to ActivityData format
+    const data: ActivityData[] = Object.entries(groupedByDate).map(([date, dateActivities]) => ({
+      date,
+      count: dateActivities.length,
+      activities: dateActivities
+    }));
+
+    setActivityData(data);
+  }, [activities]);
 
   // Handle cell click
   const handleCellClick = (dateStr: string, activities: Activity[]) => {

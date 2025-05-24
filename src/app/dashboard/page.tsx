@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth, useProfile, useUserProgress, useLearningTopics } from '@/lib/hooks';
+import { useProfile, useUserProgress, useLearningTopics, useActivityLogs } from '@/lib/hooks';
+import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
 import { FiBook, FiBarChart2, FiFileText, FiUsers, FiAward, FiCalendar } from 'react-icons/fi';
 import { format } from 'date-fns';
@@ -10,6 +11,7 @@ import { Chart as ChartJS, ArcElement, Tooltip as ChartTooltip, Legend } from 'c
 import { Doughnut } from 'react-chartjs-2';
 import StreakHeatmap from '@/components/StreakHeatmap';
 import ProgressChart from '@/components/ProgressChart';
+import NewUserWelcome from '@/components/NewUserWelcome';
 
 // Register Chart.js components
 ChartJS.register(ArcElement, ChartTooltip, Legend);
@@ -19,6 +21,7 @@ export default function Dashboard() {
   const { profile, loading: profileLoading } = useProfile(user?.id);
   const { progress, loading: progressLoading } = useUserProgress(user?.id);
   const { topics, loading: topicsLoading } = useLearningTopics();
+  const { activities, loading: activitiesLoading } = useActivityLogs(user?.id);
 
   const [completedTopics, setCompletedTopics] = useState(0);
   const [inProgressTopics, setInProgressTopics] = useState(0);
@@ -27,6 +30,16 @@ export default function Dashboard() {
   const [categoryCompletedCounts, setCategoryCompletedCounts] = useState<number[]>([]);
   const [categoryInProgressCounts, setCategoryInProgressCounts] = useState<number[]>([]);
   const [categoryNotStartedCounts, setCategoryNotStartedCounts] = useState<number[]>([]);
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  // Check if user is new (no activity, no progress, no profile data)
+  useEffect(() => {
+    if (!authLoading && !activitiesLoading && !progressLoading && user) {
+      const isNewUser = activities.length === 0 && progress.length === 0 &&
+                       (!profile || (!profile.bio && !profile.username));
+      setShowWelcome(isNewUser);
+    }
+  }, [authLoading, activitiesLoading, progressLoading, user, activities, progress, profile]);
 
   useEffect(() => {
     if (!progressLoading && !topicsLoading && progress && topics) {
@@ -84,7 +97,7 @@ export default function Dashboard() {
     ],
   };
 
-  const isLoading = authLoading || profileLoading || progressLoading || topicsLoading;
+  const isLoading = authLoading || profileLoading || progressLoading || topicsLoading || activitiesLoading;
 
   if (isLoading) {
     return (
@@ -98,8 +111,10 @@ export default function Dashboard() {
 
   return (
     <AppLayout>
+      {showWelcome && <NewUserWelcome onDismiss={() => setShowWelcome(false)} />}
+
       <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Welcome, {profile?.username || 'Trader'}!</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Welcome, {profile?.username || user?.email?.split('@')[0] || 'Trader'}!</h1>
         <p className="text-slate-700 font-medium text-sm sm:text-base">
           {format(new Date(), 'EEEE, MMMM d, yyyy')} •
           <span className="text-indigo-700 font-semibold ml-1">Streak: {profile?.streak_count || 0} days</span>
@@ -143,33 +158,63 @@ export default function Dashboard() {
         <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-slate-200">
           <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-slate-900">Recent Activity</h2>
           <div className="space-y-3 sm:space-y-4">
-            <div className="flex items-start">
-              <div className="bg-indigo-100 p-1.5 sm:p-2 rounded-full mr-2 sm:mr-3 border border-indigo-200">
-                <FiBook className="text-indigo-700 text-sm sm:text-base" />
+            {activities.length > 0 ? (
+              activities.slice(0, 3).map((activity) => {
+                const getActivityIcon = (type: string) => {
+                  switch (type) {
+                    case 'learning':
+                      return <FiBook className="text-indigo-700 text-sm sm:text-base" />;
+                    case 'trading':
+                      return <FiBarChart2 className="text-emerald-700 text-sm sm:text-base" />;
+                    case 'journal':
+                      return <FiFileText className="text-violet-700 text-sm sm:text-base" />;
+                    default:
+                      return <FiCalendar className="text-slate-700 text-sm sm:text-base" />;
+                  }
+                };
+
+                const getActivityBg = (type: string) => {
+                  switch (type) {
+                    case 'learning':
+                      return 'bg-indigo-100 border-indigo-200';
+                    case 'trading':
+                      return 'bg-emerald-100 border-emerald-200';
+                    case 'journal':
+                      return 'bg-violet-100 border-violet-200';
+                    default:
+                      return 'bg-slate-100 border-slate-200';
+                  }
+                };
+
+                const timeAgo = (date: string) => {
+                  const now = new Date();
+                  const activityDate = new Date(date);
+                  const diffInDays = Math.floor((now.getTime() - activityDate.getTime()) / (1000 * 60 * 60 * 24));
+
+                  if (diffInDays === 0) return 'Today';
+                  if (diffInDays === 1) return '1 day ago';
+                  return `${diffInDays} days ago`;
+                };
+
+                return (
+                  <div key={activity.id} className="flex items-start">
+                    <div className={`p-1.5 sm:p-2 rounded-full mr-2 sm:mr-3 border ${getActivityBg(activity.activity_type)}`}>
+                      {getActivityIcon(activity.activity_type)}
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-800 text-sm sm:text-base">{activity.activity_title}</p>
+                      <p className="text-xs sm:text-sm text-slate-600 font-medium">{timeAgo(activity.created_at)}</p>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center py-8">
+                <FiCalendar className="mx-auto h-12 w-12 text-slate-400 mb-4" />
+                <p className="text-slate-600 font-medium">No recent activity</p>
+                <p className="text-sm text-slate-500">Start learning, trading, or journaling to see your activity here!</p>
               </div>
-              <div>
-                <p className="font-medium text-slate-800 text-sm sm:text-base">Completed "Introduction to Deriv"</p>
-                <p className="text-xs sm:text-sm text-slate-600 font-medium">2 days ago</p>
-              </div>
-            </div>
-            <div className="flex items-start">
-              <div className="bg-emerald-100 p-1.5 sm:p-2 rounded-full mr-2 sm:mr-3 border border-emerald-200">
-                <FiBarChart2 className="text-emerald-700 text-sm sm:text-base" />
-              </div>
-              <div>
-                <p className="font-medium text-slate-800 text-sm sm:text-base">Recorded a new trade</p>
-                <p className="text-xs sm:text-sm text-slate-600 font-medium">3 days ago</p>
-              </div>
-            </div>
-            <div className="flex items-start">
-              <div className="bg-violet-100 p-1.5 sm:p-2 rounded-full mr-2 sm:mr-3 border border-violet-200">
-                <FiFileText className="text-violet-700 text-sm sm:text-base" />
-              </div>
-              <div>
-                <p className="font-medium text-slate-800 text-sm sm:text-base">Added a journal entry</p>
-                <p className="text-xs sm:text-sm text-slate-600 font-medium">4 days ago</p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 

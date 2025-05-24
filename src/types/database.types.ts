@@ -49,28 +49,28 @@ export interface Database {
           id: string
           created_at: string
           title: string
-          description: string
-          category: string
-          difficulty: string
-          order: number
+          description: string | null
+          category: string | null
+          difficulty: string | null
+          order_index: number
         }
         Insert: {
           id?: string
           created_at?: string
           title: string
-          description: string
-          category: string
-          difficulty: string
-          order: number
+          description?: string | null
+          category?: string | null
+          difficulty?: string | null
+          order_index?: number
         }
         Update: {
           id?: string
           created_at?: string
           title?: string
-          description?: string
-          category?: string
-          difficulty?: string
-          order?: number
+          description?: string | null
+          category?: string | null
+          difficulty?: string | null
+          order_index?: number
         }
       }
       user_progress: {
@@ -106,6 +106,7 @@ export interface Database {
         Row: {
           id: string
           created_at: string
+          updated_at: string
           user_id: string
           title: string
           content: string
@@ -115,6 +116,7 @@ export interface Database {
         Insert: {
           id?: string
           created_at?: string
+          updated_at?: string
           user_id: string
           title: string
           content: string
@@ -124,6 +126,7 @@ export interface Database {
         Update: {
           id?: string
           created_at?: string
+          updated_at?: string
           user_id?: string
           title?: string
           content?: string
@@ -135,6 +138,7 @@ export interface Database {
         Row: {
           id: string
           created_at: string
+          updated_at: string
           user_id: string
           trade_date: string
           market: string
@@ -151,6 +155,7 @@ export interface Database {
         Insert: {
           id?: string
           created_at?: string
+          updated_at?: string
           user_id: string
           trade_date: string
           market: string
@@ -167,6 +172,7 @@ export interface Database {
         Update: {
           id?: string
           created_at?: string
+          updated_at?: string
           user_id?: string
           trade_date?: string
           market?: string
@@ -179,6 +185,32 @@ export interface Database {
           notes?: string | null
           screenshot_url?: string | null
           is_private?: boolean
+        }
+      }
+      activity_logs: {
+        Row: {
+          id: string
+          created_at: string
+          user_id: string
+          activity_type: 'learning' | 'trading' | 'journal'
+          activity_title: string
+          activity_date: string
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          user_id: string
+          activity_type: 'learning' | 'trading' | 'journal'
+          activity_title: string
+          activity_date?: string
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          user_id?: string
+          activity_type?: 'learning' | 'trading' | 'journal'
+          activity_title?: string
+          activity_date?: string
         }
       }
     }

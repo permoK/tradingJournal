@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth, useJournalEntries, useProfile } from '@/lib/hooks';
+import { useJournalEntries, useProfile } from '@/lib/hooks';
+import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
 import { FiEdit2, FiTrash2, FiArrowLeft, FiEyeOff } from 'react-icons/fi';
 import { format } from 'date-fns';
@@ -14,7 +15,7 @@ export default function JournalEntryView({ params }: { params: { id: string } })
   const { user } = useAuth();
   const { entries } = useJournalEntries(user?.id);
   const { profile } = useProfile(user?.id);
-  
+
   const [entry, setEntry] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,31 +23,31 @@ export default function JournalEntryView({ params }: { params: { id: string } })
   useEffect(() => {
     // Find the entry with the matching ID
     const foundEntry = entries.find(e => e.id === params.id);
-    
+
     if (foundEntry) {
       setEntry(foundEntry);
     } else {
       setError('Journal entry not found');
     }
-    
+
     setLoading(false);
   }, [entries, params.id]);
 
   const deleteEntry = async () => {
     if (!confirm('Are you sure you want to delete this journal entry?')) return;
-    
+
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // In a real app, you would do:
       // const { error } = await supabase
       //   .from('journal_entries')
       //   .delete()
       //   .eq('id', params.id);
-      
+
       // if (error) throw error;
-      
+
       // Redirect to journal page
       router.push('/journal');
     } catch (err) {
@@ -94,7 +95,7 @@ export default function JournalEntryView({ params }: { params: { id: string } })
           <FiArrowLeft className="mr-2" />
           Back to Journal
         </button>
-        
+
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{entry.title}</h1>
@@ -108,7 +109,7 @@ export default function JournalEntryView({ params }: { params: { id: string } })
               )}
             </p>
           </div>
-          
+
           {isOwner && (
             <div className="flex gap-2">
               <Link
@@ -129,7 +130,7 @@ export default function JournalEntryView({ params }: { params: { id: string } })
           )}
         </div>
       </div>
-      
+
       <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
         <div className="prose max-w-none">
           {entry.content.split('\n').map((paragraph: string, index: number) => (
@@ -137,7 +138,7 @@ export default function JournalEntryView({ params }: { params: { id: string } })
           ))}
         </div>
       </div>
-      
+
       {entry.tags && entry.tags.length > 0 && (
         <div className="mb-6">
           <h2 className="text-lg font-semibold mb-2">Tags</h2>
@@ -153,7 +154,7 @@ export default function JournalEntryView({ params }: { params: { id: string } })
           </div>
         </div>
       )}
-      
+
       <div className="bg-gray-50 p-6 rounded-lg">
         <h2 className="text-lg font-semibold mb-2">Author</h2>
         <div className="flex items-center">

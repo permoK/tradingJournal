@@ -54,56 +54,29 @@ This guide will help you set up authentication for your Deriv Progress Tracker a
 
 ### 5. Set Up Database Tables
 
-The app expects certain database tables for user profiles and data. You can set these up in the Supabase SQL editor:
+The app requires several database tables for user profiles, learning progress, trades, journal entries, and activity tracking.
 
-```sql
--- Enable Row Level Security
-ALTER TABLE auth.users ENABLE ROW LEVEL SECURITY;
+**Important**: Run the complete database schema from the `database-schema.sql` file in your Supabase SQL editor:
 
--- Create profiles table
-CREATE TABLE profiles (
-  id UUID REFERENCES auth.users(id) PRIMARY KEY,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  username TEXT UNIQUE,
-  full_name TEXT,
-  avatar_url TEXT,
-  bio TEXT,
-  streak_count INTEGER DEFAULT 0,
-  last_active TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+1. Go to your Supabase dashboard
+2. Navigate to the SQL Editor
+3. Copy the entire contents of `database-schema.sql`
+4. Paste and execute the SQL
 
--- Set up Row Level Security for profiles
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+This will create all necessary tables:
+- `profiles` - User profile information
+- `learning_topics` - Available learning modules
+- `user_progress` - User's learning progress
+- `journal_entries` - Trading journal entries
+- `trades` - Trading records
+- `activity_logs` - Activity tracking for streaks
 
-CREATE POLICY "Users can view own profile" ON profiles
-  FOR SELECT USING (auth.uid() = id);
-
-CREATE POLICY "Users can update own profile" ON profiles
-  FOR UPDATE USING (auth.uid() = id);
-
-CREATE POLICY "Users can insert own profile" ON profiles
-  FOR INSERT WITH CHECK (auth.uid() = id);
-
--- Create function to handle new user signup
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.profiles (id, username, full_name)
-  VALUES (
-    NEW.id,
-    NEW.raw_user_meta_data->>'username',
-    NEW.raw_user_meta_data->>'full_name'
-  );
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Create trigger for new user signup
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-```
+The schema includes:
+- ✅ Row Level Security (RLS) policies
+- ✅ Proper foreign key relationships
+- ✅ Automatic profile creation on signup
+- ✅ Default learning topics
+- ✅ Activity tracking for streaks
 
 ### 6. Configure URL Redirects
 
@@ -112,7 +85,7 @@ In your Supabase dashboard:
 1. Go to Authentication > URL Configuration
 2. Add the following URLs:
    - Site URL: `http://localhost:3000` (for development)
-   - Redirect URLs: 
+   - Redirect URLs:
      - `http://localhost:3000/auth/callback`
      - `http://localhost:3000/auth/reset-password`
 

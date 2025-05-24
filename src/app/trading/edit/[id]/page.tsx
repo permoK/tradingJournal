@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth, useTrades } from '@/lib/hooks';
+import { useTrades } from '@/lib/hooks';
+import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
 import { supabase } from '@/lib/supabase';
 import { FiSave, FiX } from 'react-icons/fi';
@@ -12,7 +13,7 @@ export default function EditTrade({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { user } = useAuth();
   const { trades } = useTrades(user?.id);
-  
+
   const [market, setMarket] = useState('');
   const [tradeType, setTradeType] = useState('Buy');
   const [tradeDate, setTradeDate] = useState('');
@@ -29,7 +30,7 @@ export default function EditTrade({ params }: { params: { id: string } }) {
   useEffect(() => {
     // Find the trade with the matching ID
     const trade = trades.find(t => t.id === params.id);
-    
+
     if (trade) {
       setMarket(trade.market);
       setTradeType(trade.trade_type);
@@ -47,41 +48,41 @@ export default function EditTrade({ params }: { params: { id: string } }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!user) {
       setError('You must be logged in to edit a trade');
       return;
     }
-    
+
     if (!market.trim() || !entryPrice || !quantity) {
       setError('Market, entry price, and quantity are required');
       return;
     }
-    
+
     setLoading(true);
     setError(null);
-    
+
     // Calculate profit/loss if trade is closed
     let profitLoss = null;
     if (status === 'closed' && exitPrice) {
       const entry = parseFloat(entryPrice);
       const exit = parseFloat(exitPrice);
       const qty = parseFloat(quantity);
-      
+
       if (tradeType === 'Buy') {
         profitLoss = (exit - entry) * qty;
       } else {
         profitLoss = (entry - exit) * qty;
       }
     }
-    
+
     // For demo purposes, we'll simulate a successful update
     // In a real application, you would use Supabase to update the trade
-    
+
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // In a real app, you would do:
       // const { error } = await supabase
       //   .from('trades')
@@ -98,9 +99,9 @@ export default function EditTrade({ params }: { params: { id: string } }) {
       //     is_private: isPrivate
       //   })
       //   .eq('id', params.id);
-      
+
       // if (error) throw error;
-      
+
       // Redirect to trading page
       router.push('/trading');
     } catch (err) {
@@ -139,13 +140,13 @@ export default function EditTrade({ params }: { params: { id: string } }) {
           Cancel
         </button>
       </div>
-      
+
       {error && (
         <div className="p-4 mb-6 bg-red-100 text-red-700 rounded-md">
           {error}
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-sm">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
@@ -162,7 +163,7 @@ export default function EditTrade({ params }: { params: { id: string } }) {
               required
             />
           </div>
-          
+
           <div>
             <label htmlFor="tradeType" className="block text-sm font-medium text-gray-700 mb-1">
               Trade Type *
@@ -178,7 +179,7 @@ export default function EditTrade({ params }: { params: { id: string } }) {
               <option value="Sell">Sell</option>
             </select>
           </div>
-          
+
           <div>
             <label htmlFor="tradeDate" className="block text-sm font-medium text-gray-700 mb-1">
               Trade Date *
@@ -192,7 +193,7 @@ export default function EditTrade({ params }: { params: { id: string } }) {
               required
             />
           </div>
-          
+
           <div>
             <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
               Status *
@@ -208,7 +209,7 @@ export default function EditTrade({ params }: { params: { id: string } }) {
               <option value="closed">Closed</option>
             </select>
           </div>
-          
+
           <div>
             <label htmlFor="entryPrice" className="block text-sm font-medium text-gray-700 mb-1">
               Entry Price *
@@ -223,7 +224,7 @@ export default function EditTrade({ params }: { params: { id: string } }) {
               required
             />
           </div>
-          
+
           <div>
             <label htmlFor="exitPrice" className="block text-sm font-medium text-gray-700 mb-1">
               Exit Price {status === 'closed' && '*'}
@@ -239,7 +240,7 @@ export default function EditTrade({ params }: { params: { id: string } }) {
               disabled={status === 'open'}
             />
           </div>
-          
+
           <div>
             <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-1">
               Quantity *
@@ -255,7 +256,7 @@ export default function EditTrade({ params }: { params: { id: string } }) {
             />
           </div>
         </div>
-        
+
         <div className="mt-6">
           <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
             Notes
@@ -268,7 +269,7 @@ export default function EditTrade({ params }: { params: { id: string } }) {
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-        
+
         <div className="mt-4 mb-6">
           <label className="flex items-center">
             <input
@@ -280,7 +281,7 @@ export default function EditTrade({ params }: { params: { id: string } }) {
             <span className="ml-2 text-sm text-gray-700">Make this trade private</span>
           </label>
         </div>
-        
+
         <div className="flex justify-end">
           <button
             type="submit"

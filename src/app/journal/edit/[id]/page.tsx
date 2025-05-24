@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth, useJournalEntries } from '@/lib/hooks';
+import { useJournalEntries } from '@/lib/hooks';
+import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
 import { supabase } from '@/lib/supabase';
 import { FiSave, FiX } from 'react-icons/fi';
@@ -11,7 +12,7 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
   const router = useRouter();
   const { user } = useAuth();
   const { entries } = useJournalEntries(user?.id);
-  
+
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
@@ -23,7 +24,7 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
   useEffect(() => {
     // Find the entry with the matching ID
     const entry = entries.find(e => e.id === params.id);
-    
+
     if (entry) {
       setTitle(entry.title);
       setContent(entry.content);
@@ -36,33 +37,33 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!user) {
       setError('You must be logged in to edit a journal entry');
       return;
     }
-    
+
     if (!title.trim() || !content.trim()) {
       setError('Title and content are required');
       return;
     }
-    
+
     setLoading(true);
     setError(null);
-    
+
     // Process tags
     const tagArray = tags
       .split(',')
       .map(tag => tag.trim())
       .filter(tag => tag.length > 0);
-    
+
     // For demo purposes, we'll simulate a successful update
     // In a real application, you would use Supabase to update the entry
-    
+
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // In a real app, you would do:
       // const { error } = await supabase
       //   .from('journal_entries')
@@ -73,9 +74,9 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
       //     tags: tagArray.length > 0 ? tagArray : null
       //   })
       //   .eq('id', params.id);
-      
+
       // if (error) throw error;
-      
+
       // Redirect to journal page
       router.push('/journal');
     } catch (err) {
@@ -114,13 +115,13 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
           Cancel
         </button>
       </div>
-      
+
       {error && (
         <div className="p-4 mb-6 bg-red-100 text-red-700 rounded-md">
           {error}
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-sm">
         <div className="mb-4">
           <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
@@ -135,7 +136,7 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
             required
           />
         </div>
-        
+
         <div className="mb-4">
           <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
             Content
@@ -149,7 +150,7 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
             required
           />
         </div>
-        
+
         <div className="mb-4">
           <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-1">
             Tags (comma separated)
@@ -163,7 +164,7 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-        
+
         <div className="mb-6">
           <label className="flex items-center">
             <input
@@ -175,7 +176,7 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
             <span className="ml-2 text-sm text-gray-700">Make this entry private</span>
           </label>
         </div>
-        
+
         <div className="flex justify-end">
           <button
             type="submit"

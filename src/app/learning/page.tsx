@@ -1,15 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth, useLearningTopics, useUserProgress } from '@/lib/hooks';
+import { useLearningTopics, useUserProgress } from '@/lib/hooks';
+import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
-import { supabase } from '@/lib/supabase';
 import { FiCheckCircle, FiClock, FiCircle, FiFilter } from 'react-icons/fi';
 
 export default function Learning() {
   const { user, loading: authLoading } = useAuth();
   const { topics, loading: topicsLoading } = useLearningTopics();
-  const { progress, loading: progressLoading } = useUserProgress(user?.id);
+  const { progress, loading: progressLoading, updateProgress: updateUserProgress } = useUserProgress(user?.id);
 
   const [filter, setFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -38,35 +38,15 @@ export default function Learning() {
   const updateProgress = async (topicId: string, status: 'not_started' | 'in_progress' | 'completed') => {
     if (!user) return;
 
-    const existingProgress = progress.find(p => p.topic_id === topicId);
+    const updates = {
+      status,
+      completion_date: status === 'completed' ? new Date().toISOString() : null
+    };
 
-    if (existingProgress) {
-      // Update existing progress
-      const { error } = await supabase
-        .from('user_progress')
-        .update({
-          status,
-          completion_date: status === 'completed' ? new Date().toISOString() : existingProgress.completion_date
-        })
-        .eq('id', existingProgress.id);
+    const { error } = await updateUserProgress(topicId, updates);
 
-      if (error) {
-        console.error('Error updating progress:', error);
-      }
-    } else {
-      // Create new progress entry
-      const { error } = await supabase
-        .from('user_progress')
-        .insert({
-          user_id: user.id,
-          topic_id: topicId,
-          status,
-          completion_date: status === 'completed' ? new Date().toISOString() : null
-        });
-
-      if (error) {
-        console.error('Error creating progress:', error);
-      }
+    if (error) {
+      console.error('Error updating progress:', error);
     }
   };
 

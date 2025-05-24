@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth, useJournalEntries } from '@/lib/hooks';
+import { useJournalEntries } from '@/lib/hooks';
+import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
 import { supabase } from '@/lib/supabase';
 import { FiPlus, FiEye, FiEyeOff, FiEdit2, FiTrash2 } from 'react-icons/fi';
