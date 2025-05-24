@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useTrades } from '@/lib/hooks';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
-import { supabase } from '@/lib/supabase';
 import { FiPlus, FiEye, FiEyeOff, FiEdit2, FiTrash2, FiFilter, FiTrendingUp } from 'react-icons/fi';
 import { format, subDays } from 'date-fns';
 import Link from 'next/link';
@@ -12,7 +11,7 @@ import TradePerformanceChart from '@/components/TradePerformanceChart';
 
 export default function Trading() {
   const { user, loading: authLoading } = useAuth();
-  const { trades, loading: tradesLoading } = useTrades(user?.id);
+  const { trades, loading: tradesLoading, deleteTrade: deleteTradeHook } = useTrades(user?.id);
 
   const [showPrivate, setShowPrivate] = useState(true);
   const [marketFilter, setMarketFilter] = useState('all');
@@ -58,10 +57,7 @@ export default function Trading() {
   const deleteTrade = async (tradeId: string) => {
     if (!confirm('Are you sure you want to delete this trade?')) return;
 
-    const { error } = await supabase
-      .from('trades')
-      .delete()
-      .eq('id', tradeId);
+    const { error } = await deleteTradeHook(tradeId);
 
     if (error) {
       console.error('Error deleting trade:', error);

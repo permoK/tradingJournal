@@ -3,14 +3,16 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTrades, useActivityLogs } from '@/lib/hooks';
 import AppLayout from '@/components/AppLayout';
-import { supabase } from '@/lib/supabase';
 import { FiSave, FiX } from 'react-icons/fi';
 import { format } from 'date-fns';
 
 export default function NewTrade() {
   const router = useRouter();
   const { user } = useAuth();
+  const { createTrade } = useTrades(user?.id);
+  const { logActivity } = useActivityLogs(user?.id);
 
   const [market, setMarket] = useState('');
   const [tradeType, setTradeType] = useState('Buy');
@@ -54,37 +56,33 @@ export default function NewTrade() {
       }
     }
 
-    // For demo purposes, we'll simulate a successful creation
-    // In a real application, you would use Supabase to create the trade
-
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Create the trade using the hook
+      const { error } = await createTrade({
+        trade_date: new Date(tradeDate).toISOString(),
+        market,
+        trade_type: tradeType,
+        entry_price: parseFloat(entryPrice),
+        exit_price: exitPrice ? parseFloat(exitPrice) : null,
+        quantity: parseFloat(quantity),
+        profit_loss: profitLoss,
+        status,
+        notes: notes.trim() || null,
+        is_private: isPrivate
+      });
 
-      // In a real app, you would do:
-      // const { error } = await supabase
-      //   .from('trades')
-      //   .insert({
-      //     user_id: user.id,
-      //     trade_date: new Date(tradeDate).toISOString(),
-      //     market,
-      //     trade_type: tradeType,
-      //     entry_price: parseFloat(entryPrice),
-      //     exit_price: exitPrice ? parseFloat(exitPrice) : null,
-      //     quantity: parseFloat(quantity),
-      //     profit_loss: profitLoss,
-      //     status,
-      //     notes: notes.trim() || null,
-      //     is_private: isPrivate
-      //   });
+      if (error) {
+        throw new Error(error);
+      }
 
-      // if (error) throw error;
+      // Log activity for streak tracking
+      await logActivity('trading', `Recorded ${market} ${tradeType} trade`);
 
       // Redirect to trading page
       router.push('/trading');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error recording trade:', err);
-      setError('Failed to record trade');
+      setError(err.message || 'Failed to record trade');
       setLoading(false);
     }
   };

@@ -2,16 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useJournalEntries } from '@/lib/hooks';
+import { useJournalEntries, useActivityLogs } from '@/lib/hooks';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
-import { supabase } from '@/lib/supabase';
 import { FiSave, FiX } from 'react-icons/fi';
 
 export default function EditJournalEntry({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { user } = useAuth();
-  const { entries } = useJournalEntries(user?.id);
+  const { entries, updateEntry } = useJournalEntries(user?.id);
+  const { logActivity } = useActivityLogs(user?.id);
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -57,31 +57,27 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
       .map(tag => tag.trim())
       .filter(tag => tag.length > 0);
 
-    // For demo purposes, we'll simulate a successful update
-    // In a real application, you would use Supabase to update the entry
-
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Update the journal entry using the hook
+      const { error } = await updateEntry(params.id, {
+        title,
+        content,
+        is_private: isPrivate,
+        tags: tagArray.length > 0 ? tagArray : null
+      });
 
-      // In a real app, you would do:
-      // const { error } = await supabase
-      //   .from('journal_entries')
-      //   .update({
-      //     title,
-      //     content,
-      //     is_private: isPrivate,
-      //     tags: tagArray.length > 0 ? tagArray : null
-      //   })
-      //   .eq('id', params.id);
+      if (error) {
+        throw new Error(error);
+      }
 
-      // if (error) throw error;
+      // Log activity for streak tracking
+      await logActivity('journal', `Updated journal entry: ${title}`);
 
       // Redirect to journal page
       router.push('/journal');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating journal entry:', err);
-      setError('Failed to update journal entry');
+      setError(err.message || 'Failed to update journal entry');
       setLoading(false);
     }
   };

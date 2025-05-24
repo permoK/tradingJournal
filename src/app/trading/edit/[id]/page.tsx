@@ -2,17 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTrades } from '@/lib/hooks';
+import { useTrades, useActivityLogs } from '@/lib/hooks';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
-import { supabase } from '@/lib/supabase';
 import { FiSave, FiX } from 'react-icons/fi';
 import { format } from 'date-fns';
 
 export default function EditTrade({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { user } = useAuth();
-  const { trades } = useTrades(user?.id);
+  const { trades, updateTrade } = useTrades(user?.id);
+  const { logActivity } = useActivityLogs(user?.id);
 
   const [market, setMarket] = useState('');
   const [tradeType, setTradeType] = useState('Buy');
@@ -76,37 +76,33 @@ export default function EditTrade({ params }: { params: { id: string } }) {
       }
     }
 
-    // For demo purposes, we'll simulate a successful update
-    // In a real application, you would use Supabase to update the trade
-
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Update the trade using the hook
+      const { error } = await updateTrade(params.id, {
+        trade_date: new Date(tradeDate).toISOString(),
+        market,
+        trade_type: tradeType,
+        entry_price: parseFloat(entryPrice),
+        exit_price: exitPrice ? parseFloat(exitPrice) : null,
+        quantity: parseFloat(quantity),
+        profit_loss: profitLoss,
+        status,
+        notes: notes.trim() || null,
+        is_private: isPrivate
+      });
 
-      // In a real app, you would do:
-      // const { error } = await supabase
-      //   .from('trades')
-      //   .update({
-      //     trade_date: new Date(tradeDate).toISOString(),
-      //     market,
-      //     trade_type: tradeType,
-      //     entry_price: parseFloat(entryPrice),
-      //     exit_price: exitPrice ? parseFloat(exitPrice) : null,
-      //     quantity: parseFloat(quantity),
-      //     profit_loss: profitLoss,
-      //     status,
-      //     notes: notes.trim() || null,
-      //     is_private: isPrivate
-      //   })
-      //   .eq('id', params.id);
+      if (error) {
+        throw new Error(error);
+      }
 
-      // if (error) throw error;
+      // Log activity for streak tracking
+      await logActivity('trading', `Updated ${market} ${tradeType} trade`);
 
       // Redirect to trading page
       router.push('/trading');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating trade:', err);
-      setError('Failed to update trade');
+      setError(err.message || 'Failed to update trade');
       setLoading(false);
     }
   };

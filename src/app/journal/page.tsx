@@ -4,14 +4,13 @@ import { useState } from 'react';
 import { useJournalEntries } from '@/lib/hooks';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
-import { supabase } from '@/lib/supabase';
 import { FiPlus, FiEye, FiEyeOff, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import { format } from 'date-fns';
 import Link from 'next/link';
 
 export default function Journal() {
   const { user, loading: authLoading } = useAuth();
-  const { entries, loading: entriesLoading } = useJournalEntries(user?.id);
+  const { entries, loading: entriesLoading, deleteEntry: deleteEntryHook } = useJournalEntries(user?.id);
 
   const [showPrivate, setShowPrivate] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,10 +31,7 @@ export default function Journal() {
   const deleteEntry = async (entryId: string) => {
     if (!confirm('Are you sure you want to delete this journal entry?')) return;
 
-    const { error } = await supabase
-      .from('journal_entries')
-      .delete()
-      .eq('id', entryId);
+    const { error } = await deleteEntryHook(entryId);
 
     if (error) {
       console.error('Error deleting entry:', error);

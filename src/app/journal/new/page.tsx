@@ -3,13 +3,15 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useJournalEntries, useActivityLogs } from '@/lib/hooks';
 import AppLayout from '@/components/AppLayout';
-import { supabase } from '@/lib/supabase';
 import { FiSave, FiX } from 'react-icons/fi';
 
 export default function NewJournalEntry() {
   const router = useRouter();
   const { user } = useAuth();
+  const { createEntry } = useJournalEntries(user?.id);
+  const { logActivity } = useActivityLogs(user?.id);
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -40,31 +42,27 @@ export default function NewJournalEntry() {
       .map(tag => tag.trim())
       .filter(tag => tag.length > 0);
 
-    // For demo purposes, we'll simulate a successful creation
-    // In a real application, you would use Supabase to create the entry
-
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Create the journal entry using the hook
+      const { error } = await createEntry({
+        title,
+        content,
+        is_private: isPrivate,
+        tags: tagArray.length > 0 ? tagArray : null
+      });
 
-      // In a real app, you would do:
-      // const { error } = await supabase
-      //   .from('journal_entries')
-      //   .insert({
-      //     user_id: user.id,
-      //     title,
-      //     content,
-      //     is_private: isPrivate,
-      //     tags: tagArray.length > 0 ? tagArray : null
-      //   });
+      if (error) {
+        throw new Error(error);
+      }
 
-      // if (error) throw error;
+      // Log activity for streak tracking
+      await logActivity('journal', `Created journal entry: ${title}`);
 
       // Redirect to journal page
       router.push('/journal');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error creating journal entry:', err);
-      setError('Failed to create journal entry');
+      setError(err.message || 'Failed to create journal entry');
       setLoading(false);
     }
   };
