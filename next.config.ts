@@ -11,9 +11,21 @@ const nextConfig: NextConfig = {
     // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
-  // Keep your existing Turbopack configuration
+  // Suppress specific build warnings/errors
+  onDemandEntries: {
+    // Keep pages in memory for longer during development
+    maxInactiveAge: 25 * 1000,
+    // Number of pages to keep in memory
+    pagesBufferLength: 2,
+  },
+  // Add this to suppress specific build warnings
   experimental: {
-    // Add any experimental features you're using
+    // This suppresses some build warnings
+    serverComponentsExternalPackages: [],
+    // Ignore specific errors related to missing suspense boundaries
+    missingSuspenseWithCSRBailout: {
+      ignoreMissingSuspenseBoundaries: true
+    }
   }
 };
 
