@@ -20,7 +20,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  
+
   const { signUp, signInWithProvider, user } = useAuth();
   const router = useRouter();
 
@@ -71,13 +71,13 @@ export default function RegisterPage() {
       full_name: formData.fullName,
       username: formData.username,
     });
-    
+
     if (error) {
       setError(error.message);
     } else {
       setSuccess(true);
     }
-    
+
     setLoading(false);
   };
 
@@ -86,11 +86,11 @@ export default function RegisterPage() {
     setError(null);
 
     const { error } = await signInWithProvider(provider);
-    
+
     if (error) {
       setError(error.message);
     }
-    
+
     setLoading(false);
   };
 
@@ -106,7 +106,7 @@ export default function RegisterPage() {
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Check your email</h2>
             <p className="text-gray-600 mb-6">
-              We've sent a verification link to <strong>{formData.email}</strong>. 
+              We've sent a verification link to <strong>{formData.email}</strong>.
               Please check your email and click the link to verify your account.
             </p>
             <Link
@@ -132,7 +132,7 @@ export default function RegisterPage() {
             Join Deriv Progress Tracker and start your trading journey
           </p>
         </div>
-        
+
         <div className="bg-white rounded-lg shadow-md p-8">
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
@@ -157,7 +157,7 @@ export default function RegisterPage() {
                     required
                     value={formData.fullName}
                     onChange={handleChange}
-                    className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                     placeholder="John Doe"
                   />
                 </div>
@@ -178,7 +178,7 @@ export default function RegisterPage() {
                     required
                     value={formData.username}
                     onChange={handleChange}
-                    className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                     placeholder="johndoe"
                   />
                 </div>
@@ -201,7 +201,7 @@ export default function RegisterPage() {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   placeholder="john@example.com"
                 />
               </div>
@@ -223,7 +223,7 @@ export default function RegisterPage() {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   placeholder="Create a password"
                 />
                 <button
@@ -256,7 +256,7 @@ export default function RegisterPage() {
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   placeholder="Confirm your password"
                 />
                 <button

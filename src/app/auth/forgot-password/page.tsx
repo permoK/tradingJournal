@@ -10,7 +10,7 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  
+
   const { resetPassword } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -19,13 +19,13 @@ export default function ForgotPasswordPage() {
     setError(null);
 
     const { error } = await resetPassword(email);
-    
+
     if (error) {
       setError(error.message);
     } else {
       setSuccess(true);
     }
-    
+
     setLoading(false);
   };
 
@@ -41,7 +41,7 @@ export default function ForgotPasswordPage() {
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Check your email</h2>
             <p className="text-gray-600 mb-6">
-              We've sent a password reset link to <strong>{email}</strong>. 
+              We've sent a password reset link to <strong>{email}</strong>.
               Please check your email and follow the instructions to reset your password.
             </p>
             <div className="space-y-3">
@@ -85,7 +85,7 @@ export default function ForgotPasswordPage() {
             Enter your email address and we'll send you a link to reset your password.
           </p>
         </div>
-        
+
         <div className="bg-white rounded-lg shadow-md p-8">
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
@@ -110,7 +110,7 @@ export default function ForgotPasswordPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   placeholder="Enter your email address"
                 />
               </div>
