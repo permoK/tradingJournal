@@ -3,6 +3,7 @@
 import { ReactNode, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import { FiHome, FiBook, FiBarChart2, FiFileText, FiUsers, FiSettings, FiLogOut, FiX } from 'react-icons/fi';
 
 interface AppLayoutProps {
@@ -13,13 +14,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  // For demo purposes, we'll simulate a user is always logged in
-  const user = { id: '1', email: 'demo@example.com' };
-  const loading = false;
+  const { user, loading, signOut } = useAuth();
 
   const handleSignOut = async () => {
-    // For demo purposes, we'll just redirect to the home page
+    await signOut();
     router.push('/');
   };
 
