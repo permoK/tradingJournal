@@ -1,15 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase';
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
@@ -18,7 +18,7 @@ export default function VerifyEmailPage() {
     const verifyEmail = async () => {
       const token = searchParams.get('token');
       const type = searchParams.get('type');
-      
+
       if (!token || type !== 'signup') {
         setError('Invalid or missing verification token.');
         setLoading(false);
@@ -43,7 +43,7 @@ export default function VerifyEmailPage() {
       } catch (err) {
         setError('An unexpected error occurred. Please try again.');
       }
-      
+
       setLoading(false);
     };
 
@@ -117,7 +117,7 @@ export default function VerifyEmailPage() {
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Email verified!</h2>
             <p className="text-gray-600 mb-6">
-              Your email has been successfully verified. Welcome to Deriv Progress Tracker! 
+              Your email has been successfully verified. Welcome to Deriv Progress Tracker!
               You will be redirected to your dashboard in a few seconds.
             </p>
             <Link
@@ -133,4 +133,19 @@ export default function VerifyEmailPage() {
   }
 
   return null;
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
+  );
 }
