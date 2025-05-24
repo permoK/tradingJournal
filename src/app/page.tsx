@@ -7,7 +7,7 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="flex flex-col justify-center">
             <h1 className="text-4xl font-bold text-slate-800 mb-4">
-              Deriv Progress Tracker
+              Trading Progress Tracker
             </h1>
             <p className="text-xl text-slate-700 mb-6">
               Track your trading journey, learn together with friends, and master trading consistently.
