@@ -32,18 +32,6 @@ const nextConfig: NextConfig = {
   images: {
     disableStaticImages: true,
     unoptimized: true,
-  },
-  // Add this to disable static generation for specific paths
-  exportPathMap: async function() {
-    return {
-      '/': { page: '/' },
-      // Exclude auth pages from static generation
-      '/auth/login': { page: '/auth/login', skipPrerender: true },
-      '/auth/register': { page: '/auth/register', skipPrerender: true },
-      '/auth/forgot-password': { page: '/auth/forgot-password', skipPrerender: true },
-      '/auth/verify-email': { page: '/auth/verify-email', skipPrerender: true },
-      '/auth/callback': { page: '/auth/callback', skipPrerender: true },
-    };
   }
 };
 
