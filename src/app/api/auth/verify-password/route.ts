@@ -5,7 +5,7 @@ import { cookies } from 'next/headers';
 export async function POST(request: NextRequest) {
   try {
     const { currentPassword } = await request.json();
-    
+
     if (!currentPassword) {
       return NextResponse.json(
         { error: 'Current password is required' },
@@ -13,12 +13,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = createRouteHandlerClient({ cookies });
 
     // Get the current user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
+
     if (userError || !user) {
       return NextResponse.json(
         { error: 'User not authenticated' },

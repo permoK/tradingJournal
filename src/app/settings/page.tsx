@@ -1,13 +1,15 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useProfile } from '@/lib/hooks';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
 import { supabase } from '@/lib/supabase';
-import { FiUser, FiLock, FiSave, FiCamera, FiCheck, FiX } from 'react-icons/fi';
+import { FiUser, FiLock, FiSave, FiCamera, FiCheck, FiX, FiTrash2, FiAlertTriangle } from 'react-icons/fi';
 
 export default function Settings() {
+  const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading } = useProfile(user?.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -24,6 +26,9 @@ export default function Settings() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [checkingUsername, setCheckingUsername] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -43,7 +48,7 @@ export default function Settings() {
 
     setCheckingUsername(true);
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('profiles')
         .select('username')
         .eq('username', newUsername)
@@ -73,23 +78,62 @@ export default function Settings() {
     setUploadingAvatar(true);
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
+      console.log('Uploading file:', { fileName, filePath, fileSize: file.size, fileType: file.type });
+
+      // First, check if the bucket exists
+      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+      console.log('Available buckets:', buckets);
+
+      if (bucketsError) {
+        console.error('Error listing buckets:', bucketsError);
+        throw new Error('Storage not available');
+      }
+
+      const avatarsBucket = buckets?.find(bucket => bucket.id === 'avatars');
+      if (!avatarsBucket) {
+        throw new Error('Storage bucket not set up yet. Please create the "avatars" bucket in your Supabase Dashboard under Storage section.');
+      }
+
+      // Upload the file
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true // Allow overwriting existing files
+        });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw uploadError;
+      }
 
+      console.log('Upload successful:', uploadData);
+
+      // Get the public URL
       const { data } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
 
+      console.log('Public URL:', data.publicUrl);
       return data.publicUrl;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading avatar:', error);
-      setMessage({ type: 'error', text: 'Failed to upload avatar' });
+      let errorMessage = 'Failed to upload avatar';
+
+      if (error.message?.includes('bucket')) {
+        errorMessage = 'Storage bucket not found. Please contact support.';
+      } else if (error.message?.includes('policy')) {
+        errorMessage = 'Permission denied. Please check storage permissions.';
+      } else if (error.message?.includes('size')) {
+        errorMessage = 'File too large. Maximum size is 5MB.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      setMessage({ type: 'error', text: errorMessage });
       return null;
     } finally {
       setUploadingAvatar(false);
@@ -99,6 +143,9 @@ export default function Settings() {
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Clear any previous messages
+    setMessage(null);
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
@@ -115,6 +162,7 @@ export default function Settings() {
     const url = await uploadAvatar(file);
     if (url) {
       setAvatarUrl(url);
+      setMessage({ type: 'success', text: 'Avatar uploaded successfully' });
     }
   };
 
@@ -240,6 +288,69 @@ export default function Settings() {
     setLoading(false);
   };
 
+  const deleteAccount = async () => {
+    if (!user || !deletePassword.trim()) {
+      setMessage({ type: 'error', text: 'Password is required to delete account' });
+      return;
+    }
+
+    setDeletingAccount(true);
+    setMessage(null);
+
+    try {
+      const response = await fetch('/api/auth/delete-account', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password: deletePassword }),
+      });
+
+      if (!response.ok && response.status >= 500) {
+        throw new Error('Server error occurred');
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error('Delete account error:', data);
+
+        // Handle partial success case
+        if (data.partialSuccess) {
+          setMessage({
+            type: 'error',
+            text: data.error || 'Account data deleted but auth user deletion failed. Please contact support.'
+          });
+          setDeletingAccount(false);
+          setDeletePassword('');
+          setShowDeleteDialog(false);
+          return;
+        }
+
+        setMessage({ type: 'error', text: data.error || 'Failed to delete account' });
+        setDeletingAccount(false);
+        return;
+      }
+
+      // Account deleted successfully - redirect to home page
+      setMessage({ type: 'success', text: 'Account deleted successfully. Redirecting...' });
+
+      // Clear the form
+      setDeletePassword('');
+      setShowDeleteDialog(false);
+
+      // Redirect after a short delay
+      setTimeout(() => {
+        router.push('/');
+      }, 2000);
+
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      setMessage({ type: 'error', text: 'Failed to delete account. Please try again.' });
+      setDeletingAccount(false);
+    }
+  };
+
   const isLoading = authLoading || profileLoading || loading;
 
   if (authLoading || profileLoading) {
@@ -313,7 +424,7 @@ export default function Settings() {
                     {uploadingAvatar ? 'Uploading...' : 'Change Photo'}
                   </button>
                   <p className="mt-1 text-xs text-slate-600">
-                    JPG, PNG up to 5MB
+                    JPG, PNG up to 5MB (Storage setup required)
                   </p>
                 </div>
               </div>
@@ -477,6 +588,77 @@ export default function Settings() {
           </form>
         </div>
       </div>
+
+      {/* Danger Zone */}
+      <div className="mt-8 bg-red-50 border border-red-200 p-6 rounded-lg">
+        <h2 className="text-lg font-semibold mb-4 flex items-center text-red-800">
+          <FiAlertTriangle className="mr-2 text-red-600" />
+          Danger Zone
+        </h2>
+        <p className="text-red-700 mb-4">
+          Once you delete your account, there is no going back. This action cannot be undone.
+          All your data including journal entries, trades, and progress will be permanently deleted.
+        </p>
+        <button
+          onClick={() => setShowDeleteDialog(true)}
+          disabled={isLoading || deletingAccount}
+          className="flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 border border-red-700"
+        >
+          <FiTrash2 className="mr-2" />
+          Delete Account
+        </button>
+      </div>
+
+      {/* Delete Account Confirmation Dialog */}
+      {showDeleteDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-red-800 mb-4 flex items-center">
+              <FiAlertTriangle className="mr-2 text-red-600" />
+              Confirm Account Deletion
+            </h3>
+
+            <div className="mb-4">
+              <p className="text-gray-700 mb-4">
+                This action cannot be undone. All your data will be permanently deleted.
+              </p>
+              <p className="text-gray-700 mb-4 font-medium">
+                Please enter your password to confirm:
+              </p>
+
+              <input
+                type="password"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                placeholder="Enter your password"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-slate-800"
+                disabled={deletingAccount}
+              />
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={() => {
+                  setShowDeleteDialog(false);
+                  setDeletePassword('');
+                  setMessage(null);
+                }}
+                disabled={deletingAccount}
+                className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={deleteAccount}
+                disabled={deletingAccount || !deletePassword.trim()}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
+              >
+                {deletingAccount ? 'Deleting...' : 'Delete Account'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 }
