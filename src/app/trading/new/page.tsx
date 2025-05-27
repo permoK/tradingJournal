@@ -6,8 +6,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTrades, useActivityLogs } from '@/lib/hooks';
 import AppLayout from '@/components/AppLayout';
 import MarketSelector from '@/components/MarketSelector';
-import { FiSave, FiX, FiDollarSign, FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
+import { FiSave, FiX, FiDollarSign, FiTrendingUp, FiTrendingDown, FiInfo } from 'react-icons/fi';
 import { format } from 'date-fns';
+import { calculatePL, getMarketInfo, formatPL, formatPips, formatPercentage, validateTradeInputs, getSuggestedLotSizes } from '@/utils/plCalculator';
 
 export default function NewTrade() {
   const router = useRouter();
@@ -28,7 +29,9 @@ export default function NewTrade() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [calculatedPL, setCalculatedPL] = useState<number | null>(null);
+  const [plResult, setPlResult] = useState<any>(null);
   const [recentMarkets, setRecentMarkets] = useState<string[]>([]);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   // Load recent markets from localStorage
   useEffect(() => {
@@ -38,28 +41,54 @@ export default function NewTrade() {
     }
   }, []);
 
-  // Calculate P&L when prices change
+  // Calculate P&L when prices change using professional calculator
   useEffect(() => {
-    if (entryPrice && exitPrice && quantity && status === 'closed') {
+    if (entryPrice && exitPrice && quantity && status === 'closed' && selectedMarket) {
       const entry = parseFloat(entryPrice);
       const exit = parseFloat(exitPrice);
       const qty = parseFloat(quantity);
 
-      if (!isNaN(entry) && !isNaN(exit) && !isNaN(qty)) {
-        let profitLoss: number;
-        if (tradeType === 'buy') {
-          profitLoss = (exit - entry) * qty;
-        } else {
-          profitLoss = (entry - exit) * qty;
+      // Validate inputs
+      const validation = validateTradeInputs(entry, exit, qty);
+      if (validation) {
+        setValidationError(validation);
+        setCalculatedPL(null);
+        setPlResult(null);
+        return;
+      }
+
+      setValidationError(null);
+
+      // Get market info for accurate calculation
+      const marketInfo = getMarketInfo(selectedMarket.symbol);
+      if (marketInfo && !isNaN(entry) && !isNaN(exit) && !isNaN(qty)) {
+        try {
+          const result = calculatePL({
+            market: marketInfo,
+            tradeType,
+            entryPrice: entry,
+            exitPrice: exit,
+            quantity: qty
+          });
+
+          setCalculatedPL(result.profitLoss);
+          setPlResult(result);
+        } catch (error) {
+          console.error('P&L calculation error:', error);
+          setCalculatedPL(null);
+          setPlResult(null);
+          setValidationError('Error calculating P&L');
         }
-        setCalculatedPL(profitLoss);
       } else {
         setCalculatedPL(null);
+        setPlResult(null);
       }
     } else {
       setCalculatedPL(null);
+      setPlResult(null);
+      setValidationError(null);
     }
-  }, [entryPrice, exitPrice, quantity, tradeType, status]);
+  }, [entryPrice, exitPrice, quantity, tradeType, status, selectedMarket]);
 
   const handleMarketSelect = (marketObj: any) => {
     setSelectedMarket(marketObj);
@@ -237,7 +266,11 @@ export default function NewTrade() {
 
           <div>
             <label htmlFor="quantity" className="block text-sm font-medium text-slate-700 mb-1">
-              Quantity *
+              Quantity * {selectedMarket && (
+                <span className="text-xs text-slate-500">
+                  ({selectedMarket.category === 'forex' ? 'lots' : 'units'})
+                </span>
+              )}
             </label>
             <input
               id="quantity"
@@ -245,10 +278,27 @@ export default function NewTrade() {
               step="any"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
-              placeholder="e.g. 1000, 0.1, 10"
+              placeholder={selectedMarket?.category === 'forex' ? 'e.g. 0.1, 1, 10' : 'e.g. 1, 10, 100'}
               className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
               required
             />
+            {selectedMarket && (
+              <div className="mt-2">
+                <div className="text-xs text-slate-600 mb-1">Suggested sizes:</div>
+                <div className="flex flex-wrap gap-1">
+                  {getSuggestedLotSizes(selectedMarket.category).map(size => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => setQuantity(size.toString())}
+                      className="px-2 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border transition-colors"
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -257,44 +307,126 @@ export default function NewTrade() {
           <div className="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
             <div className="flex items-center mb-3">
               <FiDollarSign className="text-indigo-600 mr-2" />
-              <h3 className="text-lg font-semibold text-slate-900">Profit/Loss Calculator</h3>
+              <h3 className="text-lg font-semibold text-slate-900">Professional P&L Calculator</h3>
+              {selectedMarket && (
+                <span className="ml-2 text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full">
+                  {selectedMarket.category}
+                </span>
+              )}
             </div>
 
-            {calculatedPL !== null && (
-              <div className="flex items-center justify-between p-4 bg-white rounded-md border border-slate-200">
-                <div className="flex items-center space-x-3">
-                  {calculatedPL >= 0 ? (
-                    <FiTrendingUp className="w-6 h-6 text-emerald-600" />
-                  ) : (
-                    <FiTrendingDown className="w-6 h-6 text-red-600" />
-                  )}
-                  <div>
-                    <div className="text-sm text-slate-600">Calculated P/L</div>
-                    <div className={`text-xl font-bold ${
-                      calculatedPL >= 0 ? 'text-emerald-600' : 'text-red-600'
-                    }`}>
-                      {calculatedPL >= 0 ? '+' : ''}${calculatedPL.toFixed(2)}
+            {validationError && (
+              <div className="p-3 bg-red-50 rounded-md border border-red-200 mb-3">
+                <p className="text-red-800 text-sm font-medium">{validationError}</p>
+              </div>
+            )}
+
+            {plResult && calculatedPL !== null && (
+              <div className="space-y-4">
+                {/* Main P&L Display */}
+                <div className="p-4 bg-white rounded-md border border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      {calculatedPL >= 0 ? (
+                        <FiTrendingUp className="w-6 h-6 text-emerald-600" />
+                      ) : (
+                        <FiTrendingDown className="w-6 h-6 text-red-600" />
+                      )}
+                      <div>
+                        <div className="text-sm text-slate-600">Total P&L</div>
+                        <div className={`text-2xl font-bold ${
+                          calculatedPL >= 0 ? 'text-emerald-600' : 'text-red-600'
+                        }`}>
+                          {formatPL(calculatedPL)}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <div className="text-sm text-slate-600">Return</div>
+                      <div className={`text-lg font-semibold ${
+                        plResult.percentage >= 0 ? 'text-emerald-600' : 'text-red-600'
+                      }`}>
+                        {formatPercentage(plResult.percentage)}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {entryPrice && exitPrice && (
-                  <div className="text-right">
-                    <div className="text-sm text-slate-600">Price Movement</div>
-                    <div className={`text-sm font-medium ${
-                      calculatedPL >= 0 ? 'text-emerald-600' : 'text-red-600'
-                    }`}>
-                      {parseFloat(entryPrice).toFixed(4)} → {parseFloat(exitPrice).toFixed(4)}
+                {/* Detailed Breakdown */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-3 bg-white rounded-md border border-slate-200">
+                    <div className="text-sm text-slate-600 mb-1">Price Movement</div>
+                    <div className="font-semibold text-slate-900">
+                      {parseFloat(entryPrice).toFixed(selectedMarket?.category === 'forex' ? 5 : 2)} → {parseFloat(exitPrice).toFixed(selectedMarket?.category === 'forex' ? 5 : 2)}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">
+                      {plResult.breakdown.priceMovement > 0 ? '+' : ''}{plResult.breakdown.priceMovement.toFixed(selectedMarket?.category === 'forex' ? 5 : 2)} points
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-white rounded-md border border-slate-200">
+                    <div className="text-sm text-slate-600 mb-1">Pip Movement</div>
+                    <div className="font-semibold text-slate-900">
+                      {formatPips(plResult.pips)}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">
+                      Pip value: {selectedMarket?.pip || 'N/A'}
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-white rounded-md border border-slate-200">
+                    <div className="text-sm text-slate-600 mb-1">Position Size</div>
+                    <div className="font-semibold text-slate-900">
+                      {quantity} {selectedMarket?.category === 'forex' ? 'lots' : 'units'}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">
+                      Contract value: {plResult.breakdown.contractValue.toLocaleString()}
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-white rounded-md border border-slate-200">
+                    <div className="text-sm text-slate-600 mb-1">Total Investment</div>
+                    <div className="font-semibold text-slate-900">
+                      ${plResult.breakdown.totalValue.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">
+                      Entry × Position
+                    </div>
+                  </div>
+                </div>
+
+                {/* Market Info */}
+                {selectedMarket && (
+                  <div className="p-3 bg-blue-50 rounded-md border border-blue-200">
+                    <div className="flex items-center mb-2">
+                      <FiInfo className="w-4 h-4 text-blue-600 mr-2" />
+                      <span className="text-sm font-medium text-blue-900">Market Information</span>
+                    </div>
+                    <div className="text-xs text-blue-800 space-y-1">
+                      <div>Category: {selectedMarket.category.charAt(0).toUpperCase() + selectedMarket.category.slice(1)}</div>
+                      <div>Pip Size: {selectedMarket.pip}</div>
+                      {selectedMarket.contractSize && (
+                        <div>Contract Size: {selectedMarket.contractSize.toLocaleString()}</div>
+                      )}
                     </div>
                   </div>
                 )}
               </div>
             )}
 
-            {calculatedPL === null && entryPrice && exitPrice && quantity && (
+            {!plResult && !validationError && entryPrice && exitPrice && quantity && selectedMarket && (
               <div className="p-4 bg-amber-50 rounded-md border border-amber-200">
                 <p className="text-amber-800 text-sm">
-                  Please ensure all price and quantity fields contain valid numbers.
+                  Calculating P&L for {selectedMarket.symbol}...
+                </p>
+              </div>
+            )}
+
+            {!selectedMarket && (
+              <div className="p-4 bg-blue-50 rounded-md border border-blue-200">
+                <p className="text-blue-800 text-sm">
+                  Please select a market to enable accurate P&L calculation.
                 </p>
               </div>
             )}
