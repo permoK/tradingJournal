@@ -1,27 +1,33 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useProfile, useUserProgress, useLearningTopics, useActivityLogs } from '@/lib/hooks';
+import { useProfile, useUserProgress, useLearningTopics, useActivityLogs, useTrades } from '@/lib/hooks';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
-import { FiBook, FiBarChart2, FiFileText, FiUsers, FiAward, FiCalendar } from 'react-icons/fi';
+import { FiBook, FiBarChart2, FiFileText, FiUsers, FiAward, FiCalendar, FiSearch, FiTrendingUp } from 'react-icons/fi';
 import { format } from 'date-fns';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Chart as ChartJS, ArcElement, Tooltip as ChartTooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import StreakHeatmap from '@/components/StreakHeatmap';
 import ProgressChart from '@/components/ProgressChart';
+import TradingPairsChart from '@/components/TradingPairsChart';
+import ProgressTracker from '@/components/ProgressTracker';
+import AdvancedSearch from '@/components/AdvancedSearch';
 import NewUserWelcome from '@/components/NewUserWelcome';
 
 // Register Chart.js components
 ChartJS.register(ArcElement, ChartTooltip, Legend);
 
 export default function Dashboard() {
+  const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading } = useProfile(user?.id);
   const { progress, loading: progressLoading } = useUserProgress(user?.id);
   const { topics, loading: topicsLoading } = useLearningTopics();
   const { activities, loading: activitiesLoading } = useActivityLogs(user?.id);
+  const { trades, loading: tradesLoading } = useTrades(user?.id);
 
   const [completedTopics, setCompletedTopics] = useState(0);
   const [inProgressTopics, setInProgressTopics] = useState(0);
@@ -31,7 +37,6 @@ export default function Dashboard() {
   const [categoryInProgressCounts, setCategoryInProgressCounts] = useState<number[]>([]);
   const [categoryNotStartedCounts, setCategoryNotStartedCounts] = useState<number[]>([]);
   const [showWelcome, setShowWelcome] = useState(false);
-
   // Check if user is new (no activity, no progress, no profile data)
   useEffect(() => {
     if (!authLoading && !activitiesLoading && !progressLoading && user) {
@@ -40,6 +45,23 @@ export default function Dashboard() {
       setShowWelcome(isNewUser);
     }
   }, [authLoading, activitiesLoading, progressLoading, user, activities, progress, profile]);
+
+  // Calculate trading statistics
+  const tradingStats = {
+    totalTrades: trades.length,
+    totalPairs: [...new Set(trades.map(trade => trade.market))].length,
+    totalProfitLoss: trades
+      .filter(trade => trade.profit_loss !== null)
+      .reduce((total, trade) => total + (trade.profit_loss || 0), 0),
+    winRate: trades.length > 0
+      ? (trades.filter(trade => trade.profit_loss !== null && trade.profit_loss > 0).length /
+         trades.filter(trade => trade.profit_loss !== null).length) * 100
+      : 0,
+    pairData: trades.reduce((acc, trade) => {
+      acc[trade.market] = (acc[trade.market] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>)
+  };
 
   useEffect(() => {
     if (!progressLoading && !topicsLoading && progress && topics) {
@@ -97,7 +119,7 @@ export default function Dashboard() {
     ],
   };
 
-  const isLoading = authLoading || profileLoading || progressLoading || topicsLoading || activitiesLoading;
+  const isLoading = authLoading || profileLoading || progressLoading || topicsLoading || activitiesLoading || tradesLoading;
 
   if (isLoading) {
     return (
@@ -116,41 +138,55 @@ export default function Dashboard() {
       <div className="mb-4 sm:mb-6">
         <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Welcome, {profile?.username || user?.email?.split('@')[0] || 'Trader'}!</h1>
         <p className="text-slate-700 font-medium text-sm sm:text-base">
-          {format(new Date(), 'EEEE, MMMM d, yyyy')} •
-          <span className="text-indigo-700 font-semibold ml-1">Streak: {profile?.streak_count || 0} days</span>
+          {format(new Date(), 'EEEE, MMMM d, yyyy')}
         </p>
       </div>
 
-      {/* Progress Overview */}
+      {/* Streak Bar - Moved to Top */}
+      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-4 sm:p-6 rounded-lg shadow-sm mb-6 sm:mb-8 text-white">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold mb-1">Current Streak</h2>
+            <p className="text-indigo-100 text-sm sm:text-base">Keep up the great work!</p>
+          </div>
+          <div className="text-right">
+            <div className="text-3xl sm:text-4xl font-bold">{profile?.streak_count || 0}</div>
+            <div className="text-indigo-100 text-sm sm:text-base">days</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Advanced Search */}
+      <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm mb-6 sm:mb-8 border border-slate-200">
+        <div className="mb-3">
+          <h2 className="text-lg font-semibold text-slate-900 mb-1">Quick Search</h2>
+          <p className="text-sm text-slate-600">Find trades, journals, markets, and community content</p>
+        </div>
+        <AdvancedSearch />
+      </div>
+
+      {/* Trading Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-slate-200">
-          <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-slate-900">Learning Progress</h2>
-          <div className="flex justify-center">
-            <div className="w-36 h-36 sm:w-48 sm:h-48">
-              <Doughnut
-                data={progressData}
-                options={{
-                  plugins: {
-                    legend: {
-                      display: false
-                    }
-                  }
-                }}
-              />
+          <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-slate-900">Trading Statistics</h2>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-600 text-sm">Total Trades</span>
+              <span className="font-semibold text-slate-900">{tradingStats.totalTrades}</span>
             </div>
-          </div>
-          <div className="mt-3 sm:mt-4 grid grid-cols-3 gap-1 sm:gap-2 text-center text-xs sm:text-sm">
-            <div>
-              <div className="font-semibold text-emerald-600 text-base sm:text-lg">{completedTopics}</div>
-              <div className="text-slate-700 font-medium">Completed</div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-600 text-sm">Trading Pairs</span>
+              <span className="font-semibold text-slate-900">{tradingStats.totalPairs}</span>
             </div>
-            <div>
-              <div className="font-semibold text-indigo-600 text-base sm:text-lg">{inProgressTopics}</div>
-              <div className="text-slate-700 font-medium">In Progress</div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-600 text-sm">Total P/L</span>
+              <span className={`font-semibold ${tradingStats.totalProfitLoss > 0 ? 'text-emerald-600' : tradingStats.totalProfitLoss < 0 ? 'text-red-600' : 'text-slate-900'}`}>
+                {tradingStats.totalProfitLoss > 0 ? '+' : ''}{tradingStats.totalProfitLoss.toFixed(2)}
+              </span>
             </div>
-            <div>
-              <div className="font-semibold text-slate-700 text-base sm:text-lg">{notStartedTopics}</div>
-              <div className="text-slate-700 font-medium">Not Started</div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-600 text-sm">Learning Progress</span>
+              <span className="font-semibold text-indigo-600">{Math.round((completedTopics / (topics?.length || 1)) * 100)}%</span>
             </div>
           </div>
         </div>
@@ -239,6 +275,36 @@ export default function Dashboard() {
             </Link>
           </div>
         </div>
+      </div>
+
+      {/* Trading Pairs Visualization */}
+      <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm mb-6 sm:mb-8 border border-slate-200">
+        <div className="flex items-center mb-3 sm:mb-4">
+          <FiBarChart2 className="text-emerald-700 mr-2 text-sm sm:text-base" />
+          <h2 className="text-base sm:text-lg font-semibold text-slate-900">Trading Pairs & Volume</h2>
+        </div>
+        {Object.keys(tradingStats.pairData).length > 0 ? (
+          <TradingPairsChart pairData={tradingStats.pairData} />
+        ) : (
+          <div className="h-48 sm:h-64 flex items-center justify-center text-slate-700 font-medium text-sm sm:text-base">
+            No trading data available. Start recording trades to see your pair distribution.
+          </div>
+        )}
+      </div>
+
+      {/* Progress Tracker with Filtering */}
+      <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm mb-6 sm:mb-8 border border-slate-200">
+        <div className="flex items-center mb-3 sm:mb-4">
+          <FiTrendingUp className="text-indigo-700 mr-2 text-sm sm:text-base" />
+          <h2 className="text-base sm:text-lg font-semibold text-slate-900">Progress Tracker</h2>
+        </div>
+        {trades.length > 0 ? (
+          <ProgressTracker trades={trades} />
+        ) : (
+          <div className="h-48 sm:h-64 flex items-center justify-center text-slate-700 font-medium text-sm sm:text-base">
+            No trade data available. Record some trades to see your progress over time.
+          </div>
+        )}
       </div>
 
       {/* Progress by Category */}

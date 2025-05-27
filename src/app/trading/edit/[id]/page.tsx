@@ -28,6 +28,9 @@ export default function EditTrade({ params }: { params: { id: string } }) {
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
+    // Only check for trade if trades have been loaded
+    if (trades.length === 0) return;
+
     // Find the trade with the matching ID
     const trade = trades.find(t => t.id === params.id);
 
@@ -41,7 +44,9 @@ export default function EditTrade({ params }: { params: { id: string } }) {
       setStatus(trade.status);
       setNotes(trade.notes || '');
       setIsPrivate(trade.is_private);
-    } else {
+      setNotFound(false);
+    } else if (trades.length > 0) {
+      // Only set not found if trades have loaded but trade not found
       setNotFound(true);
     }
   }, [trades, params.id]);

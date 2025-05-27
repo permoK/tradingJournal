@@ -21,66 +21,42 @@ export default function CommunityJournalView({ params }: { params: { id: string 
   useEffect(() => {
     const fetchEntry = async () => {
       setLoading(true);
-      
-      // For demo purposes, we'll use mock data
-      // In a real application, you would fetch from Supabase
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data for demonstration
-      const mockEntries = [
-        {
-          id: '1',
-          created_at: '2023-03-10T00:00:00.000Z',
-          user_id: '1',
-          title: 'My First Week of Trading',
-          content: 'This week I started trading on Deriv. I focused on learning the platform and making small trades to get comfortable with the process.\n\nI began by watching some tutorial videos and reading the documentation. The platform is quite intuitive, but there are many features to explore.\n\nI made my first trade on EUR/USD with a small amount. It was a buy position based on a support level I identified. The trade was successful, and I made a small profit.\n\nI\'m planning to continue with small trades while I learn more about technical analysis and develop my trading strategy.',
-          is_private: false,
-          tags: ['beginner', 'learning']
-        },
-        {
-          id: '3',
-          created_at: '2023-03-20T00:00:00.000Z',
-          user_id: '1',
-          title: 'Trading Psychology',
-          content: 'I realized how important emotional control is in trading. Today I made a mistake by letting fear drive my decision to exit a trade too early.\n\nI had a good position on Gold, and all indicators were pointing to continued upward movement. However, after a small pullback, I got nervous and closed the position. Shortly after, the price continued upward as initially expected.\n\nThis experience taught me that I need to work on my emotional discipline. I\'m going to start keeping a separate journal specifically for tracking my emotional state during trades.\n\nSome strategies I plan to implement:\n1. Set clear entry and exit points before entering a trade\n2. Use stop losses instead of manually exiting due to fear\n3. Take breaks when feeling emotionally charged\n4. Review my trades objectively after the fact',
-          is_private: false,
-          tags: ['psychology', 'emotions']
+
+      try {
+        // Fetch journal entry
+        const { data: journalData, error: journalError } = await supabase
+          .from('journal_entries')
+          .select('*')
+          .eq('id', params.id)
+          .eq('is_private', false)
+          .single();
+
+        if (journalError || !journalData) {
+          setError('Journal entry not found or is private');
+          setLoading(false);
+          return;
         }
-      ];
-      
-      const mockProfiles = [
-        {
-          id: '1',
-          created_at: '2023-01-01T00:00:00.000Z',
-          updated_at: '2023-01-01T00:00:00.000Z',
-          username: 'demo_user',
-          full_name: 'Demo User',
-          avatar_url: null,
-          bio: 'I am learning Deriv trading',
-          streak_count: 5,
-          last_active: '2023-06-01T00:00:00.000Z'
+
+        setEntry(journalData);
+
+        // Fetch author profile
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', journalData.user_id)
+          .single();
+
+        if (!profileError && profileData) {
+          setAuthor(profileData);
         }
-      ];
-      
-      const foundEntry = mockEntries.find(e => e.id === params.id);
-      
-      if (foundEntry) {
-        setEntry(foundEntry as JournalEntry);
-        
-        // Find the author
-        const foundAuthor = mockProfiles.find(p => p.id === foundEntry.user_id);
-        if (foundAuthor) {
-          setAuthor(foundAuthor as Profile);
-        }
-      } else {
-        setError('Journal entry not found or is private');
+      } catch (err) {
+        console.error('Error fetching journal entry:', err);
+        setError('Failed to load journal entry');
       }
-      
+
       setLoading(false);
     };
-    
+
     fetchEntry();
   }, [params.id]);
 
@@ -121,7 +97,7 @@ export default function CommunityJournalView({ params }: { params: { id: string 
           <FiArrowLeft className="mr-2" />
           Back to Community
         </button>
-        
+
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{entry.title}</h1>
           <p className="text-gray-600">
@@ -130,7 +106,7 @@ export default function CommunityJournalView({ params }: { params: { id: string 
           </p>
         </div>
       </div>
-      
+
       <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
         <div className="prose max-w-none">
           {entry.content.split('\n').map((paragraph, index) => (
@@ -138,7 +114,7 @@ export default function CommunityJournalView({ params }: { params: { id: string 
           ))}
         </div>
       </div>
-      
+
       {entry.tags && entry.tags.length > 0 && (
         <div className="mb-6">
           <h2 className="text-lg font-semibold mb-2">Tags</h2>
@@ -154,7 +130,7 @@ export default function CommunityJournalView({ params }: { params: { id: string 
           </div>
         </div>
       )}
-      
+
       {author && (
         <div className="bg-gray-50 p-6 rounded-lg">
           <h2 className="text-lg font-semibold mb-2">Author</h2>

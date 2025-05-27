@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useJournalEntries } from '@/lib/hooks';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
@@ -8,12 +9,21 @@ import { FiPlus, FiEye, FiEyeOff, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import { format } from 'date-fns';
 import Link from 'next/link';
 
-export default function Journal() {
+function JournalContent() {
   const { user, loading: authLoading } = useAuth();
   const { entries, loading: entriesLoading, deleteEntry: deleteEntryHook } = useJournalEntries(user?.id);
+  const searchParams = useSearchParams();
 
   const [showPrivate, setShowPrivate] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Handle search parameter from dashboard
+  useEffect(() => {
+    const searchParam = searchParams.get('search');
+    if (searchParam) {
+      setSearchTerm(searchParam);
+    }
+  }, [searchParams]);
 
   const isLoading = authLoading || entriesLoading;
 
@@ -176,5 +186,19 @@ export default function Journal() {
         )}
       </div>
     </AppLayout>
+  );
+}
+
+export default function Journal() {
+  return (
+    <Suspense fallback={
+      <AppLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="w-12 h-12 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
+        </div>
+      </AppLayout>
+    }>
+      <JournalContent />
+    </Suspense>
   );
 }

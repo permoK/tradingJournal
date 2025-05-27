@@ -22,6 +22,9 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
+    // Only check for entry if entries have been loaded
+    if (entries.length === 0) return;
+
     // Find the entry with the matching ID
     const entry = entries.find(e => e.id === params.id);
 
@@ -30,7 +33,9 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
       setContent(entry.content);
       setIsPrivate(entry.is_private);
       setTags(entry.tags ? entry.tags.join(', ') : '');
-    } else {
+      setNotFound(false);
+    } else if (entries.length > 0) {
+      // Only set not found if entries have loaded but entry not found
       setNotFound(true);
     }
   }, [entries, params.id]);

@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTrades, useActivityLogs } from '@/lib/hooks';
 import AppLayout from '@/components/AppLayout';
-import { FiSave, FiX } from 'react-icons/fi';
+import MarketSelector from '@/components/MarketSelector';
+import { FiSave, FiX, FiDollarSign, FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
 import { format } from 'date-fns';
 
 export default function NewTrade() {
@@ -15,7 +16,8 @@ export default function NewTrade() {
   const { logActivity } = useActivityLogs(user?.id);
 
   const [market, setMarket] = useState('');
-  const [tradeType, setTradeType] = useState('Buy');
+  const [selectedMarket, setSelectedMarket] = useState<any>(null);
+  const [tradeType, setTradeType] = useState('buy');
   const [tradeDate, setTradeDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [entryPrice, setEntryPrice] = useState('');
   const [exitPrice, setExitPrice] = useState('');
@@ -25,6 +27,49 @@ export default function NewTrade() {
   const [isPrivate, setIsPrivate] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [calculatedPL, setCalculatedPL] = useState<number | null>(null);
+  const [recentMarkets, setRecentMarkets] = useState<string[]>([]);
+
+  // Load recent markets from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('recentTradingMarkets');
+    if (saved) {
+      setRecentMarkets(JSON.parse(saved));
+    }
+  }, []);
+
+  // Calculate P&L when prices change
+  useEffect(() => {
+    if (entryPrice && exitPrice && quantity && status === 'closed') {
+      const entry = parseFloat(entryPrice);
+      const exit = parseFloat(exitPrice);
+      const qty = parseFloat(quantity);
+
+      if (!isNaN(entry) && !isNaN(exit) && !isNaN(qty)) {
+        let profitLoss: number;
+        if (tradeType === 'buy') {
+          profitLoss = (exit - entry) * qty;
+        } else {
+          profitLoss = (entry - exit) * qty;
+        }
+        setCalculatedPL(profitLoss);
+      } else {
+        setCalculatedPL(null);
+      }
+    } else {
+      setCalculatedPL(null);
+    }
+  }, [entryPrice, exitPrice, quantity, tradeType, status]);
+
+  const handleMarketSelect = (marketObj: any) => {
+    setSelectedMarket(marketObj);
+    setMarket(marketObj.symbol);
+
+    // Update recent markets
+    const updated = [marketObj.symbol, ...recentMarkets.filter(m => m !== marketObj.symbol)].slice(0, 5);
+    setRecentMarkets(updated);
+    localStorage.setItem('recentTradingMarkets', JSON.stringify(updated));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,19 +87,8 @@ export default function NewTrade() {
     setLoading(true);
     setError(null);
 
-    // Calculate profit/loss if trade is closed
-    let profitLoss = null;
-    if (status === 'closed' && exitPrice) {
-      const entry = parseFloat(entryPrice);
-      const exit = parseFloat(exitPrice);
-      const qty = parseFloat(quantity);
-
-      if (tradeType === 'Buy') {
-        profitLoss = (exit - entry) * qty;
-      } else {
-        profitLoss = (entry - exit) * qty;
-      }
-    }
+    // Use calculated profit/loss
+    const profitLoss = status === 'closed' ? calculatedPL : null;
 
     try {
       // Create the trade using the hook
@@ -109,18 +143,19 @@ export default function NewTrade() {
       <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-sm">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label htmlFor="market" className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
               Market *
             </label>
-            <input
-              id="market"
-              type="text"
+            <MarketSelector
               value={market}
-              onChange={(e) => setMarket(e.target.value)}
-              placeholder="e.g. EUR/USD, BTC/USD, Gold"
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
-              required
+              onChange={handleMarketSelect}
+              recentMarkets={recentMarkets}
             />
+            {selectedMarket && (
+              <p className="mt-1 text-xs text-slate-600">
+                {selectedMarket.name} • {selectedMarket.category}
+              </p>
+            )}
           </div>
 
           <div>
@@ -134,8 +169,8 @@ export default function NewTrade() {
               className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
               required
             >
-              <option value="Buy" className="text-slate-800">Buy</option>
-              <option value="Sell" className="text-slate-800">Sell</option>
+              <option value="buy" className="text-slate-800">Buy (Long)</option>
+              <option value="sell" className="text-slate-800">Sell (Short)</option>
             </select>
           </div>
 
@@ -210,11 +245,61 @@ export default function NewTrade() {
               step="any"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
+              placeholder="e.g. 1000, 0.1, 10"
               className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
               required
             />
           </div>
         </div>
+
+        {/* P&L Calculator */}
+        {status === 'closed' && (
+          <div className="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <div className="flex items-center mb-3">
+              <FiDollarSign className="text-indigo-600 mr-2" />
+              <h3 className="text-lg font-semibold text-slate-900">Profit/Loss Calculator</h3>
+            </div>
+
+            {calculatedPL !== null && (
+              <div className="flex items-center justify-between p-4 bg-white rounded-md border border-slate-200">
+                <div className="flex items-center space-x-3">
+                  {calculatedPL >= 0 ? (
+                    <FiTrendingUp className="w-6 h-6 text-emerald-600" />
+                  ) : (
+                    <FiTrendingDown className="w-6 h-6 text-red-600" />
+                  )}
+                  <div>
+                    <div className="text-sm text-slate-600">Calculated P/L</div>
+                    <div className={`text-xl font-bold ${
+                      calculatedPL >= 0 ? 'text-emerald-600' : 'text-red-600'
+                    }`}>
+                      {calculatedPL >= 0 ? '+' : ''}${calculatedPL.toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+
+                {entryPrice && exitPrice && (
+                  <div className="text-right">
+                    <div className="text-sm text-slate-600">Price Movement</div>
+                    <div className={`text-sm font-medium ${
+                      calculatedPL >= 0 ? 'text-emerald-600' : 'text-red-600'
+                    }`}>
+                      {parseFloat(entryPrice).toFixed(4)} → {parseFloat(exitPrice).toFixed(4)}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {calculatedPL === null && entryPrice && exitPrice && quantity && (
+              <div className="p-4 bg-amber-50 rounded-md border border-amber-200">
+                <p className="text-amber-800 text-sm">
+                  Please ensure all price and quantity fields contain valid numbers.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="mt-6">
           <label htmlFor="notes" className="block text-sm font-medium text-slate-700 mb-1">
