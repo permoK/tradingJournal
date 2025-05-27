@@ -174,32 +174,37 @@ export default function Community() {
               </div>
             ) : (
               filteredProfiles.map(profile => (
-                <div key={profile.id} className="bg-white p-6 rounded-lg shadow-sm">
-                  <div className="flex items-center">
-                    <div className="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xl mr-4">
-                      {profile.username.charAt(0).toUpperCase()}
+                <Link key={profile.id} href={`/community/profile/${profile.id}`}>
+                  <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-slate-200 hover:border-indigo-300">
+                    <div className="flex items-center">
+                      <div className="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xl mr-4">
+                        {profile.username.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-slate-900 hover:text-indigo-700 transition-colors">{profile.username}</h3>
+                        {profile.full_name && (
+                          <p className="text-sm text-slate-600">{profile.full_name}</p>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900">{profile.username}</h3>
-                      {profile.full_name && (
-                        <p className="text-sm text-slate-600">{profile.full_name}</p>
+                    <div className="mt-4">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-600 font-medium">Streak:</span>
+                        <span className="font-medium text-slate-800">{profile.streak_count} days</span>
+                      </div>
+                      <div className="flex justify-between text-sm mt-1">
+                        <span className="text-slate-600 font-medium">Member since:</span>
+                        <span className="font-medium text-slate-800">{format(new Date(profile.created_at), 'MMM yyyy')}</span>
+                      </div>
+                      {profile.bio && (
+                        <p className="mt-3 text-sm text-slate-700 line-clamp-2">{profile.bio}</p>
                       )}
                     </div>
-                  </div>
-                  <div className="mt-4">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-600 font-medium">Streak:</span>
-                      <span className="font-medium text-slate-800">{profile.streak_count} days</span>
+                    <div className="mt-4 text-xs text-indigo-600 font-medium">
+                      Click to view profile →
                     </div>
-                    <div className="flex justify-between text-sm mt-1">
-                      <span className="text-slate-600 font-medium">Member since:</span>
-                      <span className="font-medium text-slate-800">{format(new Date(profile.created_at), 'MMM yyyy')}</span>
-                    </div>
-                    {profile.bio && (
-                      <p className="mt-3 text-sm text-slate-700">{profile.bio}</p>
-                    )}
                   </div>
-                </div>
+                </Link>
               ))
             )}
           </div>
@@ -214,46 +219,46 @@ export default function Community() {
               </div>
             ) : (
               filteredJournals.map(journal => (
-                <div key={journal.id} className="bg-white p-6 rounded-lg shadow-sm">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-lg font-semibold text-slate-900">{journal.title}</h3>
-                      <p className="text-sm text-slate-600 mb-2">
-                        {format(new Date(journal.created_at), 'MMMM d, yyyy')} • by {
-                          profiles.find(p => p.id === journal.user_id)?.username || 'Unknown User'
-                        }
-                      </p>
+                <Link key={journal.id} href={`/community/journal/${journal.id}`}>
+                  <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-slate-200 hover:border-indigo-300">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-slate-900 hover:text-indigo-700 transition-colors">{journal.title}</h3>
+                        <p className="text-sm text-slate-600 mb-2">
+                          {format(new Date(journal.created_at), 'MMMM d, yyyy')} • by {
+                            profiles.find(p => p.id === journal.user_id)?.username || 'Unknown User'
+                          }
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-2 prose max-w-none text-slate-800">
+                      {journal.content.length > 200
+                        ? `${journal.content.substring(0, 200)}...`
+                        : journal.content}
+                    </div>
+
+                    {journal.tags && journal.tags.length > 0 && (
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {journal.tags.slice(0, 3).map(tag => (
+                          <span
+                            key={tag}
+                            className="inline-block px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 rounded-full"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                        {journal.tags.length > 3 && (
+                          <span className="text-xs text-slate-500">+{journal.tags.length - 3} more</span>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="mt-4 text-xs text-indigo-600 font-medium">
+                      Click to read full entry →
                     </div>
                   </div>
-
-                  <div className="mt-2 prose max-w-none text-slate-800">
-                    {journal.content.length > 300
-                      ? `${journal.content.substring(0, 300)}...`
-                      : journal.content}
-                  </div>
-
-                  {journal.content.length > 300 && (
-                    <Link
-                      href={`/community/journal/${journal.id}`}
-                      className="inline-block mt-2 text-indigo-700 font-medium hover:underline"
-                    >
-                      Read more
-                    </Link>
-                  )}
-
-                  {journal.tags && journal.tags.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {journal.tags.map(tag => (
-                        <span
-                          key={tag}
-                          className="inline-block px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 rounded-full"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                </Link>
               ))
             )}
           </div>
@@ -282,28 +287,40 @@ export default function Community() {
                   </thead>
                   <tbody className="bg-white divide-y divide-slate-200">
                     {filteredTrades.map(trade => (
-                      <tr key={trade.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-medium">
-                          {profiles.find(p => p.id === trade.user_id)?.username || 'Unknown User'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">
-                          {format(new Date(trade.trade_date), 'MMM d, yyyy')}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">{trade.market}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">{trade.trade_type}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">{trade.entry_price}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">{trade.exit_price || '-'}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <span className={`${
-                            trade.profit_loss > 0
-                              ? 'text-emerald-600 font-medium'
-                              : trade.profit_loss < 0
-                                ? 'text-red-600 font-medium'
-                                : 'text-slate-800 font-medium'
-                          }`}>
-                            {trade.profit_loss !== null ? (trade.profit_loss > 0 ? '+' : '') + trade.profit_loss.toFixed(2) : '-'}
-                          </span>
-                        </td>
+                      <tr key={trade.id} className="hover:bg-slate-50 cursor-pointer transition-colors">
+                        <Link href={`/community/trade/${trade.id}`} className="contents">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-medium hover:text-indigo-700">
+                            {profiles.find(p => p.id === trade.user_id)?.username || 'Unknown User'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">
+                            {format(new Date(trade.trade_date), 'MMM d, yyyy')}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-medium">{trade.market}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                              trade.trade_type === 'buy'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {trade.trade_type.toUpperCase()}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">{trade.entry_price.toFixed(4)}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">
+                            {trade.exit_price ? trade.exit_price.toFixed(4) : '-'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <span className={`font-medium ${
+                              trade.profit_loss > 0
+                                ? 'text-emerald-600'
+                                : trade.profit_loss < 0
+                                  ? 'text-red-600'
+                                  : 'text-slate-800'
+                            }`}>
+                              {trade.profit_loss !== null ? (trade.profit_loss > 0 ? '+$' : '-$') + Math.abs(trade.profit_loss).toFixed(2) : '-'}
+                            </span>
+                          </td>
+                        </Link>
                       </tr>
                     ))}
                   </tbody>

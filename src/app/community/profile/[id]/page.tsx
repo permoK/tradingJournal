@@ -7,6 +7,7 @@ import { FiArrowLeft, FiCalendar, FiBarChart2, FiFileText, FiAward } from 'react
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase';
 import { Database } from '@/types/database.types';
+import Link from 'next/link';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 type JournalEntry = Database['public']['Tables']['journal_entries']['Row'];
@@ -24,107 +25,56 @@ export default function UserProfile({ params }: { params: { id: string } }) {
   useEffect(() => {
     const fetchProfileData = async () => {
       setLoading(true);
-      
-      // For demo purposes, we'll use mock data
-      // In a real application, you would fetch from Supabase
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data for demonstration
-      const mockProfiles = [
-        {
-          id: '1',
-          created_at: '2023-01-01T00:00:00.000Z',
-          updated_at: '2023-01-01T00:00:00.000Z',
-          username: 'demo_user',
-          full_name: 'Demo User',
-          avatar_url: null,
-          bio: 'I am learning Deriv trading and sharing my journey. Focused on forex and cryptocurrencies.',
-          streak_count: 5,
-          last_active: '2023-06-01T00:00:00.000Z'
+
+      try {
+        // Fetch profile
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', params.id)
+          .single();
+
+        if (profileError || !profileData) {
+          setError('Profile not found');
+          setLoading(false);
+          return;
         }
-      ];
-      
-      const mockJournals = [
-        {
-          id: '1',
-          created_at: '2023-03-10T00:00:00.000Z',
-          user_id: '1',
-          title: 'My First Week of Trading',
-          content: 'This week I started trading on Deriv. I focused on learning the platform and making small trades to get comfortable with the process.',
-          is_private: false,
-          tags: ['beginner', 'learning']
-        },
-        {
-          id: '3',
-          created_at: '2023-03-20T00:00:00.000Z',
-          user_id: '1',
-          title: 'Trading Psychology',
-          content: 'I realized how important emotional control is in trading. Today I made a mistake by letting fear drive my decision to exit a trade too early.',
-          is_private: false,
-          tags: ['psychology', 'emotions']
+
+        setProfile(profileData);
+
+        // Fetch public journal entries
+        const { data: journalData, error: journalError } = await supabase
+          .from('journal_entries')
+          .select('*')
+          .eq('user_id', params.id)
+          .eq('is_private', false)
+          .order('created_at', { ascending: false })
+          .limit(20);
+
+        if (!journalError && journalData) {
+          setPublicJournals(journalData);
         }
-      ];
-      
-      const mockTrades = [
-        {
-          id: '1',
-          created_at: '2023-04-01T00:00:00.000Z',
-          user_id: '1',
-          trade_date: '2023-04-01T00:00:00.000Z',
-          market: 'EUR/USD',
-          trade_type: 'Buy',
-          entry_price: 1.0850,
-          exit_price: 1.0900,
-          quantity: 1,
-          profit_loss: 50,
-          status: 'closed' as const,
-          notes: 'Good trade based on support level',
-          screenshot_url: null,
-          is_private: false
-        },
-        {
-          id: '2',
-          created_at: '2023-04-05T00:00:00.000Z',
-          user_id: '1',
-          trade_date: '2023-04-05T00:00:00.000Z',
-          market: 'BTC/USD',
-          trade_type: 'Sell',
-          entry_price: 28000,
-          exit_price: 27500,
-          quantity: 0.1,
-          profit_loss: 50,
-          status: 'closed' as const,
-          notes: 'Sold at resistance',
-          screenshot_url: null,
-          is_private: false
+
+        // Fetch public trades
+        const { data: tradeData, error: tradeError } = await supabase
+          .from('trades')
+          .select('*')
+          .eq('user_id', params.id)
+          .eq('is_private', false)
+          .order('trade_date', { ascending: false })
+          .limit(20);
+
+        if (!tradeError && tradeData) {
+          setPublicTrades(tradeData);
         }
-      ];
-      
-      const foundProfile = mockProfiles.find(p => p.id === params.id);
-      
-      if (foundProfile) {
-        setProfile(foundProfile as Profile);
-        
-        // Filter journals and trades for this user
-        const userJournals = mockJournals
-          .filter(j => j.user_id === params.id && !j.is_private)
-          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        
-        const userTrades = mockTrades
-          .filter(t => t.user_id === params.id && !t.is_private)
-          .sort((a, b) => new Date(b.trade_date).getTime() - new Date(a.trade_date).getTime());
-        
-        setPublicJournals(userJournals as JournalEntry[]);
-        setPublicTrades(userTrades as Trade[]);
-      } else {
-        setError('User not found');
+      } catch (err) {
+        console.error('Error fetching profile data:', err);
+        setError('Failed to load profile');
       }
-      
+
       setLoading(false);
     };
-    
+
     fetchProfileData();
   }, [params.id]);
 
@@ -166,20 +116,20 @@ export default function UserProfile({ params }: { params: { id: string } }) {
           Back to Community
         </button>
       </div>
-      
+
       {/* Profile Header */}
       <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
           <div className="h-24 w-24 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-4xl">
             {profile.username.charAt(0).toUpperCase()}
           </div>
-          
+
           <div className="flex-1 text-center md:text-left">
             <h1 className="text-2xl font-bold text-gray-900">{profile.username}</h1>
             {profile.full_name && (
               <p className="text-lg text-gray-700">{profile.full_name}</p>
             )}
-            
+
             <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-3">
               <div className="flex items-center text-gray-600">
                 <FiCalendar className="mr-2" />
@@ -190,14 +140,14 @@ export default function UserProfile({ params }: { params: { id: string } }) {
                 <span>{profile.streak_count} day streak</span>
               </div>
             </div>
-            
+
             {profile.bio && (
               <p className="mt-4 text-gray-600">{profile.bio}</p>
             )}
           </div>
         </div>
       </div>
-      
+
       {/* Tabs */}
       <div className="mb-6 border-b border-gray-200">
         <nav className="-mb-px flex space-x-8">
@@ -225,7 +175,7 @@ export default function UserProfile({ params }: { params: { id: string } }) {
           </button>
         </nav>
       </div>
-      
+
       {/* Tab Content */}
       <div>
         {/* Journals Tab */}
@@ -237,42 +187,42 @@ export default function UserProfile({ params }: { params: { id: string } }) {
               </div>
             ) : (
               publicJournals.map(journal => (
-                <div key={journal.id} className="bg-white p-6 rounded-lg shadow-sm">
-                  <div>
-                    <h3 className="text-lg font-semibold">{journal.title}</h3>
-                    <p className="text-sm text-gray-500 mb-2">
-                      {format(new Date(journal.created_at), 'MMMM d, yyyy')}
-                    </p>
-                  </div>
-                  
-                  <div className="mt-2 prose max-w-none">
-                    {journal.content.length > 200 
-                      ? `${journal.content.substring(0, 200)}...` 
-                      : journal.content}
-                  </div>
-                  
-                  {journal.content.length > 200 && (
-                    <button
-                      onClick={() => router.push(`/community/journal/${journal.id}`)}
-                      className="inline-block mt-2 text-blue-600 hover:underline"
-                    >
-                      Read more
-                    </button>
-                  )}
-                  
-                  {journal.tags && journal.tags.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {journal.tags.map(tag => (
-                        <span
-                          key={tag}
-                          className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full"
-                        >
-                          {tag}
-                        </span>
-                      ))}
+                <Link key={journal.id} href={`/community/journal/${journal.id}`}>
+                  <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-slate-200 hover:border-indigo-300">
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-900 hover:text-indigo-700 transition-colors">{journal.title}</h3>
+                      <p className="text-sm text-slate-500 mb-2">
+                        {format(new Date(journal.created_at), 'MMMM d, yyyy')}
+                      </p>
                     </div>
-                  )}
-                </div>
+
+                    <div className="mt-2 prose max-w-none text-slate-800">
+                      {journal.content.length > 200
+                        ? `${journal.content.substring(0, 200)}...`
+                        : journal.content}
+                    </div>
+
+                    {journal.tags && journal.tags.length > 0 && (
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {journal.tags.slice(0, 3).map(tag => (
+                          <span
+                            key={tag}
+                            className="inline-block px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 rounded-full"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                        {journal.tags.length > 3 && (
+                          <span className="text-xs text-slate-500">+{journal.tags.length - 3} more</span>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="mt-4 text-xs text-indigo-600 font-medium">
+                      Click to read full entry →
+                    </div>
+                  </div>
+                </Link>
               ))
             )}
           </div>
@@ -299,34 +249,44 @@ export default function UserProfile({ params }: { params: { id: string } }) {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white divide-y divide-slate-200">
                     {publicTrades.map(trade => (
-                      <tr key={trade.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {format(new Date(trade.trade_date), 'MMM d, yyyy')}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{trade.market}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{trade.trade_type}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{trade.entry_price}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{trade.exit_price || '-'}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <span className={`${
-                            trade.profit_loss > 0 
-                              ? 'text-green-600' 
-                              : trade.profit_loss < 0 
-                                ? 'text-red-600' 
-                                : 'text-gray-900'
-                          }`}>
-                            {trade.profit_loss !== null ? (trade.profit_loss > 0 ? '+' : '') + trade.profit_loss.toFixed(2) : '-'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            trade.status === 'open' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
-                          }`}>
-                            {trade.status}
-                          </span>
-                        </td>
+                      <tr key={trade.id} className="hover:bg-slate-50 cursor-pointer transition-colors">
+                        <Link href={`/community/trade/${trade.id}`} className="contents">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">
+                            {format(new Date(trade.trade_date), 'MMM d, yyyy')}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 hover:text-indigo-700">{trade.market}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                              trade.trade_type === 'buy' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+                            }`}>
+                              {trade.trade_type.toUpperCase()}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">{trade.entry_price.toFixed(4)}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">
+                            {trade.exit_price ? trade.exit_price.toFixed(4) : '-'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <span className={`font-medium ${
+                              trade.profit_loss > 0
+                                ? 'text-emerald-600'
+                                : trade.profit_loss < 0
+                                  ? 'text-red-600'
+                                  : 'text-slate-800'
+                            }`}>
+                              {trade.profit_loss !== null ? (trade.profit_loss > 0 ? '+$' : '-$') + Math.abs(trade.profit_loss).toFixed(2) : '-'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              trade.status === 'open' ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800'
+                            }`}>
+                              {trade.status}
+                            </span>
+                          </td>
+                        </Link>
                       </tr>
                     ))}
                   </tbody>
