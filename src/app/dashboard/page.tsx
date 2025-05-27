@@ -39,7 +39,8 @@ export default function Dashboard() {
   const [showWelcome, setShowWelcome] = useState(false);
 
   // Dashboard filter states
-  const [dateFilter, setDateFilter] = useState('7d'); // 7d, 30d, 3m, all
+  const [dateFilter, setDateFilter] = useState('7d'); // 7d, 30d, 3m, all, specific
+  const [specificDate, setSpecificDate] = useState('');
   const [marketFilter, setMarketFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   // Check if user is new (no activity, no progress, no profile data)
@@ -56,24 +57,32 @@ export default function Dashboard() {
     let filtered = [...trades];
 
     // Date filter
-    const now = new Date();
-    let startDate: Date;
+    if (dateFilter === 'specific' && specificDate) {
+      // Filter for specific date
+      const selectedDate = new Date(specificDate);
+      filtered = filtered.filter(trade => {
+        const tradeDate = new Date(trade.trade_date);
+        return tradeDate.toDateString() === selectedDate.toDateString();
+      });
+    } else if (dateFilter !== 'all') {
+      // Range-based filtering
+      const now = new Date();
+      let startDate: Date;
 
-    switch (dateFilter) {
-      case '7d':
-        startDate = subDays(now, 7);
-        break;
-      case '30d':
-        startDate = subDays(now, 30);
-        break;
-      case '3m':
-        startDate = subMonths(now, 3);
-        break;
-      default:
-        startDate = new Date(0); // All time
-    }
+      switch (dateFilter) {
+        case '7d':
+          startDate = subDays(now, 7);
+          break;
+        case '30d':
+          startDate = subDays(now, 30);
+          break;
+        case '3m':
+          startDate = subMonths(now, 3);
+          break;
+        default:
+          startDate = new Date(0); // All time
+      }
 
-    if (dateFilter !== 'all') {
       filtered = filtered.filter(trade => new Date(trade.trade_date) >= startDate);
     }
 
@@ -230,56 +239,106 @@ export default function Dashboard() {
     <AppLayout>
       {showWelcome && <NewUserWelcome onDismiss={() => setShowWelcome(false)} />}
 
-      <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Trading Dashboard</h1>
-        <p className="text-slate-700 font-medium text-sm sm:text-base">
-          {format(new Date(), 'EEEE, MMMM d, yyyy')}
-        </p>
+      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Trading Dashboard</h1>
+          <p className="text-slate-700 font-medium text-sm sm:text-base">
+            {format(new Date(), 'EEEE, MMMM d, yyyy')}
+          </p>
+        </div>
+
+        {/* Minimal Search Bar */}
+        <div className="mt-4 sm:mt-0 w-full sm:w-auto">
+          <div className="relative">
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Search trades, markets..."
+              className="w-full sm:w-64 pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  const searchTerm = (e.target as HTMLInputElement).value;
+                  if (searchTerm.trim()) {
+                    router.push(`/trading?search=${encodeURIComponent(searchTerm)}`);
+                  }
+                }
+              }}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Filter Controls */}
       <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm mb-6 border border-slate-200">
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
             <FiFilter className="text-slate-600" />
             <h2 className="text-lg font-semibold text-slate-900">Filters</h2>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Date Filter */}
-            <select
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              className="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-            >
-              <option value="7d">Last 7 Days</option>
-              <option value="30d">Last 30 Days</option>
-              <option value="3m">Last 3 Months</option>
-              <option value="all">All Time</option>
-            </select>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Date Range</label>
+              <select
+                value={dateFilter}
+                onChange={(e) => {
+                  setDateFilter(e.target.value);
+                  if (e.target.value !== 'specific') {
+                    setSpecificDate('');
+                  }
+                }}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white text-slate-900"
+              >
+                <option value="7d">Last 7 Days</option>
+                <option value="30d">Last 30 Days</option>
+                <option value="3m">Last 3 Months</option>
+                <option value="specific">Specific Date</option>
+                <option value="all">All Time</option>
+              </select>
+            </div>
+
+            {/* Specific Date Picker */}
+            {dateFilter === 'specific' && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Select Date</label>
+                <input
+                  type="date"
+                  value={specificDate}
+                  onChange={(e) => setSpecificDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white text-slate-900"
+                />
+              </div>
+            )}
 
             {/* Market Filter */}
-            <select
-              value={marketFilter}
-              onChange={(e) => setMarketFilter(e.target.value)}
-              className="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-            >
-              <option value="all">All Markets</option>
-              {availableMarkets.map(market => (
-                <option key={market} value={market}>{market}</option>
-              ))}
-            </select>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Market</label>
+              <select
+                value={marketFilter}
+                onChange={(e) => setMarketFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white text-slate-900"
+              >
+                <option value="all">All Markets</option>
+                {availableMarkets.map(market => (
+                  <option key={market} value={market}>{market}</option>
+                ))}
+              </select>
+            </div>
 
             {/* Status Filter */}
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-            >
-              <option value="all">All Status</option>
-              <option value="open">Open</option>
-              <option value="closed">Closed</option>
-            </select>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Status</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white text-slate-900"
+              >
+                <option value="all">All Status</option>
+                <option value="open">Open</option>
+                <option value="closed">Closed</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -294,7 +353,9 @@ export default function Dashboard() {
               <p className="text-sm text-slate-600">
                 {dateFilter === 'all' ? 'All time' :
                  dateFilter === '7d' ? 'Last 7 days' :
-                 dateFilter === '30d' ? 'Last 30 days' : 'Last 3 months'}
+                 dateFilter === '30d' ? 'Last 30 days' :
+                 dateFilter === '3m' ? 'Last 3 months' :
+                 dateFilter === 'specific' && specificDate ? format(new Date(specificDate), 'MMMM dd, yyyy') : 'Select a date'}
               </p>
             </div>
             <div className="text-right">
@@ -396,10 +457,10 @@ export default function Dashboard() {
             <h2 className="text-lg font-semibold text-slate-900">Recent Trades</h2>
             <p className="text-sm text-slate-600">
               Showing {filteredTrades.length} trades
-              {dateFilter !== 'all' && ` from ${
-                dateFilter === '7d' ? 'last 7 days' :
-                dateFilter === '30d' ? 'last 30 days' : 'last 3 months'
-              }`}
+              {dateFilter === 'specific' && specificDate ? ` for ${format(new Date(specificDate), 'MMMM dd, yyyy')}` :
+               dateFilter === '7d' ? ' from last 7 days' :
+               dateFilter === '30d' ? ' from last 30 days' :
+               dateFilter === '3m' ? ' from last 3 months' : ''}
             </p>
           </div>
           <Link
@@ -512,6 +573,15 @@ export default function Dashboard() {
             </Link>
           </div>
         )}
+      </div>
+
+      {/* Activity Heatmap */}
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 mb-8">
+        <div className="flex items-center mb-4">
+          <FiCalendar className="text-indigo-700 mr-2" />
+          <h2 className="text-lg font-semibold text-slate-900">Activity Streak</h2>
+        </div>
+        {user && <StreakHeatmap userId={user.id} />}
       </div>
 
       {/* Quick Actions */}
