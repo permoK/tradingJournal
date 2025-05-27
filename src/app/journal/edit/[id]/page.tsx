@@ -107,10 +107,10 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
   return (
     <AppLayout>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Edit Journal Entry</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Edit Journal Entry</h1>
         <button
           onClick={() => router.push('/journal')}
-          className="flex items-center px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+          className="flex items-center px-3 py-2 border border-slate-300 rounded-md hover:bg-slate-50 text-slate-700"
         >
           <FiX className="mr-2" />
           Cancel
@@ -118,42 +118,44 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
       </div>
 
       {error && (
-        <div className="p-4 mb-6 bg-red-100 text-red-700 rounded-md">
+        <div className="p-4 mb-6 bg-red-50 border border-red-200 text-red-800 rounded-md">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-sm">
+      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
         <div className="mb-4">
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-            Title
+          <label htmlFor="title" className="block text-sm font-medium text-slate-700 mb-1">
+            Title *
           </label>
           <input
             id="title"
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter a descriptive title for your journal entry"
+            className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
             required
           />
         </div>
 
         <div className="mb-4">
-          <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
-            Content
+          <label htmlFor="content" className="block text-sm font-medium text-slate-700 mb-1">
+            Content *
           </label>
           <textarea
             id="content"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={12}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Share your trading insights, analysis, lessons learned, or market observations..."
+            className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
             required
           />
         </div>
 
         <div className="mb-4">
-          <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="tags" className="block text-sm font-medium text-slate-700 mb-1">
             Tags (comma separated)
           </label>
           <input
@@ -161,8 +163,8 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
             type="text"
             value={tags}
             onChange={(e) => setTags(e.target.value)}
-            placeholder="e.g. forex, analysis, psychology"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="e.g. forex, analysis, psychology, strategy"
+            className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
           />
         </div>
 
@@ -172,9 +174,9 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
               type="checkbox"
               checked={isPrivate}
               onChange={(e) => setIsPrivate(e.target.checked)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-slate-300 rounded"
             />
-            <span className="ml-2 text-sm text-gray-700">Make this entry private</span>
+            <span className="ml-2 text-sm text-slate-700 font-medium">Make this entry private</span>
           </label>
         </div>
 
@@ -182,7 +184,7 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
           <button
             type="submit"
             disabled={loading}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+            className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 transition-colors"
           >
             <FiSave className="mr-2" />
             {loading ? 'Saving...' : 'Save Changes'}

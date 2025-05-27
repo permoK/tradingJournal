@@ -141,15 +141,17 @@ function JournalContent() {
                 <div className="flex gap-2">
                   <Link
                     href={`/journal/edit/${entry.id}`}
-                    className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                    className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors"
+                    title="Edit entry"
                   >
-                    <FiEdit2 />
+                    <FiEdit2 size={16} />
                   </Link>
                   <button
                     onClick={() => deleteEntry(entry.id)}
-                    className="p-1 text-red-600 hover:bg-red-50 rounded"
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                    title="Delete entry"
                   >
-                    <FiTrash2 />
+                    <FiTrash2 size={16} />
                   </button>
                 </div>
               </div>
@@ -174,7 +176,7 @@ function JournalContent() {
                   {entry.tags.map(tag => (
                     <span
                       key={tag}
-                      className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full"
+                      className="inline-block px-3 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 rounded-full"
                     >
                       {tag}
                     </span>

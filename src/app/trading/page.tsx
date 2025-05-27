@@ -156,11 +156,11 @@ export default function Trading() {
             <select
               value={marketFilter}
               onChange={(e) => setMarketFilter(e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full p-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
             >
-              <option value="all">All Markets</option>
+              <option value="all" className="text-slate-800">All Markets</option>
               {markets.map(market => (
-                <option key={market} value={market}>{market}</option>
+                <option key={market} value={market} className="text-slate-800">{market}</option>
               ))}
             </select>
           </div>
@@ -171,11 +171,11 @@ export default function Trading() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full p-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
             >
-              <option value="all">All Statuses</option>
-              <option value="open">Open</option>
-              <option value="closed">Closed</option>
+              <option value="all" className="text-slate-800">All Statuses</option>
+              <option value="open" className="text-slate-800">Open</option>
+              <option value="closed" className="text-slate-800">Closed</option>
             </select>
           </div>
           <div className="flex items-end">

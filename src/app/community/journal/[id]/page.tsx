@@ -64,7 +64,7 @@ export default function CommunityJournalView({ params }: { params: { id: string 
     return (
       <AppLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="w-12 h-12 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
         </div>
       </AppLayout>
     );
@@ -73,12 +73,12 @@ export default function CommunityJournalView({ params }: { params: { id: string 
   if (error || !entry) {
     return (
       <AppLayout>
-        <div className="bg-white p-6 rounded-lg shadow-sm text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Entry Not Found</h1>
-          <p className="text-gray-600 mb-4">The journal entry you're looking for doesn't exist or is private.</p>
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 text-center">
+          <h1 className="text-2xl font-bold text-slate-900 mb-4">Entry Not Found</h1>
+          <p className="text-slate-600 mb-4">The journal entry you're looking for doesn't exist or is private.</p>
           <button
             onClick={() => router.push('/community')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
           >
             Back to Community
           </button>
@@ -92,37 +92,39 @@ export default function CommunityJournalView({ params }: { params: { id: string 
       <div className="mb-6">
         <button
           onClick={() => router.push('/community')}
-          className="flex items-center text-blue-600 hover:underline mb-4"
+          className="flex items-center text-indigo-600 hover:text-indigo-800 mb-4 font-medium transition-colors"
         >
           <FiArrowLeft className="mr-2" />
           Back to Community
         </button>
 
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{entry.title}</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">{entry.title}</h1>
+          <p className="text-slate-600 text-lg">
             {format(new Date(entry.created_at), 'MMMM d, yyyy')}
             {author && ` • by ${author.username}`}
           </p>
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-        <div className="prose max-w-none">
+      <div className="bg-white p-8 rounded-lg shadow-sm border border-slate-200 mb-6">
+        <div className="prose prose-slate max-w-none">
           {entry.content.split('\n').map((paragraph, index) => (
-            <p key={index}>{paragraph}</p>
+            <p key={index} className="text-slate-800 leading-relaxed mb-4 text-base">
+              {paragraph || '\u00A0'}
+            </p>
           ))}
         </div>
       </div>
 
       {entry.tags && entry.tags.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-2">Tags</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-3">Tags</h2>
           <div className="flex flex-wrap gap-2">
             {entry.tags.map(tag => (
               <span
                 key={tag}
-                className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full"
+                className="inline-block px-3 py-1 text-sm font-medium bg-indigo-100 text-indigo-800 rounded-full"
               >
                 {tag}
               </span>
@@ -132,20 +134,23 @@ export default function CommunityJournalView({ params }: { params: { id: string 
       )}
 
       {author && (
-        <div className="bg-gray-50 p-6 rounded-lg">
-          <h2 className="text-lg font-semibold mb-2">Author</h2>
-          <div className="flex items-center">
-            <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xl mr-4">
+        <div className="bg-slate-50 p-6 rounded-lg border border-slate-200">
+          <h2 className="text-lg font-semibold text-slate-900 mb-3">About the Author</h2>
+          <div className="flex items-start space-x-4">
+            <div className="h-16 w-16 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-2xl">
               {author.username.charAt(0).toUpperCase()}
             </div>
-            <div>
-              <p className="font-medium">{author.username}</p>
+            <div className="flex-1">
+              <p className="font-semibold text-slate-900 text-lg">{author.username}</p>
               {author.full_name && (
-                <p className="text-sm text-gray-500">{author.full_name}</p>
+                <p className="text-slate-600 mb-2">{author.full_name}</p>
               )}
               {author.bio && (
-                <p className="text-sm text-gray-600 mt-1">{author.bio}</p>
+                <p className="text-slate-700 leading-relaxed">{author.bio}</p>
               )}
+              <div className="mt-3 text-sm text-slate-500">
+                Member since {format(new Date(author.created_at), 'MMMM yyyy')} • {author.streak_count} day streak
+              </div>
             </div>
           </div>
         </div>

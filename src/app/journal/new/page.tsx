@@ -81,12 +81,12 @@ export default function NewJournalEntry() {
       </div>
 
       {error && (
-        <div className="p-4 mb-6 bg-red-100 text-red-700 rounded-md">
+        <div className="p-4 mb-6 bg-red-50 border border-red-200 text-red-800 rounded-md">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-sm">
+      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
         <div className="mb-4">
           <label htmlFor="title" className="block text-sm font-medium text-slate-700 mb-1">
             Title
