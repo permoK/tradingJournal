@@ -78,7 +78,20 @@ The schema includes:
 - ✅ Default learning topics
 - ✅ Activity tracking for streaks
 
-### 6. Configure URL Redirects
+### 6. Set Up Storage Buckets
+
+The app requires storage buckets for file uploads:
+
+1. Go to your Supabase dashboard
+2. Navigate to Storage
+3. Run the SQL from `storage-setup.sql` in the SQL Editor to create buckets
+4. Set up RLS policies for each bucket as documented in the storage-setup.sql file
+
+This creates:
+- `avatars` bucket for user profile pictures
+- `trade-screenshots` bucket for trade images
+
+### 7. Configure URL Redirects
 
 In your Supabase dashboard:
 

@@ -344,6 +344,29 @@ export function useTrades(userId: string | undefined, includePrivate = true) {
     }
   };
 
+  const createMultipleTrades = async (trades: Omit<Database['public']['Tables']['trades']['Insert'], 'user_id' | 'id' | 'created_at' | 'updated_at'>[]) => {
+    if (!userId) return { error: 'No user ID provided' };
+
+    try {
+      const tradesWithUserId = trades.map(trade => ({
+        ...trade,
+        user_id: userId,
+      }));
+
+      const { data, error } = await supabase
+        .from('trades')
+        .insert(tradesWithUserId)
+        .select();
+
+      if (error) throw error;
+
+      setTrades(prev => [...data, ...prev]);
+      return { data, error: null };
+    } catch (err: any) {
+      return { data: null, error: err.message };
+    }
+  };
+
   const updateTrade = async (tradeId: string, updates: Partial<Database['public']['Tables']['trades']['Update']>) => {
     try {
       const { data, error } = await supabase
@@ -378,7 +401,7 @@ export function useTrades(userId: string | undefined, includePrivate = true) {
     }
   };
 
-  return { trades, loading, error, createTrade, updateTrade, deleteTrade };
+  return { trades, loading, error, createTrade, createMultipleTrades, updateTrade, deleteTrade };
 }
 
 // Hook for fetching activity logs (for streak tracking)
