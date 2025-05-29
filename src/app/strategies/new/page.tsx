@@ -16,7 +16,7 @@ export default function NewStrategy() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [details, setDetails] = useState('');
@@ -26,7 +26,7 @@ export default function NewStrategy() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!user) {
       setError('You must be logged in to create a strategy');
       return;
@@ -114,7 +114,7 @@ export default function NewStrategy() {
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-900 bg-white"
                   placeholder="e.g., Breakout Strategy, Moving Average Crossover"
                   required
                 />
@@ -129,7 +129,7 @@ export default function NewStrategy() {
                   id="category"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-900 bg-white"
                   placeholder="e.g., Scalping, Swing Trading, Day Trading"
                 />
               </div>
@@ -143,7 +143,7 @@ export default function NewStrategy() {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-900 bg-white"
                   placeholder="Brief overview of your strategy..."
                 />
               </div>
@@ -157,7 +157,7 @@ export default function NewStrategy() {
                   id="imageUrl"
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-900 bg-white"
                   placeholder="https://example.com/strategy-chart.png"
                 />
                 <p className="text-xs text-slate-500 mt-1">
@@ -194,10 +194,10 @@ export default function NewStrategy() {
                   value={details}
                   onChange={(e) => setDetails(e.target.value)}
                   rows={12}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-900 bg-white"
                   placeholder="Detailed explanation of your strategy including:
 - Entry conditions
-- Exit conditions  
+- Exit conditions
 - Risk management rules
 - Market conditions
 - Timeframes

@@ -99,11 +99,11 @@ export default function Strategies() {
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-900 bg-white"
             >
-              <option value="all">All Strategies</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
+              <option value="all" className="text-slate-900">All Strategies</option>
+              <option value="active" className="text-slate-900">Active</option>
+              <option value="inactive" className="text-slate-900">Inactive</option>
             </select>
           </div>
 
@@ -112,11 +112,11 @@ export default function Strategies() {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-900 bg-white"
             >
-              <option value="all">All Categories</option>
+              <option value="all" className="text-slate-900">All Categories</option>
               {categories.map(category => (
-                <option key={category} value={category}>{category}</option>
+                <option key={category} value={category} className="text-slate-900">{category}</option>
               ))}
             </select>
           </div>
