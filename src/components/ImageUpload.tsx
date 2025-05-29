@@ -10,6 +10,10 @@ interface ImageUploadProps {
   userId: string;
   disabled?: boolean;
   className?: string;
+  bucket?: 'trade-screenshots' | 'strategy-images';
+  label?: string;
+  description?: string;
+  maxSizeMB?: number;
 }
 
 export default function ImageUpload({
@@ -17,7 +21,11 @@ export default function ImageUpload({
   currentImage,
   userId,
   disabled = false,
-  className = ''
+  className = '',
+  bucket = 'trade-screenshots',
+  label = 'Trade Screenshot (Optional)',
+  description = 'PNG, JPG up to 10MB',
+  maxSizeMB = 10
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +42,7 @@ export default function ImageUpload({
 
       // Upload the file directly - no need to check bucket existence
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('trade-screenshots')
+        .from(bucket)
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: true // Allow overwriting existing files
@@ -47,7 +55,7 @@ export default function ImageUpload({
 
       // Get the public URL
       const { data } = supabase.storage
-        .from('trade-screenshots')
+        .from(bucket)
         .getPublicUrl(filePath);
 
       return data.publicUrl;
@@ -57,11 +65,11 @@ export default function ImageUpload({
 
       // Handle specific Supabase storage errors
       if (error.message?.includes('Bucket not found') || error.message?.includes('bucket')) {
-        errorMessage = 'Storage bucket "trade-screenshots" not found. Please create it in your Supabase Dashboard under Storage section.';
+        errorMessage = `Storage bucket "${bucket}" not found. Please create it in your Supabase Dashboard under Storage section.`;
       } else if (error.message?.includes('policy') || error.message?.includes('permission') || error.message?.includes('RLS')) {
         errorMessage = 'Permission denied. Please check storage permissions and RLS policies.';
       } else if (error.message?.includes('size') || error.message?.includes('too large')) {
-        errorMessage = 'File too large. Maximum size is 10MB.';
+        errorMessage = `File too large. Maximum size is ${maxSizeMB}MB.`;
       } else if (error.message?.includes('Invalid file type') || error.message?.includes('mime')) {
         errorMessage = 'Invalid file type. Please upload a valid image file.';
       } else if (error.message) {
@@ -87,9 +95,9 @@ export default function ImageUpload({
       return;
     }
 
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      setError('Image must be less than 10MB');
+    // Validate file size
+    if (file.size > maxSizeMB * 1024 * 1024) {
+      setError(`Image must be less than ${maxSizeMB}MB`);
       return;
     }
 
@@ -107,7 +115,7 @@ export default function ImageUpload({
   return (
     <div className={`space-y-2 ${className}`}>
       <label className="block text-sm font-medium text-slate-700">
-        Trade Screenshot (Optional)
+        {label}
       </label>
 
       {currentImage ? (
@@ -115,7 +123,7 @@ export default function ImageUpload({
           <div className="w-full max-w-md border border-slate-300 rounded-lg overflow-hidden">
             <img
               src={currentImage}
-              alt="Trade screenshot"
+              alt={bucket === 'strategy-images' ? 'Strategy image' : 'Trade screenshot'}
               className="w-full h-48 object-cover"
             />
           </div>
@@ -144,8 +152,10 @@ export default function ImageUpload({
             ) : (
               <div className="flex flex-col items-center">
                 <FiCamera className="w-8 h-8 mb-2" />
-                <span className="text-sm font-medium">Upload Screenshot</span>
-                <span className="text-xs">PNG, JPG up to 10MB</span>
+                <span className="text-sm font-medium">
+                  {bucket === 'strategy-images' ? 'Upload Strategy Image' : 'Upload Screenshot'}
+                </span>
+                <span className="text-xs">{description}</span>
               </div>
             )}
           </button>

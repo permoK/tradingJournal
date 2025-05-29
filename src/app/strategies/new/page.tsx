@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStrategies, useActivityLogs } from '@/lib/hooks';
 import AppLayout from '@/components/AppLayout';
+import ImageUpload from '@/components/ImageUpload';
 import { FiArrowLeft, FiUpload, FiX } from 'react-icons/fi';
 import Link from 'next/link';
 
@@ -148,22 +149,23 @@ export default function NewStrategy() {
                 />
               </div>
 
-              <div>
-                <label htmlFor="imageUrl" className="block text-sm font-medium text-slate-700 mb-2">
-                  Strategy Image URL
-                </label>
-                <input
-                  type="url"
-                  id="imageUrl"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-900 bg-white"
-                  placeholder="https://example.com/strategy-chart.png"
-                />
-                <p className="text-xs text-slate-500 mt-1">
-                  Optional: Add a chart or diagram that represents your strategy
-                </p>
-              </div>
+              {/* Strategy Image Upload */}
+              {user && (
+                <div>
+                  <ImageUpload
+                    onImageUpload={setImageUrl}
+                    currentImage={imageUrl}
+                    userId={user.id}
+                    bucket="strategy-images"
+                    label="Strategy Image (Optional)"
+                    description="PNG, JPG up to 5MB"
+                    maxSizeMB={5}
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Add a chart, diagram, or visual that represents your strategy
+                  </p>
+                </div>
+              )}
 
               <div>
                 <label className="flex items-center">
@@ -206,23 +208,7 @@ export default function NewStrategy() {
                 />
               </div>
 
-              {imageUrl && (
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Image Preview
-                  </label>
-                  <div className="border border-slate-200 rounded-md p-2">
-                    <img
-                      src={imageUrl}
-                      alt="Strategy preview"
-                      className="w-full h-32 object-cover rounded"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
+
             </div>
           </div>
 
