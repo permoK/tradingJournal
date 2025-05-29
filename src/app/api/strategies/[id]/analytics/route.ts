@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 
 export async function GET(
   request: NextRequest,
@@ -7,13 +8,25 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const supabase = createClient();
-    
-    // Get strategy details
+    const cookieStore = await cookies();
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+
+    // Get the current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    // Get strategy details and verify ownership
     const { data: strategy, error: strategyError } = await supabase
       .from('strategies')
       .select('*')
       .eq('id', id)
+      .eq('user_id', user.id)
       .single();
 
     if (strategyError || !strategy) {
@@ -23,11 +36,12 @@ export async function GET(
       );
     }
 
-    // Get all trades for this strategy
+    // Get all trades for this strategy (only user's trades)
     const { data: trades, error: tradesError } = await supabase
       .from('trades')
       .select('*')
       .eq('strategy_id', id)
+      .eq('user_id', user.id)
       .order('trade_date', { ascending: true });
 
     if (tradesError) {
@@ -66,17 +80,17 @@ export async function GET(
           trades: []
         };
       }
-      
+
       acc[trade.market].totalTrades++;
       acc[trade.market].trades.push(trade);
-      
+
       if (trade.status === 'closed' && trade.profit_loss !== null) {
         if (trade.profit_loss > 0) {
           acc[trade.market].profitableTrades++;
         }
         acc[trade.market].totalProfitLoss += trade.profit_loss;
       }
-      
+
       return acc;
     }, {} as Record<string, any>);
 
@@ -84,8 +98,8 @@ export async function GET(
     Object.keys(marketPerformance).forEach(market => {
       const marketData = marketPerformance[market];
       const closedMarketTrades = marketData.trades.filter((t: any) => t.status === 'closed' && t.profit_loss !== null);
-      marketData.successRate = closedMarketTrades.length > 0 
-        ? (marketData.profitableTrades / closedMarketTrades.length) * 100 
+      marketData.successRate = closedMarketTrades.length > 0
+        ? (marketData.profitableTrades / closedMarketTrades.length) * 100
         : 0;
     });
 
@@ -114,11 +128,11 @@ export async function GET(
       tradeTypePerformance[type].totalProfitLoss += trade.profit_loss!;
     });
 
-    tradeTypePerformance.buy.successRate = tradeTypePerformance.buy.totalTrades > 0 
-      ? (tradeTypePerformance.buy.profitableTrades / tradeTypePerformance.buy.totalTrades) * 100 
+    tradeTypePerformance.buy.successRate = tradeTypePerformance.buy.totalTrades > 0
+      ? (tradeTypePerformance.buy.profitableTrades / tradeTypePerformance.buy.totalTrades) * 100
       : 0;
-    tradeTypePerformance.sell.successRate = tradeTypePerformance.sell.totalTrades > 0 
-      ? (tradeTypePerformance.sell.profitableTrades / tradeTypePerformance.sell.totalTrades) * 100 
+    tradeTypePerformance.sell.successRate = tradeTypePerformance.sell.totalTrades > 0
+      ? (tradeTypePerformance.sell.profitableTrades / tradeTypePerformance.sell.totalTrades) * 100
       : 0;
 
     // Monthly performance
@@ -132,14 +146,14 @@ export async function GET(
           successRate: 0
         };
       }
-      
+
       acc[month].totalTrades++;
       if (trade.profit_loss! > 0) {
         acc[month].profitableTrades++;
       }
       acc[month].totalProfitLoss += trade.profit_loss!;
       acc[month].successRate = (acc[month].profitableTrades / acc[month].totalTrades) * 100;
-      
+
       return acc;
     }, {} as Record<string, any>);
 
@@ -156,8 +170,8 @@ export async function GET(
 
     // Recent performance trend (last 10 trades)
     const recentTrades = closedTrades.slice(-10);
-    const recentSuccessRate = recentTrades.length > 0 
-      ? (recentTrades.filter(trade => trade.profit_loss! > 0).length / recentTrades.length) * 100 
+    const recentSuccessRate = recentTrades.length > 0
+      ? (recentTrades.filter(trade => trade.profit_loss! > 0).length / recentTrades.length) * 100
       : 0;
 
     // Longest winning/losing streaks

@@ -7,9 +7,11 @@ import AppLayout from '@/components/AppLayout';
 import { FiPlus, FiEye, FiEyeOff, FiEdit2, FiTrash2, FiFilter, FiTrendingUp } from 'react-icons/fi';
 import { format, subDays } from 'date-fns';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import TradePerformanceChart from '@/components/TradePerformanceChart';
 
 export default function Trading() {
+  const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { trades, loading: tradesLoading, deleteTrade: deleteTradeHook } = useTrades(user?.id);
 
@@ -230,7 +232,11 @@ export default function Trading() {
                 </thead>
                 <tbody className="bg-white divide-y divide-slate-200">
                   {filteredTrades.map(trade => (
-                    <tr key={trade.id} className="hover:bg-slate-50">
+                    <tr
+                      key={trade.id}
+                      className="hover:bg-slate-50 cursor-pointer"
+                      onClick={() => router.push(`/trading/${trade.id}`)}
+                    >
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 font-medium">
                         {format(new Date(trade.trade_date), 'MMM d, yyyy')}
                         {trade.is_private && (
@@ -265,20 +271,32 @@ export default function Trading() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex justify-end gap-3">
+                        <div className="flex justify-end gap-2">
+                          <Link
+                            href={`/trading/${trade.id}`}
+                            className="text-slate-600 hover:text-indigo-600 p-1 hover:bg-indigo-50 rounded-full"
+                            title="View trade details"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <FiEye size={16} />
+                          </Link>
                           <Link
                             href={`/trading/edit/${trade.id}`}
-                            className="text-indigo-600 hover:text-indigo-900 p-1 hover:bg-indigo-50 rounded-full"
+                            className="text-slate-600 hover:text-amber-600 p-1 hover:bg-amber-50 rounded-full"
                             title="Edit trade"
+                            onClick={(e) => e.stopPropagation()}
                           >
-                            <FiEdit2 size={18} />
+                            <FiEdit2 size={16} />
                           </Link>
                           <button
-                            onClick={() => deleteTrade(trade.id)}
-                            className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded-full"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteTrade(trade.id);
+                            }}
+                            className="text-slate-600 hover:text-red-600 p-1 hover:bg-red-50 rounded-full"
                             title="Delete trade"
                           >
-                            <FiTrash2 size={18} />
+                            <FiTrash2 size={16} />
                           </button>
                         </div>
                       </td>
@@ -291,7 +309,11 @@ export default function Trading() {
             {/* Mobile card view */}
             <div className="md:hidden divide-y divide-slate-200">
               {filteredTrades.map(trade => (
-                <div key={trade.id} className="p-4 hover:bg-slate-50">
+                <div
+                  key={trade.id}
+                  className="p-4 hover:bg-slate-50 cursor-pointer"
+                  onClick={() => router.push(`/trading/${trade.id}`)}
+                >
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <div className="font-medium text-slate-900">
@@ -335,20 +357,32 @@ export default function Trading() {
                     </div>
                   </div>
 
-                  <div className="flex justify-end gap-3 border-t border-slate-100 pt-2">
+                  <div className="flex justify-end gap-2 border-t border-slate-100 pt-2">
+                    <Link
+                      href={`/trading/${trade.id}`}
+                      className="text-slate-600 hover:text-indigo-600 p-2 hover:bg-indigo-50 rounded-full"
+                      title="View trade details"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <FiEye size={16} />
+                    </Link>
                     <Link
                       href={`/trading/edit/${trade.id}`}
-                      className="text-indigo-600 hover:text-indigo-900 p-2 hover:bg-indigo-50 rounded-full"
+                      className="text-slate-600 hover:text-amber-600 p-2 hover:bg-amber-50 rounded-full"
                       title="Edit trade"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <FiEdit2 size={18} />
+                      <FiEdit2 size={16} />
                     </Link>
                     <button
-                      onClick={() => deleteTrade(trade.id)}
-                      className="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded-full"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteTrade(trade.id);
+                      }}
+                      className="text-slate-600 hover:text-red-600 p-2 hover:bg-red-50 rounded-full"
                       title="Delete trade"
                     >
-                      <FiTrash2 size={18} />
+                      <FiTrash2 size={16} />
                     </button>
                   </div>
                 </div>

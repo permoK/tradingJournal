@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
 import { FiArrowLeft, FiTrendingUp, FiTrendingDown, FiBarChart2, FiTarget, FiCalendar, FiDollarSign } from 'react-icons/fi';
@@ -68,6 +68,7 @@ interface StrategyAnalytics {
 
 export default function StrategyAnalytics() {
   const params = useParams();
+  const router = useRouter();
   const { user } = useAuth();
   const [analytics, setAnalytics] = useState<StrategyAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -450,7 +451,11 @@ export default function StrategyAnalytics() {
               </thead>
               <tbody>
                 {analytics.recentTrades.map((trade) => (
-                  <tr key={trade.id} className="border-b border-slate-100">
+                  <tr
+                    key={trade.id}
+                    className="border-b border-slate-100 hover:bg-slate-50 cursor-pointer"
+                    onClick={() => router.push(`/trading/${trade.id}`)}
+                  >
                     <td className="py-2 px-3 font-medium text-slate-900">{trade.market}</td>
                     <td className="py-2 px-3">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${

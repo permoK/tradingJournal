@@ -22,6 +22,8 @@ interface Trade {
   trade_date: string;
   status: 'open' | 'closed';
   notes: string | null;
+  screenshot_url: string | null;
+  is_private: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -118,6 +120,20 @@ export default function TradeDetail() {
           )}
         </div>
       </div>
+
+      {/* Trade Screenshot */}
+      {trade.screenshot_url && (
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 mb-6">
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">Trade Screenshot</h2>
+          <div className="border border-slate-200 rounded-lg overflow-hidden">
+            <img
+              src={trade.screenshot_url}
+              alt="Trade screenshot"
+              className="w-full h-auto max-h-96 object-contain"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Trade Details */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">

@@ -147,7 +147,11 @@ export default function Strategies() {
           </div>
         ) : (
           filteredStrategies.map(strategy => (
-            <div key={strategy.id} className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-slate-200">
+            <div
+              key={strategy.id}
+              className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-slate-200 cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => router.push(`/strategies/${strategy.id}`)}
+            >
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-start gap-3">
@@ -205,6 +209,7 @@ export default function Strategies() {
                     href={`/strategies/${strategy.id}`}
                     className="p-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
                     title="View details"
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <FiEye className="h-4 w-4" />
                   </Link>
@@ -212,6 +217,7 @@ export default function Strategies() {
                     href={`/strategies/${strategy.id}/analytics`}
                     className="p-2 text-slate-600 hover:text-purple-600 hover:bg-purple-50 rounded-md transition-colors"
                     title="View analytics"
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <FiPieChart className="h-4 w-4" />
                   </Link>
@@ -219,11 +225,15 @@ export default function Strategies() {
                     href={`/strategies/edit/${strategy.id}`}
                     className="p-2 text-slate-600 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
                     title="Edit strategy"
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <FiEdit className="h-4 w-4" />
                   </Link>
                   <button
-                    onClick={() => handleDeleteStrategy(strategy.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteStrategy(strategy.id);
+                    }}
                     className="p-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
                     title="Delete strategy"
                   >
