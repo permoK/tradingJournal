@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTrades, useActivityLogs } from '@/lib/hooks';
+import { useTrades, useActivityLogs, useStrategies } from '@/lib/hooks';
 import AppLayout from '@/components/AppLayout';
 import MarketSelector from '@/components/MarketSelector';
 import ImageUpload from '@/components/ImageUpload';
@@ -18,6 +18,7 @@ export default function NewTrade() {
   const { user } = useAuth();
   const { createMultipleTrades } = useTrades(user?.id);
   const { logActivity } = useActivityLogs(user?.id);
+  const { strategies } = useStrategies(user?.id);
 
   // Form state
   const [market, setMarket] = useState('');
@@ -31,6 +32,7 @@ export default function NewTrade() {
   const [notes, setNotes] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
+  const [strategyId, setStrategyId] = useState<string>('');
 
   // UI state
   const [loading, setLoading] = useState(false);
@@ -131,6 +133,7 @@ export default function NewTrade() {
     setNotes('');
     setIsPrivate(false);
     setScreenshotUrl(null);
+    setStrategyId('');
     setError(null);
     setValidationError(null);
     setCalculatedPL(null);
@@ -163,7 +166,8 @@ export default function NewTrade() {
       notes,
       isPrivate,
       screenshotUrl,
-      calculatedPL: status === 'closed' ? calculatedPL : null
+      calculatedPL: status === 'closed' ? calculatedPL : null,
+      strategyId: strategyId || null
     };
 
     if (editingTrade) {
@@ -191,6 +195,7 @@ export default function NewTrade() {
     setNotes(trade.notes);
     setIsPrivate(trade.isPrivate);
     setScreenshotUrl(trade.screenshotUrl || null);
+    setStrategyId(trade.strategyId || '');
 
     // Set selected market if it exists
     const marketInfo = getMarketInfo(trade.market);
@@ -228,7 +233,8 @@ export default function NewTrade() {
         status: trade.status,
         notes: trade.notes.trim() || null,
         screenshot_url: trade.screenshotUrl,
-        is_private: trade.isPrivate
+        is_private: trade.isPrivate,
+        strategy_id: trade.strategyId || null
       }));
 
       const { error } = await createMultipleTrades(tradesToRecord);
@@ -407,6 +413,28 @@ export default function NewTrade() {
                 </div>
               </div>
             )}
+          </div>
+
+          <div className="md:col-span-2">
+            <label htmlFor="strategy" className="block text-sm font-medium text-slate-700 mb-1">
+              Trading Strategy
+            </label>
+            <select
+              id="strategy"
+              value={strategyId}
+              onChange={(e) => setStrategyId(e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
+            >
+              <option value="" className="text-slate-800">No strategy selected</option>
+              {strategies.filter(s => s.is_active).map(strategy => (
+                <option key={strategy.id} value={strategy.id} className="text-slate-800">
+                  {strategy.name} {strategy.category && `(${strategy.category})`}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-slate-600">
+              Optional: Select the trading strategy used for this trade
+            </p>
           </div>
         </div>
 

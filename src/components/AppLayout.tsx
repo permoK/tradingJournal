@@ -27,7 +27,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: FiHome },
-    { name: 'Learning', href: '/learning', icon: FiBook },
+    { name: 'Strategies', href: '/strategies', icon: FiBook },
     { name: 'Trading', href: '/trading', icon: FiBarChart2 },
     { name: 'Journal', href: '/journal', icon: FiFileText },
     { name: 'Community', href: '/community', icon: FiUsers },

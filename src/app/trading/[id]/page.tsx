@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useStrategies } from '@/lib/hooks';
 import AppLayout from '@/components/AppLayout';
 import { FiArrowLeft, FiEdit, FiCalendar, FiBarChart2, FiDollarSign, FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
 import { format } from 'date-fns';
@@ -11,6 +12,7 @@ import Link from 'next/link';
 interface Trade {
   id: string;
   user_id: string;
+  strategy_id: string | null;
   market: string;
   trade_type: 'buy' | 'sell';
   entry_price: number | null;
@@ -28,6 +30,7 @@ export default function TradeDetail() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
+  const { strategies } = useStrategies(user?.id);
   const [trade, setTrade] = useState<Trade | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -103,7 +106,7 @@ export default function TradeDetail() {
               </p>
             </div>
           </div>
-          
+
           {canEdit && (
             <Link
               href={`/trading/edit/${trade.id}`}
@@ -121,53 +124,74 @@ export default function TradeDetail() {
         {/* Basic Information */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
           <h2 className="text-lg font-semibold text-slate-900 mb-4">Trade Information</h2>
-          
+
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-slate-600">Market:</span>
               <span className="font-semibold text-slate-900">{trade.market}</span>
             </div>
-            
+
             <div className="flex justify-between items-center">
               <span className="text-slate-600">Type:</span>
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                trade.trade_type === 'buy' 
-                  ? 'bg-emerald-100 text-emerald-800' 
+                trade.trade_type === 'buy'
+                  ? 'bg-emerald-100 text-emerald-800'
                   : 'bg-red-100 text-red-800'
               }`}>
                 {trade.trade_type?.toUpperCase()}
               </span>
             </div>
-            
+
             <div className="flex justify-between items-center">
               <span className="text-slate-600">Status:</span>
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                trade.status === 'open' 
-                  ? 'bg-blue-100 text-blue-800' 
+                trade.status === 'open'
+                  ? 'bg-blue-100 text-blue-800'
                   : 'bg-slate-100 text-slate-800'
               }`}>
                 {trade.status?.charAt(0).toUpperCase() + trade.status?.slice(1)}
               </span>
             </div>
-            
+
             <div className="flex justify-between items-center">
               <span className="text-slate-600">Entry Price:</span>
               <span className="font-semibold text-slate-900">
                 {trade.entry_price ? `$${trade.entry_price.toFixed(4)}` : '-'}
               </span>
             </div>
-            
+
             <div className="flex justify-between items-center">
               <span className="text-slate-600">Exit Price:</span>
               <span className="font-semibold text-slate-900">
                 {trade.exit_price ? `$${trade.exit_price.toFixed(4)}` : '-'}
               </span>
             </div>
-            
+
             <div className="flex justify-between items-center">
               <span className="text-slate-600">Quantity:</span>
               <span className="font-semibold text-slate-900">
                 {trade.quantity ? trade.quantity.toFixed(4) : '-'}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <span className="text-slate-600">Strategy:</span>
+              <span className="font-semibold text-slate-900">
+                {trade.strategy_id ? (
+                  (() => {
+                    const strategy = strategies.find(s => s.id === trade.strategy_id);
+                    return strategy ? (
+                      <Link
+                        href={`/strategies/${strategy.id}`}
+                        className="text-indigo-600 hover:text-indigo-800 hover:underline"
+                      >
+                        {strategy.name}
+                      </Link>
+                    ) : 'Unknown Strategy';
+                  })()
+                ) : (
+                  <span className="text-slate-500">No strategy</span>
+                )}
               </span>
             </div>
           </div>
@@ -176,7 +200,7 @@ export default function TradeDetail() {
         {/* Performance */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
           <h2 className="text-lg font-semibold text-slate-900 mb-4">Performance</h2>
-          
+
           <div className="text-center mb-6">
             <div className="flex items-center justify-center mb-2">
               {trade.profit_loss !== null ? (
@@ -190,17 +214,17 @@ export default function TradeDetail() {
               ) : (
                 <FiBarChart2 className="text-slate-600 mr-2 h-6 w-6" />
               )}
-              
+
               <span className={`text-3xl font-bold ${
                 trade.profit_loss !== null
-                  ? trade.profit_loss > 0 
-                    ? 'text-emerald-600' 
-                    : trade.profit_loss < 0 
-                    ? 'text-red-600' 
+                  ? trade.profit_loss > 0
+                    ? 'text-emerald-600'
+                    : trade.profit_loss < 0
+                    ? 'text-red-600'
                     : 'text-slate-900'
                   : 'text-slate-900'
               }`}>
-                {trade.profit_loss !== null 
+                {trade.profit_loss !== null
                   ? `${trade.profit_loss > 0 ? '+' : ''}${trade.profit_loss.toFixed(2)}`
                   : '-'
                 }

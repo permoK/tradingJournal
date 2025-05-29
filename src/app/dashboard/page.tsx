@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useProfile, useUserProgress, useLearningTopics, useActivityLogs, useTrades } from '@/lib/hooks';
+import { useProfile, useStrategies, useActivityLogs, useTrades } from '@/lib/hooks';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
 import { FiBook, FiBarChart2, FiFileText, FiUsers, FiAward, FiCalendar, FiSearch, FiTrendingUp, FiTrendingDown, FiFilter, FiEye } from 'react-icons/fi';
@@ -24,14 +24,13 @@ export default function Dashboard() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading } = useProfile(user?.id);
-  const { progress, loading: progressLoading } = useUserProgress(user?.id);
-  const { topics, loading: topicsLoading } = useLearningTopics();
+  const { strategies, loading: strategiesLoading } = useStrategies(user?.id);
   const { activities, loading: activitiesLoading } = useActivityLogs(user?.id);
   const { trades, loading: tradesLoading } = useTrades(user?.id);
 
-  const [completedTopics, setCompletedTopics] = useState(0);
-  const [inProgressTopics, setInProgressTopics] = useState(0);
-  const [notStartedTopics, setNotStartedTopics] = useState(0);
+  const [activeStrategies, setActiveStrategies] = useState(0);
+  const [totalStrategies, setTotalStrategies] = useState(0);
+  const [avgSuccessRate, setAvgSuccessRate] = useState(0);
   const [categories, setCategories] = useState<string[]>([]);
   const [categoryCompletedCounts, setCategoryCompletedCounts] = useState<number[]>([]);
   const [categoryInProgressCounts, setCategoryInProgressCounts] = useState<number[]>([]);
@@ -43,14 +42,14 @@ export default function Dashboard() {
   const [specificDate, setSpecificDate] = useState('');
   const [marketFilter, setMarketFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
-  // Check if user is new (no activity, no progress, no profile data)
+  // Check if user is new (no activity, no strategies, no profile data)
   useEffect(() => {
-    if (!authLoading && !activitiesLoading && !progressLoading && user) {
-      const isNewUser = activities.length === 0 && progress.length === 0 &&
+    if (!authLoading && !activitiesLoading && !strategiesLoading && user) {
+      const isNewUser = activities.length === 0 && strategies.length === 0 &&
                        (!profile || (!profile.bio && !profile.username));
       setShowWelcome(isNewUser);
     }
-  }, [authLoading, activitiesLoading, progressLoading, user, activities, progress, profile]);
+  }, [authLoading, activitiesLoading, strategiesLoading, user, activities, strategies, profile]);
 
   // Filter trades based on selected filters
   const getFilteredTrades = () => {
@@ -124,17 +123,19 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    if (!progressLoading && !topicsLoading && progress && topics) {
-      const completed = progress.filter(p => p.status === 'completed').length;
-      const inProgress = progress.filter(p => p.status === 'in_progress').length;
-      const notStarted = topics.length - completed - inProgress;
+    if (!strategiesLoading && strategies) {
+      const active = strategies.filter(s => s.is_active).length;
+      const total = strategies.length;
+      const avgRate = total > 0
+        ? strategies.reduce((sum, s) => sum + s.success_rate, 0) / total
+        : 0;
 
-      setCompletedTopics(completed);
-      setInProgressTopics(inProgress);
-      setNotStartedTopics(notStarted);
+      setActiveStrategies(active);
+      setTotalStrategies(total);
+      setAvgSuccessRate(avgRate);
 
       // Process category data for the chart
-      const uniqueCategories = Array.from(new Set(topics.map(topic => topic.category)));
+      const uniqueCategories = Array.from(new Set(strategies.map(strategy => strategy.category).filter(Boolean)));
       setCategories(uniqueCategories);
 
       // Calculate counts for each category
@@ -143,29 +144,20 @@ export default function Dashboard() {
       const notStartedByCategory: number[] = [];
 
       uniqueCategories.forEach(category => {
-        const topicsInCategory = topics.filter(topic => topic.category === category);
-        const topicIds = topicsInCategory.map(topic => topic.id);
+        const strategiesInCategory = strategies.filter(strategy => strategy.category === category);
+        const activeCount = strategiesInCategory.filter(s => s.is_active).length;
+        const inactiveCount = strategiesInCategory.length - activeCount;
 
-        const completedCount = progress.filter(p =>
-          topicIds.includes(p.topic_id) && p.status === 'completed'
-        ).length;
-
-        const inProgressCount = progress.filter(p =>
-          topicIds.includes(p.topic_id) && p.status === 'in_progress'
-        ).length;
-
-        const notStartedCount = topicsInCategory.length - completedCount - inProgressCount;
-
-        completedByCategory.push(completedCount);
-        inProgressByCategory.push(inProgressCount);
-        notStartedByCategory.push(notStartedCount);
+        completedByCategory.push(activeCount);
+        inProgressByCategory.push(inactiveCount);
+        notStartedByCategory.push(0); // Not applicable for strategies
       });
 
       setCategoryCompletedCounts(completedByCategory);
       setCategoryInProgressCounts(inProgressByCategory);
       setCategoryNotStartedCounts(notStartedByCategory);
     }
-  }, [progress, topics, progressLoading, topicsLoading]);
+  }, [strategies, strategiesLoading]);
 
   // Chart data for profit/loss visualization
   const profitLossData = {
@@ -211,19 +203,19 @@ export default function Dashboard() {
     },
   };
 
-  const progressData = {
-    labels: ['Completed', 'In Progress', 'Not Started'],
+  const strategiesData = {
+    labels: ['Active Strategies', 'Inactive Strategies'],
     datasets: [
       {
-        data: [completedTopics, inProgressTopics, notStartedTopics],
-        backgroundColor: ['#10B981', '#4F46E5', '#64748B'],
-        borderColor: ['#10B981', '#4F46E5', '#64748B'],
+        data: [activeStrategies, totalStrategies - activeStrategies],
+        backgroundColor: ['#10B981', '#64748B'],
+        borderColor: ['#10B981', '#64748B'],
         borderWidth: 1,
       },
     ],
   };
 
-  const isLoading = authLoading || profileLoading || progressLoading || topicsLoading || activitiesLoading || tradesLoading;
+  const isLoading = authLoading || profileLoading || strategiesLoading || activitiesLoading || tradesLoading;
 
   if (isLoading) {
     return (
@@ -596,9 +588,9 @@ export default function Dashboard() {
             <FiFileText className="text-violet-700 mr-3 text-lg" />
             <span className="text-slate-900 font-medium">Write Journal</span>
           </Link>
-          <Link href="/learning" className="flex items-center p-4 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors border border-indigo-100 hover:border-indigo-200">
+          <Link href="/strategies" className="flex items-center p-4 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors border border-indigo-100 hover:border-indigo-200">
             <FiBook className="text-indigo-700 mr-3 text-lg" />
-            <span className="text-slate-900 font-medium">Continue Learning</span>
+            <span className="text-slate-900 font-medium">Manage Strategies</span>
           </Link>
           <Link href="/community" className="flex items-center p-4 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors border border-amber-100 hover:border-amber-200">
             <FiUsers className="text-amber-700 mr-3 text-lg" />

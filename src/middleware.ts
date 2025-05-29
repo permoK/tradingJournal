@@ -12,7 +12,7 @@ export async function middleware(req: NextRequest) {
   // Protected routes that require authentication
   const protectedRoutes = [
     '/dashboard',
-    '/learning',
+    '/strategies',
     '/journal',
     '/trading',
     '/community',

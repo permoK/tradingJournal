@@ -16,6 +16,7 @@ export interface SavedTrade {
   isPrivate: boolean;
   screenshotUrl?: string | null;
   calculatedPL?: number | null;
+  strategyId?: string | null;
 }
 
 interface SavedTradeCardProps {
@@ -51,15 +52,15 @@ export default function SavedTradeCard({ trade, onEdit, onDelete }: SavedTradeCa
           <div className="flex items-center space-x-2 mb-1">
             <h3 className="font-semibold text-slate-900">{trade.market}</h3>
             <span className={`px-2 py-1 text-xs rounded-full font-medium ${
-              trade.tradeType === 'buy' 
-                ? 'bg-green-100 text-green-800' 
+              trade.tradeType === 'buy'
+                ? 'bg-green-100 text-green-800'
                 : 'bg-red-100 text-red-800'
             }`}>
               {trade.tradeType.toUpperCase()}
             </span>
             <span className={`px-2 py-1 text-xs rounded-full font-medium ${
-              trade.status === 'open' 
-                ? 'bg-blue-100 text-blue-800' 
+              trade.status === 'open'
+                ? 'bg-blue-100 text-blue-800'
                 : 'bg-slate-100 text-slate-800'
             }`}>
               {trade.status.toUpperCase()}
@@ -69,7 +70,7 @@ export default function SavedTradeCard({ trade, onEdit, onDelete }: SavedTradeCa
             {format(new Date(trade.tradeDate), 'MMM d, yyyy')}
           </p>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <button
             onClick={() => onEdit(trade)}

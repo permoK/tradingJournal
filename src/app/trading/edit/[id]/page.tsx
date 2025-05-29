@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTrades, useActivityLogs } from '@/lib/hooks';
+import { useTrades, useActivityLogs, useStrategies } from '@/lib/hooks';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
 import MarketSelector from '@/components/MarketSelector';
@@ -15,6 +15,7 @@ export default function EditTrade({ params }: { params: { id: string } }) {
   const { user } = useAuth();
   const { trades, updateTrade } = useTrades(user?.id);
   const { logActivity } = useActivityLogs(user?.id);
+  const { strategies } = useStrategies(user?.id);
 
   const [market, setMarket] = useState('');
   const [selectedMarket, setSelectedMarket] = useState<any>(null);
@@ -26,6 +27,7 @@ export default function EditTrade({ params }: { params: { id: string } }) {
   const [status, setStatus] = useState('open');
   const [notes, setNotes] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
+  const [strategyId, setStrategyId] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
@@ -118,6 +120,7 @@ export default function EditTrade({ params }: { params: { id: string } }) {
       setStatus(trade.status);
       setNotes(trade.notes || '');
       setIsPrivate(trade.is_private);
+      setStrategyId(trade.strategy_id || '');
       setNotFound(false);
 
       // Set selected market if it exists in our market list
@@ -162,7 +165,8 @@ export default function EditTrade({ params }: { params: { id: string } }) {
         profit_loss: profitLoss,
         status,
         notes: notes.trim() || null,
-        is_private: isPrivate
+        is_private: isPrivate,
+        strategy_id: strategyId || null
       });
 
       if (error) {
@@ -349,6 +353,28 @@ export default function EditTrade({ params }: { params: { id: string } }) {
                 </div>
               </div>
             )}
+          </div>
+
+          <div className="md:col-span-2">
+            <label htmlFor="strategy" className="block text-sm font-medium text-slate-700 mb-1">
+              Trading Strategy
+            </label>
+            <select
+              id="strategy"
+              value={strategyId}
+              onChange={(e) => setStrategyId(e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
+            >
+              <option value="" className="text-slate-800">No strategy selected</option>
+              {strategies.filter(s => s.is_active).map(strategy => (
+                <option key={strategy.id} value={strategy.id} className="text-slate-800">
+                  {strategy.name} {strategy.category && `(${strategy.category})`}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-slate-600">
+              Optional: Select the trading strategy used for this trade
+            </p>
           </div>
         </div>
 
