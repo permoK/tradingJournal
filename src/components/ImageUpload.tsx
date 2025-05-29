@@ -12,12 +12,12 @@ interface ImageUploadProps {
   className?: string;
 }
 
-export default function ImageUpload({ 
-  onImageUpload, 
-  currentImage, 
-  userId, 
+export default function ImageUpload({
+  onImageUpload,
+  currentImage,
+  userId,
   disabled = false,
-  className = '' 
+  className = ''
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,20 +32,7 @@ export default function ImageUpload({
       const fileName = `${userId}-${Date.now()}.${fileExt}`;
       const filePath = `${userId}/${fileName}`;
 
-      // First, check if the bucket exists
-      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-      
-      if (bucketsError) {
-        console.error('Error listing buckets:', bucketsError);
-        throw new Error('Storage not available');
-      }
-
-      const tradeScreenshotsBucket = buckets?.find(bucket => bucket.id === 'trade-screenshots');
-      if (!tradeScreenshotsBucket) {
-        throw new Error('Trade screenshots storage bucket not set up yet. Please create the "trade-screenshots" bucket in your Supabase Dashboard under Storage section.');
-      }
-
-      // Upload the file
+      // Upload the file directly - no need to check bucket existence
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('trade-screenshots')
         .upload(filePath, file, {
@@ -68,12 +55,15 @@ export default function ImageUpload({
       console.error('Error uploading image:', error);
       let errorMessage = 'Failed to upload image';
 
-      if (error.message?.includes('bucket')) {
-        errorMessage = 'Storage bucket not found. Please contact support.';
-      } else if (error.message?.includes('policy')) {
-        errorMessage = 'Permission denied. Please check storage permissions.';
-      } else if (error.message?.includes('size')) {
+      // Handle specific Supabase storage errors
+      if (error.message?.includes('Bucket not found') || error.message?.includes('bucket')) {
+        errorMessage = 'Storage bucket "trade-screenshots" not found. Please create it in your Supabase Dashboard under Storage section.';
+      } else if (error.message?.includes('policy') || error.message?.includes('permission') || error.message?.includes('RLS')) {
+        errorMessage = 'Permission denied. Please check storage permissions and RLS policies.';
+      } else if (error.message?.includes('size') || error.message?.includes('too large')) {
         errorMessage = 'File too large. Maximum size is 10MB.';
+      } else if (error.message?.includes('Invalid file type') || error.message?.includes('mime')) {
+        errorMessage = 'Invalid file type. Please upload a valid image file.';
       } else if (error.message) {
         errorMessage = error.message;
       }
@@ -119,7 +109,7 @@ export default function ImageUpload({
       <label className="block text-sm font-medium text-slate-700">
         Trade Screenshot (Optional)
       </label>
-      
+
       {currentImage ? (
         <div className="relative">
           <div className="w-full max-w-md border border-slate-300 rounded-lg overflow-hidden">
