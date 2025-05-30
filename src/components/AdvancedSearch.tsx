@@ -182,7 +182,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
         });
       }
 
-      // Search community trades
+      // Search community trades (exclude demo trades)
       const { data: communityTrades } = await supabase
         .from('trades')
         .select(`
@@ -190,6 +190,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
           profiles!inner(username)
         `)
         .eq('is_private', false)
+        .eq('is_demo', false)
         .neq('user_id', user.id)
         .ilike('market', `%${term}%`)
         .limit(3);

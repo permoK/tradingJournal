@@ -8,6 +8,9 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const isDemoMode = searchParams.get('isDemoMode') === 'true';
+
     const cookieStore = await cookies();
     const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
 
@@ -36,13 +39,16 @@ export async function GET(
       );
     }
 
-    // Get all trades for this strategy (only user's trades)
-    const { data: trades, error: tradesError } = await supabase
+    // Get trades for this strategy filtered by demo mode
+    let tradesQuery = supabase
       .from('trades')
       .select('*')
       .eq('strategy_id', id)
       .eq('user_id', user.id)
+      .eq('is_demo', isDemoMode)
       .order('trade_date', { ascending: true });
+
+    const { data: trades, error: tradesError } = await tradesQuery;
 
     if (tradesError) {
       console.error('Error fetching trades:', tradesError);

@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTradeMode } from '@/contexts/TradeModeContext';
 import AppLayout from '@/components/AppLayout';
+import TradeModeToggle from '@/components/TradeModeToggle';
 import { FiArrowLeft, FiTrendingUp, FiTrendingDown, FiBarChart2, FiTarget, FiCalendar, FiDollarSign } from 'react-icons/fi';
 import Link from 'next/link';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
@@ -70,6 +72,7 @@ export default function StrategyAnalytics() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
+  const { isDemoMode } = useTradeMode();
   const [analytics, setAnalytics] = useState<StrategyAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,7 +82,7 @@ export default function StrategyAnalytics() {
       if (!params.id) return;
 
       try {
-        const response = await fetch(`/api/strategies/${params.id}/analytics`);
+        const response = await fetch(`/api/strategies/${params.id}/analytics?isDemoMode=${isDemoMode}`);
         if (!response.ok) {
           throw new Error('Failed to fetch analytics');
         }
@@ -93,7 +96,7 @@ export default function StrategyAnalytics() {
     };
 
     fetchAnalytics();
-  }, [params.id]);
+  }, [params.id, isDemoMode]);
 
   if (loading) {
     return (
@@ -188,17 +191,23 @@ export default function StrategyAnalytics() {
   return (
     <AppLayout>
       <div className="mb-4 sm:mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <Link
-            href={`/strategies/${strategy.id}`}
-            className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
-          >
-            <FiArrowLeft className="h-5 w-5" />
-          </Link>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">{strategy.name} Analytics</h1>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <Link
+              href={`/strategies/${strategy.id}`}
+              className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
+            >
+              <FiArrowLeft className="h-5 w-5" />
+            </Link>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">{strategy.name} Analytics</h1>
+          </div>
+          <TradeModeToggle />
         </div>
         <p className="text-slate-700 font-medium text-sm sm:text-base ml-11">
           Comprehensive performance analysis and insights
+          {isDemoMode && (
+            <span className="text-amber-600 font-medium"> • Demo Mode Active</span>
+          )}
         </p>
       </div>
 

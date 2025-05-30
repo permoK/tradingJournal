@@ -279,46 +279,46 @@ export function useTrades(userId: string | undefined, includePrivate = true, isD
   const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
 
-  useEffect(() => {
+  const fetchTrades = async () => {
     if (!userId) {
       setTrades([]);
       setLoading(false);
       return;
     }
 
-    const fetchTrades = async () => {
-      try {
-        setLoading(true);
-        let query = supabase
-          .from('trades')
-          .select('*')
-          .order('trade_date', { ascending: false });
+    try {
+      setLoading(true);
+      let query = supabase
+        .from('trades')
+        .select('*')
+        .order('trade_date', { ascending: false });
 
-        if (includePrivate) {
-          query = query.eq('user_id', userId);
-        } else {
-          query = query.or(`user_id.eq.${userId},is_private.eq.false`);
-        }
-
-        // Filter by demo mode if specified
-        if (isDemoMode !== undefined) {
-          query = query.eq('is_demo', isDemoMode);
-        }
-
-        const { data, error } = await query;
-
-        if (error) throw error;
-
-        setTrades(data || []);
-        setError(null);
-      } catch (err: any) {
-        setError(err.message);
-        setTrades([]);
-      } finally {
-        setLoading(false);
+      if (includePrivate) {
+        query = query.eq('user_id', userId);
+      } else {
+        query = query.or(`user_id.eq.${userId},is_private.eq.false`);
       }
-    };
 
+      // Filter by demo mode if specified
+      if (isDemoMode !== undefined) {
+        query = query.eq('is_demo', isDemoMode);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      setTrades(data || []);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message);
+      setTrades([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchTrades();
   }, [userId, includePrivate, isDemoMode, supabase]);
 
@@ -401,7 +401,7 @@ export function useTrades(userId: string | undefined, includePrivate = true, isD
     }
   };
 
-  return { trades, loading, error, createTrade, createMultipleTrades, updateTrade, deleteTrade };
+  return { trades, loading, error, createTrade, createMultipleTrades, updateTrade, deleteTrade, refetch: fetchTrades };
 }
 
 // Hook for fetching activity logs (for streak tracking)

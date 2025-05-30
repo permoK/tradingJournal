@@ -54,11 +54,12 @@ export default function Community() {
         setPublicJournals(journalsData || []);
       }
 
-      // Fetch public trades
+      // Fetch public trades (exclude demo trades)
       const { data: tradesData, error: tradesError } = await supabase
         .from('trades')
         .select('*')
         .eq('is_private', false)
+        .eq('is_demo', false)
         .order('trade_date', { ascending: false });
 
       if (tradesError) {

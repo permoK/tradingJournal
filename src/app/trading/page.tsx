@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTradeMode } from '@/contexts/TradeModeContext';
 import AppLayout from '@/components/AppLayout';
 import TradeModeToggle from '@/components/TradeModeToggle';
+import DemoTradeReset from '@/components/DemoTradeReset';
 import { FiPlus, FiEye, FiEyeOff, FiEdit2, FiTrash2, FiFilter, FiTrendingUp, FiPause } from 'react-icons/fi';
 import { format, subDays } from 'date-fns';
 import Link from 'next/link';
@@ -16,7 +17,7 @@ export default function Trading() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { isDemoMode } = useTradeMode();
-  const { trades, loading: tradesLoading, deleteTrade: deleteTradeHook } = useTrades(user?.id, true, isDemoMode);
+  const { trades, loading: tradesLoading, deleteTrade: deleteTradeHook, refetch } = useTrades(user?.id, true, isDemoMode);
 
   const [showPrivate, setShowPrivate] = useState(true);
   const [marketFilter, setMarketFilter] = useState('all');
@@ -189,7 +190,7 @@ export default function Trading() {
               <option value="closed" className="text-slate-800">Closed</option>
             </select>
           </div>
-          <div className="flex items-end">
+          <div className="flex items-end gap-2">
             <button
               onClick={() => setShowPrivate(!showPrivate)}
               className="flex items-center px-4 py-2 border border-slate-300 rounded-md hover:bg-slate-50 text-slate-700"
@@ -206,6 +207,13 @@ export default function Trading() {
                 </>
               )}
             </button>
+            {isDemoMode && (
+              <DemoTradeReset
+                onReset={() => {
+                  if (refetch) refetch();
+                }}
+              />
+            )}
           </div>
         </div>
       </div>

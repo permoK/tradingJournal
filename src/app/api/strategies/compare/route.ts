@@ -3,9 +3,9 @@ import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: NextRequest) {
   try {
-    const { strategyIds, userId } = await request.json();
+    const { strategyIds, userId, isDemoMode } = await request.json();
 
-    console.log('Strategy comparison request:', { strategyIds, userId });
+    console.log('Strategy comparison request:', { strategyIds, userId, isDemoMode });
 
     if (!strategyIds || !Array.isArray(strategyIds) || strategyIds.length < 2) {
       console.error('Invalid strategy IDs:', strategyIds);
@@ -63,14 +63,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get trades for all strategies
-    console.log('Fetching trades for strategies:', strategyIds);
-    const { data: allTrades, error: tradesError } = await supabase
+    // Get trades for all strategies filtered by demo mode
+    console.log('Fetching trades for strategies:', strategyIds, 'isDemoMode:', isDemoMode);
+    let tradesQuery = supabase
       .from('trades')
       .select('*')
       .in('strategy_id', strategyIds)
       .eq('user_id', userId)
       .order('trade_date', { ascending: true });
+
+    // Filter by demo mode if specified
+    if (isDemoMode !== undefined) {
+      tradesQuery = tradesQuery.eq('is_demo', isDemoMode);
+    }
+
+    const { data: allTrades, error: tradesError } = await tradesQuery;
 
     if (tradesError) {
       console.error('Error fetching trades:', tradesError);

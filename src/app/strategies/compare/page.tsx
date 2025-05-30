@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTradeMode } from '@/contexts/TradeModeContext';
 import { useStrategies } from '@/lib/hooks';
 import AppLayout from '@/components/AppLayout';
+import TradeModeToggle from '@/components/TradeModeToggle';
 import { FiArrowLeft, FiBarChart2, FiTrendingUp, FiTrendingDown, FiTarget, FiDollarSign, FiPlus } from 'react-icons/fi';
 import Link from 'next/link';
 import { Bar, Line } from 'react-chartjs-2';
@@ -61,11 +63,19 @@ interface ComparisonData {
 
 export default function StrategyComparison() {
   const { user } = useAuth();
+  const { isDemoMode } = useTradeMode();
   const { strategies, loading: strategiesLoading } = useStrategies(user?.id);
   const [selectedStrategies, setSelectedStrategies] = useState<string[]>([]);
   const [comparisonData, setComparisonData] = useState<ComparisonData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Reset comparison data when demo mode changes
+  useEffect(() => {
+    if (comparisonData) {
+      setComparisonData(null);
+    }
+  }, [isDemoMode]);
 
   const handleStrategyToggle = (strategyId: string) => {
     setSelectedStrategies(prev => {
@@ -97,7 +107,8 @@ export default function StrategyComparison() {
         },
         body: JSON.stringify({
           strategyIds: selectedStrategies,
-          userId: user?.id
+          userId: user?.id,
+          isDemoMode: isDemoMode
         })
       });
 
@@ -248,17 +259,23 @@ export default function StrategyComparison() {
   return (
     <AppLayout>
       <div className="mb-4 sm:mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <Link
-            href="/strategies"
-            className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
-          >
-            <FiArrowLeft className="h-5 w-5" />
-          </Link>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Compare Strategies</h1>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/strategies"
+              className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
+            >
+              <FiArrowLeft className="h-5 w-5" />
+            </Link>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Compare Strategies</h1>
+          </div>
+          <TradeModeToggle />
         </div>
         <p className="text-slate-700 font-medium text-sm sm:text-base ml-11">
           Select strategies to compare their performance side by side
+          {isDemoMode && (
+            <span className="text-amber-600 font-medium"> • Demo Mode Active</span>
+          )}
         </p>
       </div>
 

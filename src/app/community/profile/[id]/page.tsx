@@ -145,12 +145,13 @@ export default function UserProfile({ params }: { params: { id: string } }) {
           setPublicJournals(journalData);
         }
 
-        // Fetch public trades
+        // Fetch public trades (exclude demo trades)
         const { data: tradeData, error: tradeError } = await supabase
           .from('trades')
           .select('*')
           .eq('user_id', params.id)
           .eq('is_private', false)
+          .eq('is_demo', false)
           .order('trade_date', { ascending: false })
           .limit(20);
 
