@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
 import Avatar from '@/components/Avatar';
+import StreakHeatmap from '@/components/StreakHeatmap';
 import { FiArrowLeft, FiCalendar, FiBarChart2, FiFileText, FiAward, FiLayers, FiTrendingUp, FiDollarSign, FiTarget } from 'react-icons/fi';
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase';
@@ -358,6 +359,15 @@ export default function UserProfile({ params }: { params: { id: string } }) {
           </div>
         </div>
       )}
+
+      {/* Activity Streak Heatmap */}
+      <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
+        <div className="flex items-center mb-4">
+          <FiCalendar className="text-emerald-600 mr-2" />
+          <h2 className="text-lg font-semibold text-gray-900">Activity Streak</h2>
+        </div>
+        <StreakHeatmap userId={params.id} />
+      </div>
 
       {/* Tabs */}
       <div className="mb-6 border-b border-gray-200">
