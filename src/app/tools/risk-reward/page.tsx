@@ -174,8 +174,8 @@ export default function RiskRewardCalculator() {
                 step="any"
                 value={entryPrice}
                 onChange={(e) => setEntryPrice(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="1.10000"
+                className="w-full px-4 py-3 border-2 border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-slate-900 placeholder-slate-500"
+                placeholder="Enter entry price (e.g., 1.10000)"
               />
             </div>
 
@@ -188,8 +188,8 @@ export default function RiskRewardCalculator() {
                 step="any"
                 value={stopLossPrice}
                 onChange={(e) => setStopLossPrice(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="1.09500"
+                className="w-full px-4 py-3 border-2 border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-slate-900 placeholder-slate-500"
+                placeholder="Enter stop loss price (e.g., 1.09500)"
               />
             </div>
 
@@ -202,8 +202,8 @@ export default function RiskRewardCalculator() {
                 step="any"
                 value={takeProfitPrice}
                 onChange={(e) => setTakeProfitPrice(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="1.11000"
+                className="w-full px-4 py-3 border-2 border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-slate-900 placeholder-slate-500"
+                placeholder="Enter take profit price (e.g., 1.11000)"
               />
             </div>
           </div>
@@ -218,8 +218,8 @@ export default function RiskRewardCalculator() {
               step="any"
               value={positionSize}
               onChange={(e) => setPositionSize(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              placeholder="1.00"
+              className="w-full px-4 py-3 border-2 border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-slate-900 placeholder-slate-500"
+              placeholder="Enter position size (e.g., 1.00)"
             />
           </div>
 
@@ -309,19 +309,19 @@ export default function RiskRewardCalculator() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-slate-600">Entry Price:</span>
-                    <span className="font-medium">{parseFloat(entryPrice).toFixed(5)}</span>
+                    <span className="font-medium text-slate-900">{parseFloat(entryPrice).toFixed(5)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-600">Stop Loss:</span>
-                    <span className="font-medium">{parseFloat(stopLossPrice).toFixed(5)}</span>
+                    <span className="font-medium text-slate-900">{parseFloat(stopLossPrice).toFixed(5)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-600">Take Profit:</span>
-                    <span className="font-medium">{parseFloat(takeProfitPrice).toFixed(5)}</span>
+                    <span className="font-medium text-slate-900">{parseFloat(takeProfitPrice).toFixed(5)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-600">Position Size:</span>
-                    <span className="font-medium">{positionSize} lots</span>
+                    <span className="font-medium text-slate-900">{positionSize} lots</span>
                   </div>
                 </div>
               </div>

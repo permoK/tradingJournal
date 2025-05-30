@@ -153,8 +153,8 @@ export default function PipValueCalculator() {
               step="any"
               value={positionSize}
               onChange={(e) => setPositionSize(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              placeholder="1.00"
+              className="w-full px-4 py-3 border-2 border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-slate-900 placeholder-slate-500"
+              placeholder="Enter position size (e.g., 1.00)"
             />
 
             {/* Quick Lot Size Buttons */}
@@ -194,20 +194,20 @@ export default function PipValueCalculator() {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-slate-600">Symbol:</span>
-                  <span className="font-medium">{selectedMarket.symbol}</span>
+                  <span className="font-medium text-slate-900">{selectedMarket.symbol}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">Category:</span>
-                  <span className="font-medium capitalize">{selectedMarket.category}</span>
+                  <span className="font-medium text-slate-900 capitalize">{selectedMarket.category}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">Pip Size:</span>
-                  <span className="font-medium">{selectedMarket.pip}</span>
+                  <span className="font-medium text-slate-900">{selectedMarket.pip}</span>
                 </div>
                 {selectedMarket.contractSize && (
                   <div className="flex justify-between">
                     <span className="text-slate-600">Contract Size:</span>
-                    <span className="font-medium">{selectedMarket.contractSize.toLocaleString()}</span>
+                    <span className="font-medium text-slate-900">{selectedMarket.contractSize.toLocaleString()}</span>
                   </div>
                 )}
               </div>
@@ -250,11 +250,11 @@ export default function PipValueCalculator() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-slate-600">Contract Size:</span>
-                    <span className="font-medium">{result.contractSize.toLocaleString()}</span>
+                    <span className="font-medium text-slate-900">{result.contractSize.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-600">Pip Value (USD):</span>
-                    <span className="font-medium">{formatCurrency(result.pipValueInAccountCurrency)}</span>
+                    <span className="font-medium text-slate-900">{formatCurrency(result.pipValueInAccountCurrency)}</span>
                   </div>
                 </div>
               </div>
@@ -321,15 +321,15 @@ export default function PipValueCalculator() {
               <tbody>
                 {comparisonData.map((item, index) => (
                   <tr key={index} className="border-b border-slate-100">
-                    <td className="py-2 font-medium">{item.size} lots</td>
-                    <td className="py-2 text-right">{formatCurrency(item.pipValue)}</td>
-                    <td className="py-2 text-right text-emerald-700">
+                    <td className="py-2 font-medium text-slate-900">{item.size} lots</td>
+                    <td className="py-2 text-right font-medium text-slate-900">{formatCurrency(item.pipValue)}</td>
+                    <td className="py-2 text-right text-emerald-700 font-medium">
                       {formatCurrency(item.pipValue * 10)}
                     </td>
-                    <td className="py-2 text-right text-emerald-700">
+                    <td className="py-2 text-right text-emerald-700 font-medium">
                       {formatCurrency(item.pipValue * 50)}
                     </td>
-                    <td className="py-2 text-right text-emerald-700">
+                    <td className="py-2 text-right text-emerald-700 font-medium">
                       {formatCurrency(item.pipValue * 100)}
                     </td>
                   </tr>
