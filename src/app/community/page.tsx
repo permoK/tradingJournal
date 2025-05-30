@@ -25,6 +25,29 @@ export default function Community() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('members');
 
+  // Calculate real-time strategy performance from real trades only
+  const calculateStrategyPerformance = (strategy: any) => {
+    const realTrades = strategy.real_trades || [];
+    const closedTrades = realTrades.filter((trade: any) => trade.status === 'closed' && trade.profit_loss !== null);
+
+    if (closedTrades.length === 0) {
+      return {
+        totalTrades: 0,
+        successRate: 0,
+        profitableTrades: 0
+      };
+    }
+
+    const profitableTrades = closedTrades.filter((trade: any) => trade.profit_loss > 0);
+    const successRate = (profitableTrades.length / closedTrades.length) * 100;
+
+    return {
+      totalTrades: closedTrades.length,
+      successRate: successRate,
+      profitableTrades: profitableTrades.length
+    };
+  };
+
   useEffect(() => {
     const fetchCommunityData = async () => {
       setLoading(true);
@@ -68,11 +91,19 @@ export default function Community() {
         setPublicTrades(tradesData || []);
       }
 
-      // Fetch public strategies
+      // Fetch public strategies with real trade performance only
       const { data: strategiesData, error: strategiesError } = await supabase
         .from('strategies')
-        .select('*')
+        .select(`
+          *,
+          real_trades:trades!strategy_id(
+            id,
+            profit_loss,
+            status
+          )
+        `)
         .eq('is_private', false)
+        .eq('trades.is_demo', false)
         .order('created_at', { ascending: false });
 
       if (strategiesError) {
@@ -376,65 +407,68 @@ export default function Community() {
                 <p className="text-slate-700 font-medium">No public strategies found</p>
               </div>
             ) : (
-              filteredStrategies.map(strategy => (
-                <Link key={strategy.id} href={`/community/strategy/${strategy.id}`}>
-                  <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-slate-200 hover:border-indigo-300">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-slate-900 hover:text-indigo-700 transition-colors mb-1">
-                          {strategy.name}
-                        </h3>
-                        <p className="text-sm text-slate-600 mb-2">
-                          by {profiles.find(p => p.id === strategy.user_id)?.username || 'Unknown User'}
-                        </p>
-                        {strategy.category && (
-                          <span className="inline-block px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 rounded-full">
-                            {strategy.category}
-                          </span>
+              filteredStrategies.map(strategy => {
+                const performance = calculateStrategyPerformance(strategy);
+                return (
+                  <Link key={strategy.id} href={`/community/strategy/${strategy.id}`}>
+                    <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-slate-200 hover:border-indigo-300">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-slate-900 hover:text-indigo-700 transition-colors mb-1">
+                            {strategy.name}
+                          </h3>
+                          <p className="text-sm text-slate-600 mb-2">
+                            by {profiles.find(p => p.id === strategy.user_id)?.username || 'Unknown User'}
+                          </p>
+                          {strategy.category && (
+                            <span className="inline-block px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 rounded-full">
+                              {strategy.category}
+                            </span>
+                          )}
+                        </div>
+                        {strategy.image_url && (
+                          <img
+                            src={strategy.image_url}
+                            alt={strategy.name}
+                            className="w-16 h-16 rounded-lg object-cover border border-slate-200 ml-4"
+                          />
                         )}
                       </div>
-                      {strategy.image_url && (
-                        <img
-                          src={strategy.image_url}
-                          alt={strategy.name}
-                          className="w-16 h-16 rounded-lg object-cover border border-slate-200 ml-4"
-                        />
+
+                      {strategy.description && (
+                        <p className="text-sm text-slate-700 mb-4 line-clamp-3">
+                          {strategy.description}
+                        </p>
                       )}
-                    </div>
 
-                    {strategy.description && (
-                      <p className="text-sm text-slate-700 mb-4 line-clamp-3">
-                        {strategy.description}
-                      </p>
-                    )}
-
-                    <div className="flex justify-between items-center text-sm">
-                      <div className="flex space-x-4">
-                        <div className="text-slate-600">
-                          <span className="font-medium">Success Rate:</span>
-                          <span className={`ml-1 font-semibold ${
-                            strategy.success_rate >= 70 ? 'text-emerald-600' :
-                            strategy.success_rate >= 50 ? 'text-amber-600' : 'text-red-600'
-                          }`}>
-                            {strategy.success_rate.toFixed(1)}%
-                          </span>
+                      <div className="flex justify-between items-center text-sm">
+                        <div className="flex space-x-4">
+                          <div className="text-slate-600">
+                            <span className="font-medium">Success Rate:</span>
+                            <span className={`ml-1 font-semibold ${
+                              performance.successRate >= 70 ? 'text-emerald-600' :
+                              performance.successRate >= 50 ? 'text-amber-600' : 'text-red-600'
+                            }`}>
+                              {performance.successRate.toFixed(1)}%
+                            </span>
+                          </div>
+                          <div className="text-slate-600">
+                            <span className="font-medium">Real Trades:</span>
+                            <span className="ml-1 font-semibold text-slate-800">{performance.totalTrades}</span>
+                          </div>
                         </div>
-                        <div className="text-slate-600">
-                          <span className="font-medium">Trades:</span>
-                          <span className="ml-1 font-semibold text-slate-800">{strategy.total_trades}</span>
+                        <div className="text-xs text-slate-500">
+                          {format(new Date(strategy.created_at), 'MMM d, yyyy')}
                         </div>
                       </div>
-                      <div className="text-xs text-slate-500">
-                        {format(new Date(strategy.created_at), 'MMM d, yyyy')}
+
+                      <div className="mt-4 text-xs text-indigo-600 font-medium">
+                        Click to view strategy →
                       </div>
                     </div>
-
-                    <div className="mt-4 text-xs text-indigo-600 font-medium">
-                      Click to view strategy →
-                    </div>
-                  </div>
-                </Link>
-              ))
+                  </Link>
+                );
+              })
             )}
           </div>
         )}

@@ -17,24 +17,63 @@ interface CommunityStrategyPageProps {
   params: Promise<{ id: string }>;
 }
 
+interface StrategyWithTrades extends Strategy {
+  real_trades?: Array<{
+    id: string;
+    profit_loss: number | null;
+    status: string;
+  }>;
+}
+
 export default function CommunityStrategyPage({ params }: CommunityStrategyPageProps) {
   const router = useRouter();
-  const [strategy, setStrategy] = useState<Strategy | null>(null);
+  const [strategy, setStrategy] = useState<StrategyWithTrades | null>(null);
   const [author, setAuthor] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Calculate real-time strategy performance from real trades only
+  const calculateStrategyPerformance = (strategy: StrategyWithTrades) => {
+    const realTrades = strategy.real_trades || [];
+    const closedTrades = realTrades.filter(trade => trade.status === 'closed' && trade.profit_loss !== null);
+
+    if (closedTrades.length === 0) {
+      return {
+        totalTrades: 0,
+        successRate: 0,
+        profitableTrades: 0
+      };
+    }
+
+    const profitableTrades = closedTrades.filter(trade => trade.profit_loss! > 0);
+    const successRate = (profitableTrades.length / closedTrades.length) * 100;
+
+    return {
+      totalTrades: closedTrades.length,
+      successRate: successRate,
+      profitableTrades: profitableTrades.length
+    };
+  };
 
   useEffect(() => {
     const fetchStrategy = async () => {
       try {
         const { id } = await params;
 
-        // Fetch strategy
+        // Fetch strategy with real trades only
         const { data: strategyData, error: strategyError } = await supabase
           .from('strategies')
-          .select('*')
+          .select(`
+            *,
+            real_trades:trades!strategy_id(
+              id,
+              profit_loss,
+              status
+            )
+          `)
           .eq('id', id)
           .eq('is_private', false)
+          .eq('trades.is_demo', false)
           .single();
 
         if (strategyError) {
@@ -170,28 +209,38 @@ export default function CommunityStrategyPage({ params }: CommunityStrategyPageP
           <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 sm:p-6">
             <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center">
               <FiBarChart2 className="mr-2" />
-              Performance
+              Real Trade Performance
             </h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-slate-600 font-medium">Success Rate</span>
-                <span className={`font-bold text-lg ${getSuccessRateColor(strategy.success_rate)}`}>
-                  {strategy.success_rate.toFixed(1)}%
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-600 font-medium">Total Trades</span>
-                <span className="font-bold text-lg text-slate-800">{strategy.total_trades}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-600 font-medium">Profitable Trades</span>
-                <span className="font-bold text-lg text-emerald-600">{strategy.profitable_trades}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-600 font-medium">Losing Trades</span>
-                <span className="font-bold text-lg text-red-600">{strategy.total_trades - strategy.profitable_trades}</span>
-              </div>
-            </div>
+            {(() => {
+              const performance = calculateStrategyPerformance(strategy);
+              return (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-600 font-medium">Success Rate</span>
+                    <span className={`font-bold text-lg ${getSuccessRateColor(performance.successRate)}`}>
+                      {performance.successRate.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-600 font-medium">Real Trades</span>
+                    <span className="font-bold text-lg text-slate-800">{performance.totalTrades}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-600 font-medium">Profitable Trades</span>
+                    <span className="font-bold text-lg text-emerald-600">{performance.profitableTrades}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-600 font-medium">Losing Trades</span>
+                    <span className="font-bold text-lg text-red-600">{performance.totalTrades - performance.profitableTrades}</span>
+                  </div>
+                  {performance.totalTrades === 0 && (
+                    <div className="text-center py-4">
+                      <p className="text-sm text-slate-500">No real trades recorded yet</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
           {/* Author Info */}

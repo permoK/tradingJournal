@@ -102,6 +102,25 @@ This implementation ensures that demo trades are completely separated from real 
 - Analytics and comparison data refetch when mode changes
 - Reset functionality triggers data refresh
 
+### 6. Public Strategy Performance Separation
+- **Updated Community Page**: `src/app/community/page.tsx`
+  - Fetches strategies with real trades only using join query
+  - Calculates real-time performance from real trades
+  - Displays "Real Trades" instead of "Trades" in strategy cards
+  - Performance metrics calculated dynamically, not from stored values
+
+- **Updated Community Profile**: `src/app/community/profile/[id]/page.tsx`
+  - Fetches user strategies with real trades only
+  - Calculates real-time performance from real trades
+  - Shows "Real Trades" count in strategy performance
+  - Performance metrics calculated dynamically
+
+- **Updated Community Strategy Detail**: `src/app/community/strategy/[id]/page.tsx`
+  - Fetches strategy with real trades only using join query
+  - Calculates and displays real-time performance from real trades
+  - Shows "Real Trade Performance" section title
+  - Handles cases where no real trades exist yet
+
 ## Benefits
 
 ### For Users
@@ -109,19 +128,42 @@ This implementation ensures that demo trades are completely separated from real 
 2. **Clean Data Separation**: Real and demo data never mix
 3. **Privacy Protection**: Demo trades are always private
 4. **Easy Reset**: Can start fresh with demo trades anytime
+5. **True Strategy Testing**: Demo strategy usage doesn't affect public performance
 
 ### For Community
 1. **Authentic Performance**: Public strategies only show real trade performance
 2. **No Demo Pollution**: Community sections only show real trading activity
 3. **Reliable Metrics**: Strategy comparisons use consistent data types
+4. **Real-Time Accuracy**: Performance calculated from actual real trades, not stored aggregates
 
 ### For Strategy Development
 1. **Separate Testing**: Test strategies in demo mode without affecting real metrics
 2. **Mode-Specific Analytics**: See how strategies perform in each mode
 3. **Preserved Real Data**: Real trade performance remains intact when switching modes
+4. **Public Integrity**: Public strategy performance only reflects real trading results
+
+## Key Technical Improvements
+
+### Real-Time Performance Calculation
+- All public strategy displays now calculate performance dynamically from real trades
+- No reliance on stored aggregate metrics that could include demo trade data
+- Consistent performance calculation across all community pages
+- Proper handling of strategies with no real trades
+
+### Database Query Optimization
+- Uses JOIN queries to fetch strategies with their real trades in single requests
+- Filters out demo trades at the database level for better performance
+- Reduces multiple API calls by fetching related data together
+
+### User Experience Enhancements
+- Clear labeling of "Real Trades" vs "Trades" to indicate data source
+- Demo mode indicators throughout strategy interfaces
+- Graceful handling of strategies with no real trade data
+- Consistent performance metrics across all views
 
 ## Migration Notes
 - No database migration required (existing `is_demo` column used)
 - Existing demo trades remain demo, real trades remain real
 - All existing functionality preserved
 - New features are additive and backward compatible
+- Public strategy performance now accurately reflects real trading only
