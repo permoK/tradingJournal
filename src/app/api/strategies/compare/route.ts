@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: NextRequest) {
   try {
     const { strategyIds, userId } = await request.json();
 
+    console.log('Strategy comparison request:', { strategyIds, userId });
+
     if (!strategyIds || !Array.isArray(strategyIds) || strategyIds.length < 2) {
+      console.error('Invalid strategy IDs:', strategyIds);
       return NextResponse.json(
         { error: 'At least 2 strategy IDs are required for comparison' },
         { status: 400 }
@@ -13,15 +16,21 @@ export async function POST(request: NextRequest) {
     }
 
     if (!userId) {
+      console.error('Missing user ID');
       return NextResponse.json(
         { error: 'User ID is required' },
         { status: 400 }
       );
     }
 
-    const supabase = createClient();
+    // Use service role key for server-side operations
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
     // Get strategies
+    console.log('Fetching strategies for user:', userId);
     const { data: strategies, error: strategiesError } = await supabase
       .from('strategies')
       .select('*')
@@ -31,12 +40,23 @@ export async function POST(request: NextRequest) {
     if (strategiesError) {
       console.error('Error fetching strategies:', strategiesError);
       return NextResponse.json(
-        { error: 'Failed to fetch strategies' },
+        { error: `Failed to fetch strategies: ${strategiesError.message}` },
         { status: 500 }
       );
     }
 
+    console.log('Found strategies:', strategies?.length);
+
+    if (!strategies || strategies.length === 0) {
+      console.error('No strategies found for user');
+      return NextResponse.json(
+        { error: 'No strategies found for the current user' },
+        { status: 404 }
+      );
+    }
+
     if (strategies.length !== strategyIds.length) {
+      console.error('Strategy count mismatch:', { found: strategies.length, requested: strategyIds.length });
       return NextResponse.json(
         { error: 'Some strategies not found or not accessible' },
         { status: 404 }
@@ -44,6 +64,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get trades for all strategies
+    console.log('Fetching trades for strategies:', strategyIds);
     const { data: allTrades, error: tradesError } = await supabase
       .from('trades')
       .select('*')
@@ -54,24 +75,30 @@ export async function POST(request: NextRequest) {
     if (tradesError) {
       console.error('Error fetching trades:', tradesError);
       return NextResponse.json(
-        { error: 'Failed to fetch trade data' },
+        { error: `Failed to fetch trade data: ${tradesError.message}` },
         { status: 500 }
       );
     }
 
+    console.log('Found trades:', allTrades?.length || 0);
+
     // Process data for each strategy
     const comparisonData = strategies.map(strategy => {
-      const strategyTrades = allTrades.filter(trade => trade.strategy_id === strategy.id);
+      console.log(`Processing strategy: ${strategy.name} (${strategy.id})`);
+
+      const strategyTrades = allTrades?.filter(trade => trade.strategy_id === strategy.id) || [];
       const closedTrades = strategyTrades.filter(trade => trade.status === 'closed' && trade.profit_loss !== null);
-      
+
+      console.log(`Strategy ${strategy.name}: ${strategyTrades.length} total trades, ${closedTrades.length} closed trades`);
+
       const totalTrades = closedTrades.length;
       const profitableTrades = closedTrades.filter(trade => trade.profit_loss! > 0);
       const losingTrades = closedTrades.filter(trade => trade.profit_loss! < 0);
-      
-      const totalProfit = profitableTrades.reduce((sum, trade) => sum + trade.profit_loss!, 0);
-      const totalLoss = Math.abs(losingTrades.reduce((sum, trade) => sum + trade.profit_loss!, 0));
+
+      const totalProfit = profitableTrades.reduce((sum, trade) => sum + (trade.profit_loss || 0), 0);
+      const totalLoss = Math.abs(losingTrades.reduce((sum, trade) => sum + (trade.profit_loss || 0), 0));
       const netProfitLoss = totalProfit - totalLoss;
-      
+
       const successRate = totalTrades > 0 ? (profitableTrades.length / totalTrades) * 100 : 0;
       const averageWin = profitableTrades.length > 0 ? totalProfit / profitableTrades.length : 0;
       const averageLoss = losingTrades.length > 0 ? totalLoss / losingTrades.length : 0;
@@ -79,6 +106,8 @@ export async function POST(request: NextRequest) {
 
       // Market analysis
       const marketPerformance = strategyTrades.reduce((acc, trade) => {
+        if (!trade.market) return acc; // Skip trades without market data
+
         if (!acc[trade.market]) {
           acc[trade.market] = { totalTrades: 0, profitableTrades: 0, totalProfitLoss: 0 };
         }
@@ -95,25 +124,29 @@ export async function POST(request: NextRequest) {
       // Calculate success rate for each market
       Object.keys(marketPerformance).forEach(market => {
         const marketData = marketPerformance[market];
-        const closedMarketTrades = strategyTrades.filter(t => 
+        const closedMarketTrades = strategyTrades.filter(t =>
           t.market === market && t.status === 'closed' && t.profit_loss !== null
         );
-        marketData.successRate = closedMarketTrades.length > 0 
-          ? (marketData.profitableTrades / closedMarketTrades.length) * 100 
+        marketData.successRate = closedMarketTrades.length > 0
+          ? (marketData.profitableTrades / closedMarketTrades.length) * 100
           : 0;
       });
 
       // Monthly performance
       const monthlyPerformance = closedTrades.reduce((acc, trade) => {
-        const month = new Date(trade.trade_date).toISOString().slice(0, 7);
-        if (!acc[month]) {
-          acc[month] = { totalTrades: 0, profitableTrades: 0, totalProfitLoss: 0 };
+        try {
+          const month = new Date(trade.trade_date).toISOString().slice(0, 7);
+          if (!acc[month]) {
+            acc[month] = { totalTrades: 0, profitableTrades: 0, totalProfitLoss: 0 };
+          }
+          acc[month].totalTrades++;
+          if ((trade.profit_loss || 0) > 0) {
+            acc[month].profitableTrades++;
+          }
+          acc[month].totalProfitLoss += trade.profit_loss || 0;
+        } catch (error) {
+          console.error('Error processing trade date:', trade.trade_date, error);
         }
-        acc[month].totalTrades++;
-        if (trade.profit_loss! > 0) {
-          acc[month].profitableTrades++;
-        }
-        acc[month].totalProfitLoss += trade.profit_loss!;
         return acc;
       }, {} as Record<string, any>);
 
@@ -152,46 +185,56 @@ export async function POST(request: NextRequest) {
     });
 
     // Calculate comparative metrics
+    console.log('Calculating comparative metrics for', comparisonData.length, 'strategies');
+
     const comparison = {
       strategies: comparisonData,
       summary: {
-        bestPerformer: comparisonData.reduce((best, current) => 
+        bestPerformer: comparisonData.length > 0 ? comparisonData.reduce((best, current) =>
           current.metrics.netProfitLoss > best.metrics.netProfitLoss ? current : best
-        ),
-        mostConsistent: comparisonData.reduce((best, current) => 
+        ) : null,
+        mostConsistent: comparisonData.length > 0 ? comparisonData.reduce((best, current) =>
           current.metrics.successRate > best.metrics.successRate ? current : best
-        ),
-        mostActive: comparisonData.reduce((best, current) => 
+        ) : null,
+        mostActive: comparisonData.length > 0 ? comparisonData.reduce((best, current) =>
           current.metrics.totalTrades > best.metrics.totalTrades ? current : best
-        ),
-        bestProfitFactor: comparisonData.reduce((best, current) => 
+        ) : null,
+        bestProfitFactor: comparisonData.length > 0 ? comparisonData.reduce((best, current) =>
           current.metrics.profitFactor > best.metrics.profitFactor ? current : best
-        )
+        ) : null
       },
       marketComparison: {},
       timeComparison: {}
     };
 
     // Market comparison across strategies
-    const allMarkets = [...new Set(allTrades.map(trade => trade.market))];
+    const allMarkets = [...new Set((allTrades || []).map(trade => trade.market).filter(Boolean))];
     comparison.marketComparison = allMarkets.reduce((acc, market) => {
       acc[market] = comparisonData.map(strategyData => ({
         strategyName: strategyData.strategy.name,
         strategyId: strategyData.strategy.id,
-        performance: strategyData.marketPerformance[market] || { 
-          totalTrades: 0, 
-          profitableTrades: 0, 
-          totalProfitLoss: 0, 
-          successRate: 0 
+        performance: strategyData.marketPerformance[market] || {
+          totalTrades: 0,
+          profitableTrades: 0,
+          totalProfitLoss: 0,
+          successRate: 0
         }
       }));
       return acc;
     }, {} as Record<string, any>);
 
     // Time-based comparison
-    const allMonths = [...new Set(allTrades
-      .filter(trade => trade.status === 'closed')
-      .map(trade => new Date(trade.trade_date).toISOString().slice(0, 7))
+    const allMonths = [...new Set((allTrades || [])
+      .filter(trade => trade.status === 'closed' && trade.trade_date)
+      .map(trade => {
+        try {
+          return new Date(trade.trade_date).toISOString().slice(0, 7);
+        } catch (error) {
+          console.error('Error parsing trade date:', trade.trade_date, error);
+          return null;
+        }
+      })
+      .filter(Boolean)
     )].sort();
 
     comparison.timeComparison = allMonths.reduce((acc, month) => {
@@ -207,6 +250,7 @@ export async function POST(request: NextRequest) {
       return acc;
     }, {} as Record<string, any>);
 
+    console.log('Comparison completed successfully');
     return NextResponse.json(comparison);
   } catch (error) {
     console.error('Error in strategy comparison API:', error);
