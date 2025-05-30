@@ -6,29 +6,29 @@ import AppLayout from '@/components/AppLayout';
 import MarketSelector from '@/components/MarketSelector';
 import { FiDollarSign, FiTrendingUp, FiTrendingDown, FiInfo, FiArrowLeft } from 'react-icons/fi';
 import Link from 'next/link';
-import { 
-  calculatePL, 
-  getMarketInfo, 
-  formatPL, 
-  formatPips, 
-  formatPercentage, 
+import {
+  calculatePL,
+  getMarketInfo,
+  formatPL,
+  formatPips,
+  formatPercentage,
   validateTradeInputs,
   getSuggestedLotSizes,
   formatCurrency,
   type MarketInfo,
-  type PLResult 
+  type PLResult
 } from '@/utils/plCalculator';
 
 export default function ProfitLossCalculator() {
   const { user } = useAuth();
-  
+
   // Form state
   const [selectedMarket, setSelectedMarket] = useState<MarketInfo | null>(null);
   const [tradeType, setTradeType] = useState<'buy' | 'sell'>('buy');
   const [entryPrice, setEntryPrice] = useState('');
   const [exitPrice, setExitPrice] = useState('');
   const [quantity, setQuantity] = useState('');
-  
+
   // Results state
   const [result, setResult] = useState<PLResult | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -68,8 +68,19 @@ export default function ProfitLossCalculator() {
     }
   }, [selectedMarket, tradeType, entryPrice, exitPrice, quantity]);
 
-  const handleMarketSelect = (market: MarketInfo) => {
-    setSelectedMarket(market);
+  const handleMarketSelect = (market: any) => {
+    // Convert MarketSelector's Market interface to MarketInfo
+    const marketInfo: MarketInfo = {
+      symbol: market.symbol,
+      category: market.category,
+      pip: market.pip,
+      contractSize: market.category === 'forex' ? 100000 :
+                   market.category === 'commodities' ? 1000 :
+                   market.category === 'indices' ? 1 :
+                   market.category === 'crypto' ? 1 : 1,
+      quoteCurrency: market.symbol.includes('/') ? market.symbol.split('/')[1] : 'USD'
+    };
+    setSelectedMarket(marketInfo);
   };
 
   const handleQuickLotSize = (size: number) => {
@@ -84,8 +95,8 @@ export default function ProfitLossCalculator() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
-          <Link 
-            href="/tools" 
+          <Link
+            href="/tools"
             className="flex items-center text-slate-600 hover:text-slate-800 mr-4"
           >
             <FiArrowLeft className="mr-2" />
@@ -105,7 +116,7 @@ export default function ProfitLossCalculator() {
         {/* Calculator Form */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
           <h2 className="text-lg font-semibold text-slate-900 mb-4">Trade Parameters</h2>
-          
+
           {/* Market Selection */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -166,8 +177,8 @@ export default function ProfitLossCalculator() {
                 step="any"
                 value={entryPrice}
                 onChange={(e) => setEntryPrice(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="0.00000"
+                className="w-full px-4 py-3 border-2 border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-slate-900 placeholder-slate-500"
+                placeholder="Enter entry price (e.g., 1.0850)"
               />
             </div>
             <div>
@@ -179,8 +190,8 @@ export default function ProfitLossCalculator() {
                 step="any"
                 value={exitPrice}
                 onChange={(e) => setExitPrice(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="0.00000"
+                className="w-full px-4 py-3 border-2 border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-slate-900 placeholder-slate-500"
+                placeholder="Enter exit price (e.g., 1.0900)"
               />
             </div>
           </div>
@@ -195,10 +206,10 @@ export default function ProfitLossCalculator() {
               step="any"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              placeholder="1.00"
+              className="w-full px-4 py-3 border-2 border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-slate-900 placeholder-slate-500"
+              placeholder="Enter position size (e.g., 1.00)"
             />
-            
+
             {/* Quick Lot Size Buttons */}
             {selectedMarket && (
               <div className="mt-2">
@@ -229,14 +240,14 @@ export default function ProfitLossCalculator() {
         {/* Results Panel */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
           <h2 className="text-lg font-semibold text-slate-900 mb-4">Calculation Results</h2>
-          
+
           {result ? (
             <div className="space-y-4">
               {/* Main P&L Result */}
               <div className={`p-4 rounded-lg border-2 ${
-                isProfit 
-                  ? 'bg-emerald-50 border-emerald-200' 
-                  : isLoss 
+                isProfit
+                  ? 'bg-emerald-50 border-emerald-200'
+                  : isLoss
                     ? 'bg-red-50 border-red-200'
                     : 'bg-slate-50 border-slate-200'
               }`}>
@@ -268,15 +279,15 @@ export default function ProfitLossCalculator() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-slate-600">Price Movement:</span>
-                    <span className="font-medium">{result.breakdown.priceMovement.toFixed(5)}</span>
+                    <span className="font-medium text-slate-900">{result.breakdown.priceMovement.toFixed(5)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-600">Contract Value:</span>
-                    <span className="font-medium">{formatCurrency(result.breakdown.contractValue)}</span>
+                    <span className="font-medium text-slate-900">{formatCurrency(result.breakdown.contractValue)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-600">Total Position Value:</span>
-                    <span className="font-medium">{formatCurrency(result.breakdown.totalValue)}</span>
+                    <span className="font-medium text-slate-900">{formatCurrency(result.breakdown.totalValue)}</span>
                   </div>
                 </div>
               </div>

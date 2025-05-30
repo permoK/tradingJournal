@@ -12,8 +12,9 @@ interface Market {
 }
 
 interface MarketSelectorProps {
-  value: string;
-  onChange: (market: Market) => void;
+  value?: string;
+  onChange?: (market: Market) => void;
+  onMarketSelect?: (market: Market) => void;
   recentMarkets?: string[];
 }
 
@@ -26,35 +27,36 @@ const MARKETS: Market[] = [
   { symbol: 'AUD/USD', name: 'Australian Dollar / US Dollar', category: 'forex', pip: 0.0001 },
   { symbol: 'USD/CAD', name: 'US Dollar / Canadian Dollar', category: 'forex', pip: 0.0001 },
   { symbol: 'NZD/USD', name: 'New Zealand Dollar / US Dollar', category: 'forex', pip: 0.0001 },
-  
+
   // Forex Minor Pairs
   { symbol: 'EUR/GBP', name: 'Euro / British Pound', category: 'forex', pip: 0.0001 },
   { symbol: 'EUR/JPY', name: 'Euro / Japanese Yen', category: 'forex', pip: 0.01 },
   { symbol: 'GBP/JPY', name: 'British Pound / Japanese Yen', category: 'forex', pip: 0.01 },
-  
+
   // Commodities
   { symbol: 'GOLD', name: 'Gold Spot', category: 'commodities', pip: 0.01 },
   { symbol: 'SILVER', name: 'Silver Spot', category: 'commodities', pip: 0.001 },
   { symbol: 'OIL', name: 'Crude Oil', category: 'commodities', pip: 0.01 },
   { symbol: 'NATGAS', name: 'Natural Gas', category: 'commodities', pip: 0.001 },
-  
+
   // Indices
   { symbol: 'SPX500', name: 'S&P 500', category: 'indices', pip: 0.1 },
   { symbol: 'NAS100', name: 'NASDAQ 100', category: 'indices', pip: 0.1 },
   { symbol: 'US30', name: 'Dow Jones 30', category: 'indices', pip: 1 },
   { symbol: 'GER40', name: 'Germany 40', category: 'indices', pip: 0.1 },
   { symbol: 'UK100', name: 'UK 100', category: 'indices', pip: 0.1 },
-  
+
   // Crypto
   { symbol: 'BTC/USD', name: 'Bitcoin / US Dollar', category: 'crypto', pip: 1 },
   { symbol: 'ETH/USD', name: 'Ethereum / US Dollar', category: 'crypto', pip: 0.01 },
   { symbol: 'LTC/USD', name: 'Litecoin / US Dollar', category: 'crypto', pip: 0.01 },
 ];
 
-const MarketSelector: React.FC<MarketSelectorProps> = ({ value, onChange, recentMarkets = [] }) => {
+const MarketSelector: React.FC<MarketSelectorProps> = ({ value, onChange, onMarketSelect, recentMarkets = [] }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedMarket, setSelectedMarket] = useState<Market | null>(null);
   const selectorRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -113,7 +115,16 @@ const MarketSelector: React.FC<MarketSelectorProps> = ({ value, onChange, recent
   };
 
   const handleMarketSelect = (market: Market) => {
-    onChange(market);
+    setSelectedMarket(market);
+
+    // Call the appropriate callback
+    if (onChange) {
+      onChange(market);
+    }
+    if (onMarketSelect) {
+      onMarketSelect(market);
+    }
+
     setIsOpen(false);
     setSearchTerm('');
   };
@@ -122,10 +133,10 @@ const MarketSelector: React.FC<MarketSelectorProps> = ({ value, onChange, recent
     <div ref={selectorRef} className="relative">
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 bg-white cursor-pointer flex items-center justify-between"
+        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 bg-white cursor-pointer flex items-center justify-between hover:border-slate-400 transition-colors"
       >
-        <span className={value ? 'text-slate-900' : 'text-slate-500'}>
-          {value || 'Select a market...'}
+        <span className={(value || selectedMarket) ? 'text-slate-900 font-medium' : 'text-slate-500'}>
+          {value || selectedMarket?.symbol || 'Click to select a trading pair...'}
         </span>
         <FiSearch className="w-4 h-4 text-slate-400" />
       </div>
@@ -138,59 +149,76 @@ const MarketSelector: React.FC<MarketSelectorProps> = ({ value, onChange, recent
               <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search markets..."
+                placeholder="Type to search markets (e.g., EUR/USD, Gold, Bitcoin)..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                className="w-full pl-10 pr-3 py-3 border-2 border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white text-slate-900 placeholder-slate-500"
+                autoFocus
+                onClick={(e) => e.stopPropagation()}
               />
             </div>
-            
+
             <div className="flex gap-2 flex-wrap">
               <button
-                onClick={() => setSelectedCategory('all')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedCategory('all');
+                }}
                 className={`px-3 py-1 text-xs rounded-full font-medium transition-colors ${
-                  selectedCategory === 'all' 
-                    ? 'bg-indigo-100 text-indigo-800' 
+                  selectedCategory === 'all'
+                    ? 'bg-indigo-100 text-indigo-800'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
                 All
               </button>
               <button
-                onClick={() => setSelectedCategory('forex')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedCategory('forex');
+                }}
                 className={`px-3 py-1 text-xs rounded-full font-medium transition-colors ${
-                  selectedCategory === 'forex' 
-                    ? 'bg-blue-100 text-blue-800' 
+                  selectedCategory === 'forex'
+                    ? 'bg-blue-100 text-blue-800'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
                 Forex
               </button>
               <button
-                onClick={() => setSelectedCategory('commodities')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedCategory('commodities');
+                }}
                 className={`px-3 py-1 text-xs rounded-full font-medium transition-colors ${
-                  selectedCategory === 'commodities' 
-                    ? 'bg-amber-100 text-amber-800' 
+                  selectedCategory === 'commodities'
+                    ? 'bg-amber-100 text-amber-800'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
                 Commodities
               </button>
               <button
-                onClick={() => setSelectedCategory('indices')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedCategory('indices');
+                }}
                 className={`px-3 py-1 text-xs rounded-full font-medium transition-colors ${
-                  selectedCategory === 'indices' 
-                    ? 'bg-emerald-100 text-emerald-800' 
+                  selectedCategory === 'indices'
+                    ? 'bg-emerald-100 text-emerald-800'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
                 Indices
               </button>
               <button
-                onClick={() => setSelectedCategory('crypto')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedCategory('crypto');
+                }}
                 className={`px-3 py-1 text-xs rounded-full font-medium transition-colors ${
-                  selectedCategory === 'crypto' 
-                    ? 'bg-purple-100 text-purple-800' 
+                  selectedCategory === 'crypto'
+                    ? 'bg-purple-100 text-purple-800'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
@@ -207,13 +235,16 @@ const MarketSelector: React.FC<MarketSelectorProps> = ({ value, onChange, recent
                 {recentMarketObjects.map(market => (
                   <button
                     key={`recent-${market.symbol}`}
-                    onClick={() => handleMarketSelect(market)}
-                    className="w-full text-left px-3 py-2 hover:bg-slate-50 rounded-md transition-colors flex items-center justify-between"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleMarketSelect(market);
+                    }}
+                    className="w-full text-left px-4 py-3 hover:bg-indigo-50 hover:border-indigo-200 rounded-md transition-colors flex items-center justify-between cursor-pointer border border-transparent"
                   >
                     <div className="flex items-center space-x-3">
                       {getCategoryIcon(market.category)}
                       <div>
-                        <div className="font-medium text-slate-900">{market.symbol}</div>
+                        <div className="font-semibold text-slate-900">{market.symbol}</div>
                         <div className="text-xs text-slate-600">{market.name}</div>
                       </div>
                     </div>
@@ -231,13 +262,16 @@ const MarketSelector: React.FC<MarketSelectorProps> = ({ value, onChange, recent
                 filteredMarkets.map(market => (
                   <button
                     key={market.symbol}
-                    onClick={() => handleMarketSelect(market)}
-                    className="w-full text-left px-3 py-2 hover:bg-slate-50 rounded-md transition-colors flex items-center justify-between"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleMarketSelect(market);
+                    }}
+                    className="w-full text-left px-4 py-3 hover:bg-indigo-50 hover:border-indigo-200 rounded-md transition-colors flex items-center justify-between cursor-pointer border border-transparent"
                   >
                     <div className="flex items-center space-x-3">
                       {getCategoryIcon(market.category)}
                       <div>
-                        <div className="font-medium text-slate-900">{market.symbol}</div>
+                        <div className="font-semibold text-slate-900">{market.symbol}</div>
                         <div className="text-xs text-slate-600">{market.name}</div>
                       </div>
                     </div>

@@ -6,21 +6,21 @@ import AppLayout from '@/components/AppLayout';
 import MarketSelector from '@/components/MarketSelector';
 import { FiTrendingUp, FiInfo, FiArrowLeft, FiDollarSign } from 'react-icons/fi';
 import Link from 'next/link';
-import { 
+import {
   calculatePipValue,
   formatCurrency,
   getSuggestedLotSizes,
   type MarketInfo,
-  type PipValueResult 
+  type PipValueResult
 } from '@/utils/plCalculator';
 
 export default function PipValueCalculator() {
   const { user } = useAuth();
-  
+
   // Form state
   const [selectedMarket, setSelectedMarket] = useState<MarketInfo | null>(null);
   const [positionSize, setPositionSize] = useState('1');
-  
+
   // Results state
   const [result, setResult] = useState<PipValueResult | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -38,7 +38,7 @@ export default function PipValueCalculator() {
       }
 
       setValidationError(null);
-      
+
       try {
         const pipResult = calculatePipValue({
           market: selectedMarket,
@@ -55,8 +55,19 @@ export default function PipValueCalculator() {
     }
   }, [selectedMarket, positionSize]);
 
-  const handleMarketSelect = (market: MarketInfo) => {
-    setSelectedMarket(market);
+  const handleMarketSelect = (market: any) => {
+    // Convert MarketSelector's Market interface to MarketInfo
+    const marketInfo: MarketInfo = {
+      symbol: market.symbol,
+      category: market.category,
+      pip: market.pip,
+      contractSize: market.category === 'forex' ? 100000 :
+                   market.category === 'commodities' ? 1000 :
+                   market.category === 'indices' ? 1 :
+                   market.category === 'crypto' ? 1 : 1,
+      quoteCurrency: market.symbol.includes('/') ? market.symbol.split('/')[1] : 'USD'
+    };
+    setSelectedMarket(marketInfo);
   };
 
   const handleQuickLotSize = (size: number) => {
@@ -66,7 +77,7 @@ export default function PipValueCalculator() {
   // Calculate pip values for different lot sizes for comparison
   const getComparisonData = () => {
     if (!selectedMarket) return [];
-    
+
     const sizes = getSuggestedLotSizes(selectedMarket.category);
     return sizes.map(size => {
       const pipResult = calculatePipValue({
@@ -87,8 +98,8 @@ export default function PipValueCalculator() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
-          <Link 
-            href="/tools" 
+          <Link
+            href="/tools"
             className="flex items-center text-slate-600 hover:text-slate-800 mr-4"
           >
             <FiArrowLeft className="mr-2" />
@@ -108,7 +119,7 @@ export default function PipValueCalculator() {
         {/* Calculator Form */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
           <h2 className="text-lg font-semibold text-slate-900 mb-4">Pip Value Parameters</h2>
-          
+
           {/* Market Selection */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -145,7 +156,7 @@ export default function PipValueCalculator() {
               className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               placeholder="1.00"
             />
-            
+
             {/* Quick Lot Size Buttons */}
             {selectedMarket && (
               <div className="mt-2">
@@ -207,7 +218,7 @@ export default function PipValueCalculator() {
         {/* Results Panel */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
           <h2 className="text-lg font-semibold text-slate-900 mb-4">Pip Value Results</h2>
-          
+
           {result ? (
             <div className="space-y-4">
               {/* Main Pip Value Result */}

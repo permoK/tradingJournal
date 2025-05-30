@@ -6,24 +6,24 @@ import AppLayout from '@/components/AppLayout';
 import MarketSelector from '@/components/MarketSelector';
 import { FiTarget, FiTrendingUp, FiTrendingDown, FiInfo, FiArrowLeft, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 import Link from 'next/link';
-import { 
+import {
   calculateRiskReward,
   formatCurrency,
   formatRatio,
   type MarketInfo,
-  type RiskRewardResult 
+  type RiskRewardResult
 } from '@/utils/plCalculator';
 
 export default function RiskRewardCalculator() {
   const { user } = useAuth();
-  
+
   // Form state
   const [selectedMarket, setSelectedMarket] = useState<MarketInfo | null>(null);
   const [entryPrice, setEntryPrice] = useState('');
   const [stopLossPrice, setStopLossPrice] = useState('');
   const [takeProfitPrice, setTakeProfitPrice] = useState('');
   const [positionSize, setPositionSize] = useState('1');
-  
+
   // Results state
   const [result, setResult] = useState<RiskRewardResult | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -60,7 +60,7 @@ export default function RiskRewardCalculator() {
 
       if (!isValidStopLoss) {
         setValidationError(
-          isLong 
+          isLong
             ? 'For long trades, stop loss must be below entry price'
             : 'For short trades, stop loss must be above entry price'
         );
@@ -70,7 +70,7 @@ export default function RiskRewardCalculator() {
 
       if (!isValidTakeProfit) {
         setValidationError(
-          isLong 
+          isLong
             ? 'For long trades, take profit must be above entry price'
             : 'For short trades, take profit must be below entry price'
         );
@@ -79,7 +79,7 @@ export default function RiskRewardCalculator() {
       }
 
       setValidationError(null);
-      
+
       try {
         const rrResult = calculateRiskReward({
           entryPrice: entryNum,
@@ -99,8 +99,19 @@ export default function RiskRewardCalculator() {
     }
   }, [selectedMarket, entryPrice, stopLossPrice, takeProfitPrice, positionSize]);
 
-  const handleMarketSelect = (market: MarketInfo) => {
-    setSelectedMarket(market);
+  const handleMarketSelect = (market: any) => {
+    // Convert MarketSelector's Market interface to MarketInfo
+    const marketInfo: MarketInfo = {
+      symbol: market.symbol,
+      category: market.category,
+      pip: market.pip,
+      contractSize: market.category === 'forex' ? 100000 :
+                   market.category === 'commodities' ? 1000 :
+                   market.category === 'indices' ? 1 :
+                   market.category === 'crypto' ? 1 : 1,
+      quoteCurrency: market.symbol.includes('/') ? market.symbol.split('/')[1] : 'USD'
+    };
+    setSelectedMarket(marketInfo);
   };
 
   const isGoodRatio = result && result.riskRewardRatio >= 2;
@@ -112,8 +123,8 @@ export default function RiskRewardCalculator() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
-          <Link 
-            href="/tools" 
+          <Link
+            href="/tools"
             className="flex items-center text-slate-600 hover:text-slate-800 mr-4"
           >
             <FiArrowLeft className="mr-2" />
@@ -133,7 +144,7 @@ export default function RiskRewardCalculator() {
         {/* Calculator Form */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
           <h2 className="text-lg font-semibold text-slate-900 mb-4">Trade Setup</h2>
-          
+
           {/* Market Selection */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -167,7 +178,7 @@ export default function RiskRewardCalculator() {
                 placeholder="1.10000"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Stop Loss Price
@@ -181,7 +192,7 @@ export default function RiskRewardCalculator() {
                 placeholder="1.09500"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Take Profit Price
@@ -223,14 +234,14 @@ export default function RiskRewardCalculator() {
         {/* Results Panel */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
           <h2 className="text-lg font-semibold text-slate-900 mb-4">Risk/Reward Analysis</h2>
-          
+
           {result ? (
             <div className="space-y-4">
               {/* Main R:R Ratio */}
               <div className={`p-4 rounded-lg border-2 ${
-                isGoodRatio 
-                  ? 'bg-emerald-50 border-emerald-200' 
-                  : isAcceptableRatio 
+                isGoodRatio
+                  ? 'bg-emerald-50 border-emerald-200'
+                  : isAcceptableRatio
                     ? 'bg-amber-50 border-amber-200'
                     : 'bg-red-50 border-red-200'
               }`}>

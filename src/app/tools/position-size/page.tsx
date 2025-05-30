@@ -6,24 +6,24 @@ import AppLayout from '@/components/AppLayout';
 import MarketSelector from '@/components/MarketSelector';
 import { FiPieChart, FiShield, FiInfo, FiArrowLeft, FiAlertTriangle } from 'react-icons/fi';
 import Link from 'next/link';
-import { 
+import {
   calculatePositionSize,
   getMarketInfo,
   formatCurrency,
   type MarketInfo,
-  type PositionSizeResult 
+  type PositionSizeResult
 } from '@/utils/plCalculator';
 
 export default function PositionSizeCalculator() {
   const { user } = useAuth();
-  
+
   // Form state
   const [selectedMarket, setSelectedMarket] = useState<MarketInfo | null>(null);
   const [accountBalance, setAccountBalance] = useState('');
   const [riskPercentage, setRiskPercentage] = useState('2');
   const [entryPrice, setEntryPrice] = useState('');
   const [stopLossPrice, setStopLossPrice] = useState('');
-  
+
   // Results state
   const [result, setResult] = useState<PositionSizeResult | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -59,7 +59,7 @@ export default function PositionSizeCalculator() {
       }
 
       setValidationError(null);
-      
+
       try {
         const positionResult = calculatePositionSize({
           accountBalance: balanceNum,
@@ -79,8 +79,19 @@ export default function PositionSizeCalculator() {
     }
   }, [selectedMarket, accountBalance, riskPercentage, entryPrice, stopLossPrice]);
 
-  const handleMarketSelect = (market: MarketInfo) => {
-    setSelectedMarket(market);
+  const handleMarketSelect = (market: any) => {
+    // Convert MarketSelector's Market interface to MarketInfo
+    const marketInfo: MarketInfo = {
+      symbol: market.symbol,
+      category: market.category,
+      pip: market.pip,
+      contractSize: market.category === 'forex' ? 100000 :
+                   market.category === 'commodities' ? 1000 :
+                   market.category === 'indices' ? 1 :
+                   market.category === 'crypto' ? 1 : 1,
+      quoteCurrency: market.symbol.includes('/') ? market.symbol.split('/')[1] : 'USD'
+    };
+    setSelectedMarket(marketInfo);
   };
 
   const handleRiskPreset = (risk: number) => {
@@ -94,8 +105,8 @@ export default function PositionSizeCalculator() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
-          <Link 
-            href="/tools" 
+          <Link
+            href="/tools"
             className="flex items-center text-slate-600 hover:text-slate-800 mr-4"
           >
             <FiArrowLeft className="mr-2" />
@@ -115,7 +126,7 @@ export default function PositionSizeCalculator() {
         {/* Calculator Form */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
           <h2 className="text-lg font-semibold text-slate-900 mb-4">Risk Parameters</h2>
-          
+
           {/* Account Balance */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -126,8 +137,8 @@ export default function PositionSizeCalculator() {
               step="any"
               value={accountBalance}
               onChange={(e) => setAccountBalance(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              placeholder="10000"
+              className="w-full px-4 py-3 border-2 border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-slate-900 placeholder-slate-500"
+              placeholder="Enter account balance (e.g., 10000)"
             />
           </div>
 
@@ -149,14 +160,14 @@ export default function PositionSizeCalculator() {
               max="100"
               value={riskPercentage}
               onChange={(e) => setRiskPercentage(e.target.value)}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:border-transparent ${
-                isHighRisk 
-                  ? 'border-red-300 focus:ring-red-500' 
-                  : 'border-slate-300 focus:ring-indigo-500'
+              className={`w-full px-4 py-3 border-2 rounded-md focus:outline-none focus:ring-2 focus:border-transparent bg-white text-slate-900 placeholder-slate-500 ${
+                isHighRisk
+                  ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                  : 'border-slate-300 focus:ring-indigo-500 focus:border-indigo-500'
               }`}
-              placeholder="2"
+              placeholder="Enter risk percentage (e.g., 2)"
             />
-            
+
             {/* Risk Presets */}
             <div className="mt-2">
               <p className="text-xs text-slate-600 mb-2">Common risk levels:</p>
@@ -207,8 +218,8 @@ export default function PositionSizeCalculator() {
                 step="any"
                 value={entryPrice}
                 onChange={(e) => setEntryPrice(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="1.10000"
+                className="w-full px-4 py-3 border-2 border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-slate-900 placeholder-slate-500"
+                placeholder="Enter entry price (e.g., 1.10000)"
               />
             </div>
             <div>
@@ -220,8 +231,8 @@ export default function PositionSizeCalculator() {
                 step="any"
                 value={stopLossPrice}
                 onChange={(e) => setStopLossPrice(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="1.09500"
+                className="w-full px-4 py-3 border-2 border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-slate-900 placeholder-slate-500"
+                placeholder="Enter stop loss price (e.g., 1.09500)"
               />
             </div>
           </div>
@@ -237,7 +248,7 @@ export default function PositionSizeCalculator() {
         {/* Results Panel */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
           <h2 className="text-lg font-semibold text-slate-900 mb-4">Position Size Results</h2>
-          
+
           {result ? (
             <div className="space-y-4">
               {/* Main Position Size Result */}
@@ -268,17 +279,17 @@ export default function PositionSizeCalculator() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-slate-600">Contract Value:</span>
-                    <span className="font-medium">{formatCurrency(result.contractValue)}</span>
+                    <span className="font-medium text-slate-900">{formatCurrency(result.contractValue)}</span>
                   </div>
                   {result.marginRequired && (
                     <div className="flex justify-between">
                       <span className="text-slate-600">Estimated Margin:</span>
-                      <span className="font-medium">{formatCurrency(result.marginRequired)}</span>
+                      <span className="font-medium text-slate-900">{formatCurrency(result.marginRequired)}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
                     <span className="text-slate-600">Risk Percentage:</span>
-                    <span className="font-medium">{riskPercentage}%</span>
+                    <span className="font-medium text-slate-900">{riskPercentage}%</span>
                   </div>
                 </div>
               </div>
