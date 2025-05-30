@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
 import Avatar from '@/components/Avatar';
-import { FiArrowLeft, FiCalendar, FiBarChart2, FiFileText, FiAward, FiLayers } from 'react-icons/fi';
+import { FiArrowLeft, FiCalendar, FiBarChart2, FiFileText, FiAward, FiLayers, FiTrendingUp, FiDollarSign, FiTarget } from 'react-icons/fi';
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase';
 import { Database } from '@/types/database.types';
@@ -15,12 +15,99 @@ type JournalEntry = Database['public']['Tables']['journal_entries']['Row'];
 type Trade = Database['public']['Tables']['trades']['Row'];
 type Strategy = Database['public']['Tables']['strategies']['Row'];
 
+interface ProfileStats {
+  totalTrades: number;
+  winningTrades: number;
+  losingTrades: number;
+  winRate: number;
+  totalProfitLoss: number;
+  currentWinStreak: number;
+  maxWinStreak: number;
+  topTradedPairs: Array<{
+    market: string;
+    count: number;
+    profitLoss: number;
+  }>;
+}
+
+function calculateProfileStats(trades: Trade[]): ProfileStats {
+  // Filter only closed trades with profit/loss data
+  const closedTrades = trades.filter(trade => trade.status === 'closed' && trade.profit_loss !== null);
+
+  // Sort trades by date for streak calculation
+  const sortedTrades = [...closedTrades].sort((a, b) => new Date(a.trade_date).getTime() - new Date(b.trade_date).getTime());
+
+  // Basic statistics
+  const totalTrades = closedTrades.length;
+  const winningTrades = closedTrades.filter(trade => trade.profit_loss! > 0).length;
+  const losingTrades = closedTrades.filter(trade => trade.profit_loss! < 0).length;
+  const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
+  const totalProfitLoss = closedTrades.reduce((sum, trade) => sum + (trade.profit_loss || 0), 0);
+
+  // Calculate winning streaks
+  let currentWinStreak = 0;
+  let maxWinStreak = 0;
+  let tempStreak = 0;
+
+  // Calculate current streak from the end
+  for (let i = sortedTrades.length - 1; i >= 0; i--) {
+    if (sortedTrades[i].profit_loss! > 0) {
+      currentWinStreak++;
+    } else {
+      break;
+    }
+  }
+
+  // Calculate max streak
+  for (const trade of sortedTrades) {
+    if (trade.profit_loss! > 0) {
+      tempStreak++;
+      maxWinStreak = Math.max(maxWinStreak, tempStreak);
+    } else {
+      tempStreak = 0;
+    }
+  }
+
+  // Calculate top traded pairs
+  const pairStats = trades.reduce((acc, trade) => {
+    if (!acc[trade.market]) {
+      acc[trade.market] = { count: 0, profitLoss: 0 };
+    }
+    acc[trade.market].count++;
+    if (trade.profit_loss !== null) {
+      acc[trade.market].profitLoss += trade.profit_loss;
+    }
+    return acc;
+  }, {} as Record<string, { count: number; profitLoss: number }>);
+
+  const topTradedPairs = Object.entries(pairStats)
+    .map(([market, stats]) => ({
+      market,
+      count: stats.count,
+      profitLoss: stats.profitLoss
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 3);
+
+  return {
+    totalTrades,
+    winningTrades,
+    losingTrades,
+    winRate,
+    totalProfitLoss,
+    currentWinStreak,
+    maxWinStreak,
+    topTradedPairs
+  };
+}
+
 export default function UserProfile({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [publicJournals, setPublicJournals] = useState<JournalEntry[]>([]);
   const [publicTrades, setPublicTrades] = useState<Trade[]>([]);
   const [publicStrategies, setPublicStrategies] = useState<Strategy[]>([]);
+  const [profileStats, setProfileStats] = useState<ProfileStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('journals');
@@ -82,6 +169,18 @@ export default function UserProfile({ params }: { params: { id: string } }) {
 
         if (!strategyError && strategyData) {
           setPublicStrategies(strategyData);
+        }
+
+        // Fetch ALL trades for statistics calculation (both public and private)
+        const { data: allTradesData, error: allTradesError } = await supabase
+          .from('trades')
+          .select('*')
+          .eq('user_id', params.id)
+          .order('trade_date', { ascending: false });
+
+        if (!allTradesError && allTradesData) {
+          const stats = calculateProfileStats(allTradesData);
+          setProfileStats(stats);
         }
       } catch (err) {
         console.error('Error fetching profile data:', err);
@@ -165,6 +264,68 @@ export default function UserProfile({ params }: { params: { id: string } }) {
           </div>
         </div>
       </div>
+
+      {/* Trading Statistics */}
+      {profileStats && (
+        <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Trading Performance</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Winning Streak */}
+            <div className="text-center">
+              <div className="flex items-center justify-center mb-2">
+                <FiTrendingUp className="text-2xl text-emerald-600 mr-2" />
+                <div>
+                  <div className="text-2xl font-bold text-gray-900">{profileStats.currentWinStreak}</div>
+                  <div className="text-sm text-gray-600">Current Win Streak</div>
+                </div>
+              </div>
+              <div className="text-xs text-gray-500">
+                Max: {profileStats.maxWinStreak} wins
+              </div>
+            </div>
+
+            {/* Profitability */}
+            <div className="text-center">
+              <div className="flex items-center justify-center mb-2">
+                <FiDollarSign className="text-2xl text-blue-600 mr-2" />
+                <div>
+                  <div className={`text-2xl font-bold ${
+                    profileStats.totalProfitLoss >= 0 ? 'text-emerald-600' : 'text-red-600'
+                  }`}>
+                    {profileStats.totalProfitLoss >= 0 ? '+' : ''}${profileStats.totalProfitLoss.toFixed(2)}
+                  </div>
+                  <div className="text-sm text-gray-600">Total P/L</div>
+                </div>
+              </div>
+              <div className="text-xs text-gray-500">
+                Win Rate: {profileStats.winRate.toFixed(1)}% ({profileStats.winningTrades}/{profileStats.totalTrades})
+              </div>
+            </div>
+
+            {/* Top Traded Pairs */}
+            <div className="text-center">
+              <div className="flex items-center justify-center mb-2">
+                <FiTarget className="text-2xl text-purple-600 mr-2" />
+                <div>
+                  <div className="text-lg font-bold text-gray-900">
+                    {profileStats.topTradedPairs.length > 0 ? profileStats.topTradedPairs[0].market : 'N/A'}
+                  </div>
+                  <div className="text-sm text-gray-600">Top Traded Pair</div>
+                </div>
+              </div>
+              {profileStats.topTradedPairs.length > 0 && (
+                <div className="text-xs text-gray-500">
+                  {profileStats.topTradedPairs[0].count} trades
+                  {profileStats.topTradedPairs.length > 1 && (
+                    <span>, {profileStats.topTradedPairs[1].market} ({profileStats.topTradedPairs[1].count})</span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="mb-6 border-b border-gray-200">
