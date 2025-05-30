@@ -250,24 +250,13 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Minimal Search Bar */}
+        {/* Universal Real-time Search */}
         <div className="mt-4 sm:mt-0 w-full sm:w-auto">
-          <div className="relative">
-            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search trades, markets..."
-              className="w-full sm:w-64 pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  const searchTerm = (e.target as HTMLInputElement).value;
-                  if (searchTerm.trim()) {
-                    router.push(`/trading?search=${encodeURIComponent(searchTerm)}`);
-                  }
-                }
-              }}
-            />
-          </div>
+          <AdvancedSearch
+            placeholder="Search universally for anything..."
+            className="w-full sm:w-64"
+            minimal={true}
+          />
         </div>
       </div>
 
