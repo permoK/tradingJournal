@@ -6,9 +6,7 @@ import ClientOnly from "@/components/ClientOnly";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { TradeModeProvider } from "@/contexts/TradeModeContext";
 
-################# analytics########################
 import { Analytics } from "@vercel/analytics/next"
-###############################
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
