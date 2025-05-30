@@ -273,7 +273,7 @@ export function useJournalEntries(userId: string | undefined, includePrivate = t
 }
 
 // Hook for fetching trades
-export function useTrades(userId: string | undefined, includePrivate = true) {
+export function useTrades(userId: string | undefined, includePrivate = true, isDemoMode?: boolean) {
   const [trades, setTrades] = useState<Database['public']['Tables']['trades']['Row'][]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -300,6 +300,11 @@ export function useTrades(userId: string | undefined, includePrivate = true) {
           query = query.or(`user_id.eq.${userId},is_private.eq.false`);
         }
 
+        // Filter by demo mode if specified
+        if (isDemoMode !== undefined) {
+          query = query.eq('is_demo', isDemoMode);
+        }
+
         const { data, error } = await query;
 
         if (error) throw error;
@@ -315,7 +320,7 @@ export function useTrades(userId: string | undefined, includePrivate = true) {
     };
 
     fetchTrades();
-  }, [userId, includePrivate, supabase]);
+  }, [userId, includePrivate, isDemoMode, supabase]);
 
   const createTrade = async (trade: Omit<Database['public']['Tables']['trades']['Insert'], 'user_id' | 'id' | 'created_at' | 'updated_at'>) => {
     if (!userId) return { error: 'No user ID provided' };

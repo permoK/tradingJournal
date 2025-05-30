@@ -61,7 +61,8 @@ CREATE TABLE IF NOT EXISTS trades (
   status TEXT CHECK (status IN ('open', 'closed')) DEFAULT 'open',
   notes TEXT,
   screenshot_url TEXT,
-  is_private BOOLEAN DEFAULT true
+  is_private BOOLEAN DEFAULT true,
+  is_demo BOOLEAN DEFAULT false
 );
 
 -- Create activity_logs table for streak tracking

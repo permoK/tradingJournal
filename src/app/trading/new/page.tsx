@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTradeMode } from '@/contexts/TradeModeContext';
 import { useTrades, useActivityLogs, useStrategies } from '@/lib/hooks';
 import AppLayout from '@/components/AppLayout';
 import MarketSelector from '@/components/MarketSelector';
 import ImageUpload from '@/components/ImageUpload';
 import SavedTradesList from '@/components/SavedTradesList';
+import TradeModeToggle from '@/components/TradeModeToggle';
 import { SavedTrade } from '@/components/SavedTradeCard';
 import { FiPlus, FiX, FiDollarSign, FiTrendingUp, FiTrendingDown, FiInfo } from 'react-icons/fi';
 import { format } from 'date-fns';
@@ -16,6 +18,7 @@ import { calculatePL, getMarketInfo, formatPL, formatPips, formatPercentage, val
 export default function NewTrade() {
   const router = useRouter();
   const { user } = useAuth();
+  const { isDemoMode } = useTradeMode();
   const { createMultipleTrades } = useTrades(user?.id);
   const { logActivity } = useActivityLogs(user?.id);
   const { strategies } = useStrategies(user?.id);
@@ -165,6 +168,7 @@ export default function NewTrade() {
       status: status as 'open' | 'closed',
       notes,
       isPrivate,
+      isDemo: isDemoMode,
       screenshotUrl,
       calculatedPL: status === 'closed' ? calculatedPL : null,
       strategyId: strategyId || null
@@ -234,6 +238,7 @@ export default function NewTrade() {
         notes: trade.notes.trim() || null,
         screenshot_url: trade.screenshotUrl,
         is_private: trade.isPrivate,
+        is_demo: trade.isDemo,
         strategy_id: trade.strategyId || null
       }));
 
@@ -262,11 +267,17 @@ export default function NewTrade() {
     <AppLayout>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
-            {editingTrade ? 'Edit Trade' : 'Record New Trades'}
-          </h1>
+          <div className="flex items-center gap-4 mb-2">
+            <h1 className="text-2xl font-bold text-slate-900">
+              {editingTrade ? 'Edit Trade' : 'Record New Trades'}
+            </h1>
+            <TradeModeToggle />
+          </div>
           <p className="text-slate-600 mt-1">
             Add multiple trades and record them all at once
+            {isDemoMode && (
+              <span className="text-amber-600 font-medium"> • Demo Mode Active</span>
+            )}
           </p>
         </div>
         <button

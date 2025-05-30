@@ -4,6 +4,7 @@ import "./globals.css";
 import ServerCompileLoader from "@/components/ServerCompileLoader";
 import ClientOnly from "@/components/ClientOnly";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { TradeModeProvider } from "@/contexts/TradeModeContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,10 +38,12 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} antialiased`}
       >
         <AuthProvider>
-          <ClientOnly>
-            <ServerCompileLoader />
-          </ClientOnly>
-          {children}
+          <TradeModeProvider>
+            <ClientOnly>
+              <ServerCompileLoader />
+            </ClientOnly>
+            {children}
+          </TradeModeProvider>
         </AuthProvider>
       </body>
     </html>

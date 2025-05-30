@@ -1,6 +1,6 @@
 'use client';
 
-import { FiEdit, FiTrash2, FiTrendingUp, FiTrendingDown, FiImage } from 'react-icons/fi';
+import { FiEdit, FiTrash2, FiTrendingUp, FiTrendingDown, FiImage, FiPause } from 'react-icons/fi';
 import { format } from 'date-fns';
 
 export interface SavedTrade {
@@ -14,6 +14,7 @@ export interface SavedTrade {
   status: 'open' | 'closed';
   notes: string;
   isPrivate: boolean;
+  isDemo: boolean;
   screenshotUrl?: string | null;
   calculatedPL?: number | null;
   strategyId?: string | null;
@@ -65,6 +66,12 @@ export default function SavedTradeCard({ trade, onEdit, onDelete }: SavedTradeCa
             }`}>
               {trade.status.toUpperCase()}
             </span>
+            {trade.isDemo && (
+              <span className="inline-flex items-center px-2 py-1 text-xs rounded-full font-medium bg-amber-100 text-amber-800">
+                <FiPause className="mr-1 w-3 h-3" />
+                Demo
+              </span>
+            )}
           </div>
           <p className="text-sm text-slate-600">
             {format(new Date(trade.tradeDate), 'MMM d, yyyy')}

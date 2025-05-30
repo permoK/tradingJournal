@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useTrades } from '@/lib/hooks';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTradeMode } from '@/contexts/TradeModeContext';
 import AppLayout from '@/components/AppLayout';
-import { FiPlus, FiEye, FiEyeOff, FiEdit2, FiTrash2, FiFilter, FiTrendingUp } from 'react-icons/fi';
+import TradeModeToggle from '@/components/TradeModeToggle';
+import { FiPlus, FiEye, FiEyeOff, FiEdit2, FiTrash2, FiFilter, FiTrendingUp, FiPause } from 'react-icons/fi';
 import { format, subDays } from 'date-fns';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -13,7 +15,8 @@ import TradePerformanceChart from '@/components/TradePerformanceChart';
 export default function Trading() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const { trades, loading: tradesLoading, deleteTrade: deleteTradeHook } = useTrades(user?.id);
+  const { isDemoMode } = useTradeMode();
+  const { trades, loading: tradesLoading, deleteTrade: deleteTradeHook } = useTrades(user?.id, true, isDemoMode);
 
   const [showPrivate, setShowPrivate] = useState(true);
   const [marketFilter, setMarketFilter] = useState('all');
@@ -94,9 +97,15 @@ export default function Trading() {
     <AppLayout>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Trading Journal</h1>
+          <div className="flex items-center gap-4 mb-2">
+            <h1 className="text-2xl font-bold text-slate-900">Trading Journal</h1>
+            <TradeModeToggle />
+          </div>
           <p className="text-slate-700 font-medium">
             Track and analyze your Deriv trades
+            {isDemoMode && (
+              <span className="text-amber-600 font-medium"> • Demo Mode Active</span>
+            )}
           </p>
         </div>
         <Link
@@ -245,6 +254,12 @@ export default function Trading() {
                             Private
                           </span>
                         )}
+                        {trade.is_demo && (
+                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                            <FiPause className="mr-1" size={10} />
+                            Demo
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{trade.market}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{trade.trade_type}</td>
@@ -322,6 +337,12 @@ export default function Trading() {
                           <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800 border border-slate-200">
                             <FiEyeOff className="mr-1" size={10} />
                             Private
+                          </span>
+                        )}
+                        {trade.is_demo && (
+                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                            <FiPause className="mr-1" size={10} />
+                            Demo
                           </span>
                         )}
                       </div>

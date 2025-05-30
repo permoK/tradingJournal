@@ -144,6 +144,7 @@ export interface Database {
           notes: string | null
           screenshot_url: string | null
           is_private: boolean
+          is_demo: boolean
         }
         Insert: {
           id?: string
@@ -162,6 +163,7 @@ export interface Database {
           notes?: string | null
           screenshot_url?: string | null
           is_private?: boolean
+          is_demo?: boolean
         }
         Update: {
           id?: string
@@ -180,6 +182,7 @@ export interface Database {
           notes?: string | null
           screenshot_url?: string | null
           is_private?: boolean
+          is_demo?: boolean
         }
       }
       activity_logs: {

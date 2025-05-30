@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useProfile, useStrategies, useActivityLogs, useTrades } from '@/lib/hooks';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTradeMode } from '@/contexts/TradeModeContext';
 import AppLayout from '@/components/AppLayout';
+import TradeModeToggle from '@/components/TradeModeToggle';
 import { FiBook, FiBarChart2, FiFileText, FiUsers, FiAward, FiCalendar, FiSearch, FiTrendingUp, FiTrendingDown, FiFilter, FiEye } from 'react-icons/fi';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, subWeeks, subMonths } from 'date-fns';
 import Link from 'next/link';
@@ -23,10 +25,11 @@ ChartJS.register(ArcElement, ChartTooltip, Legend, CategoryScale, LinearScale, B
 export default function Dashboard() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const { isDemoMode } = useTradeMode();
   const { profile, loading: profileLoading } = useProfile(user?.id);
   const { strategies, loading: strategiesLoading } = useStrategies(user?.id);
   const { activities, loading: activitiesLoading } = useActivityLogs(user?.id);
-  const { trades, loading: tradesLoading } = useTrades(user?.id);
+  const { trades, loading: tradesLoading } = useTrades(user?.id, true, isDemoMode);
 
   const [activeStrategies, setActiveStrategies] = useState(0);
   const [totalStrategies, setTotalStrategies] = useState(0);
@@ -233,10 +236,18 @@ export default function Dashboard() {
 
       <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Trading Dashboard</h1>
+          <div className="flex items-center gap-4 mb-2">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Trading Dashboard</h1>
+            <TradeModeToggle />
+          </div>
           <p className="text-slate-700 font-medium text-sm sm:text-base">
             {format(new Date(), 'EEEE, MMMM d, yyyy')}
           </p>
+          {isDemoMode && (
+            <p className="text-amber-600 text-sm font-medium mt-1">
+              You are currently viewing demo trades. Switch to real mode to see your actual trading data.
+            </p>
+          )}
         </div>
 
         {/* Minimal Search Bar */}

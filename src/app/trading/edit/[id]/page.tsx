@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTrades, useActivityLogs, useStrategies } from '@/lib/hooks';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTradeMode } from '@/contexts/TradeModeContext';
 import AppLayout from '@/components/AppLayout';
 import MarketSelector from '@/components/MarketSelector';
+import TradeModeToggle from '@/components/TradeModeToggle';
 import { FiSave, FiX, FiDollarSign, FiTrendingUp, FiTrendingDown, FiInfo } from 'react-icons/fi';
 import { format } from 'date-fns';
 import { calculatePL, getMarketInfo, formatPL, formatPips, formatPercentage, validateTradeInputs, getSuggestedLotSizes } from '@/utils/plCalculator';
@@ -13,6 +15,7 @@ import { calculatePL, getMarketInfo, formatPL, formatPips, formatPercentage, val
 export default function EditTrade({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { user } = useAuth();
+  const { isDemoMode } = useTradeMode();
   const { trades, updateTrade } = useTrades(user?.id);
   const { logActivity } = useActivityLogs(user?.id);
   const { strategies } = useStrategies(user?.id);
@@ -166,6 +169,7 @@ export default function EditTrade({ params }: { params: { id: string } }) {
         status,
         notes: notes.trim() || null,
         is_private: isPrivate,
+        is_demo: isDemoMode,
         strategy_id: strategyId || null
       });
 
@@ -205,7 +209,17 @@ export default function EditTrade({ params }: { params: { id: string } }) {
   return (
     <AppLayout>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Edit Trade</h1>
+        <div>
+          <div className="flex items-center gap-4 mb-2">
+            <h1 className="text-2xl font-bold text-slate-900">Edit Trade</h1>
+            <TradeModeToggle />
+          </div>
+          {isDemoMode && (
+            <p className="text-amber-600 text-sm font-medium">
+              Demo Mode Active - Changes will be saved as demo trade
+            </p>
+          )}
+        </div>
         <button
           onClick={() => router.push('/trading')}
           className="flex items-center px-3 py-2 border border-slate-300 rounded-md hover:bg-slate-50 text-slate-700"
