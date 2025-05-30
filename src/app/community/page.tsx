@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
+import Avatar from '@/components/Avatar';
 import { supabase } from '@/lib/supabase';
 import { FiUser, FiBarChart2, FiFileText, FiSearch, FiLayers } from 'react-icons/fi';
 import { format } from 'date-fns';
@@ -209,8 +210,12 @@ export default function Community() {
                 <Link key={profile.id} href={`/community/profile/${profile.id}`}>
                   <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-slate-200 hover:border-indigo-300">
                     <div className="flex items-center">
-                      <div className="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xl mr-4">
-                        {profile.username.charAt(0).toUpperCase()}
+                      <div className="mr-4">
+                        <Avatar
+                          username={profile.username}
+                          avatarUrl={profile.avatar_url}
+                          size="md"
+                        />
                       </div>
                       <div>
                         <h3 className="font-semibold text-slate-900 hover:text-indigo-700 transition-colors">{profile.username}</h3>

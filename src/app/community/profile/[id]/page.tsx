@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
+import Avatar from '@/components/Avatar';
 import { FiArrowLeft, FiCalendar, FiBarChart2, FiFileText, FiAward, FiLayers } from 'react-icons/fi';
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase';
@@ -135,9 +136,11 @@ export default function UserProfile({ params }: { params: { id: string } }) {
       {/* Profile Header */}
       <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-          <div className="h-24 w-24 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-4xl">
-            {profile.username.charAt(0).toUpperCase()}
-          </div>
+          <Avatar
+            username={profile.username}
+            avatarUrl={profile.avatar_url}
+            size="xl"
+          />
 
           <div className="flex-1 text-center md:text-left">
             <h1 className="text-2xl font-bold text-gray-900">{profile.username}</h1>

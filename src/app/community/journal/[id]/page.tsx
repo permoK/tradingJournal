@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
+import Avatar from '@/components/Avatar';
 import { FiArrowLeft } from 'react-icons/fi';
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase';
@@ -137,9 +138,11 @@ export default function CommunityJournalView({ params }: { params: { id: string 
         <div className="bg-slate-50 p-6 rounded-lg border border-slate-200">
           <h2 className="text-lg font-semibold text-slate-900 mb-3">About the Author</h2>
           <div className="flex items-start space-x-4">
-            <div className="h-16 w-16 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-2xl">
-              {author.username.charAt(0).toUpperCase()}
-            </div>
+            <Avatar
+              username={author.username}
+              avatarUrl={author.avatar_url}
+              size="lg"
+            />
             <div className="flex-1">
               <p className="font-semibold text-slate-900 text-lg">{author.username}</p>
               {author.full_name && (

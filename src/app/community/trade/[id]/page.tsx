@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
+import Avatar from '@/components/Avatar';
 import { supabase } from '@/lib/supabase';
 import { FiArrowLeft, FiUser, FiCalendar, FiTrendingUp, FiTrendingDown, FiDollarSign, FiBarChart2 } from 'react-icons/fi';
 import { format } from 'date-fns';
@@ -95,7 +96,7 @@ export default function CommunityTradeDetail({ params }: { params: { id: string 
 
   const profitLoss = trade.profit_loss || 0;
   const isProfit = profitLoss > 0;
-  const profitLossPercentage = trade.entry_price 
+  const profitLossPercentage = trade.entry_price
     ? ((profitLoss / trade.entry_price) * 100).toFixed(2)
     : '0.00';
 
@@ -110,26 +111,28 @@ export default function CommunityTradeDetail({ params }: { params: { id: string 
           <FiArrowLeft className="mr-2" />
           Back to Community
         </Link>
-        
+
         <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-slate-900">{trade.market} Trade</h1>
             <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-              trade.status === 'closed' 
-                ? isProfit 
-                  ? 'bg-emerald-100 text-emerald-800' 
+              trade.status === 'closed'
+                ? isProfit
+                  ? 'bg-emerald-100 text-emerald-800'
                   : 'bg-red-100 text-red-800'
                 : 'bg-amber-100 text-amber-800'
             }`}>
               {trade.status === 'closed' ? (isProfit ? 'Profitable' : 'Loss') : 'Open'}
             </div>
           </div>
-          
+
           {/* Author Info */}
           <div className="flex items-center space-x-4 mb-4">
-            <div className="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-lg">
-              {author?.username?.charAt(0).toUpperCase() || 'U'}
-            </div>
+            <Avatar
+              username={author?.username || 'Unknown User'}
+              avatarUrl={author?.avatar_url}
+              size="md"
+            />
             <div>
               <div className="flex items-center space-x-2">
                 <FiUser className="text-slate-500 w-4 h-4" />
@@ -244,9 +247,11 @@ export default function CommunityTradeDetail({ params }: { params: { id: string 
         <div className="bg-slate-50 p-6 rounded-lg border border-slate-200">
           <h3 className="text-lg font-semibold text-slate-900 mb-3">About the Trader</h3>
           <div className="flex items-start space-x-4">
-            <div className="h-16 w-16 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xl">
-              {author.username.charAt(0).toUpperCase()}
-            </div>
+            <Avatar
+              username={author.username}
+              avatarUrl={author.avatar_url}
+              size="lg"
+            />
             <div className="flex-1">
               <h4 className="font-semibold text-slate-900 mb-1">{author.username}</h4>
               {author.full_name && (

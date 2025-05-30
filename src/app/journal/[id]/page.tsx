@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useJournalEntries, useProfile } from '@/lib/hooks';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
+import Avatar from '@/components/Avatar';
 import { FiEdit2, FiTrash2, FiArrowLeft, FiEyeOff } from 'react-icons/fi';
 import { format } from 'date-fns';
 import Link from 'next/link';
@@ -158,8 +159,12 @@ export default function JournalEntryView({ params }: { params: { id: string } })
       <div className="bg-gray-50 p-6 rounded-lg">
         <h2 className="text-lg font-semibold mb-2">Author</h2>
         <div className="flex items-center">
-          <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xl mr-4">
-            {profile?.username.charAt(0).toUpperCase()}
+          <div className="mr-4">
+            <Avatar
+              username={profile?.username || 'Unknown'}
+              avatarUrl={profile?.avatar_url}
+              size="md"
+            />
           </div>
           <div>
             <p className="font-medium">{profile?.username}</p>

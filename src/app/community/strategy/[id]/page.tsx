@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
+import Avatar from '@/components/Avatar';
 import { FiArrowLeft, FiUser, FiCalendar, FiBarChart2, FiLayers, FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase';
@@ -27,7 +28,7 @@ export default function CommunityStrategyPage({ params }: CommunityStrategyPageP
     const fetchStrategy = async () => {
       try {
         const { id } = await params;
-        
+
         // Fetch strategy
         const { data: strategyData, error: strategyError } = await supabase
           .from('strategies')
@@ -199,8 +200,12 @@ export default function CommunityStrategyPage({ params }: CommunityStrategyPageP
               <h3 className="text-lg font-semibold text-slate-900 mb-4">Strategy Author</h3>
               <Link href={`/community/profile/${author.id}`} className="block hover:bg-slate-50 rounded-lg p-3 transition-colors">
                 <div className="flex items-center">
-                  <div className="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xl mr-4">
-                    {author.username.charAt(0).toUpperCase()}
+                  <div className="mr-4">
+                    <Avatar
+                      username={author.username}
+                      avatarUrl={author.avatar_url}
+                      size="md"
+                    />
                   </div>
                   <div>
                     <h4 className="font-semibold text-slate-900 hover:text-indigo-700 transition-colors">{author.username}</h4>
@@ -232,7 +237,7 @@ export default function CommunityStrategyPage({ params }: CommunityStrategyPageP
               </span>
             </div>
             <p className="text-sm text-slate-600 mt-2">
-              {strategy.is_active 
+              {strategy.is_active
                 ? 'This strategy is currently being used by the author'
                 : 'This strategy is no longer actively used'
               }
