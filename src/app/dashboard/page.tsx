@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTradeMode } from '@/contexts/TradeModeContext';
 import AppLayout from '@/components/AppLayout';
 import TradeModeToggle from '@/components/TradeModeToggle';
-import { FiBook, FiBarChart2, FiFileText, FiUsers, FiAward, FiCalendar, FiSearch, FiTrendingUp, FiTrendingDown, FiFilter, FiEye } from 'react-icons/fi';
+import { FiBook, FiBarChart2, FiFileText, FiUsers, FiAward, FiCalendar, FiSearch, FiTrendingUp, FiTrendingDown, FiFilter, FiEye, FiGrid } from 'react-icons/fi';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, subWeeks, subMonths } from 'date-fns';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -590,7 +590,7 @@ export default function Dashboard() {
       {/* Quick Actions */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 mb-8">
         <h2 className="text-lg font-semibold mb-4 text-slate-900">Quick Actions</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <Link href="/trading/new" className="flex items-center p-4 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors border border-emerald-100 hover:border-emerald-200">
             <FiBarChart2 className="text-emerald-700 mr-3 text-lg" />
             <span className="text-slate-900 font-medium">Record Trade</span>
@@ -602,6 +602,10 @@ export default function Dashboard() {
           <Link href="/strategies" className="flex items-center p-4 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors border border-indigo-100 hover:border-indigo-200">
             <FiBook className="text-indigo-700 mr-3 text-lg" />
             <span className="text-slate-900 font-medium">Manage Strategies</span>
+          </Link>
+          <Link href="/tools" className="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors border border-blue-100 hover:border-blue-200">
+            <FiGrid className="text-blue-700 mr-3 text-lg" />
+            <span className="text-slate-900 font-medium">Trading Tools</span>
           </Link>
           <Link href="/community" className="flex items-center p-4 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors border border-amber-100 hover:border-amber-200">
             <FiUsers className="text-amber-700 mr-3 text-lg" />

@@ -4,7 +4,7 @@ import { ReactNode, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { FiHome, FiBook, FiBarChart2, FiFileText, FiUsers, FiSettings, FiLogOut, FiX } from 'react-icons/fi';
+import { FiHome, FiBook, FiBarChart2, FiFileText, FiUsers, FiSettings, FiLogOut, FiX, FiGrid } from 'react-icons/fi';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -31,6 +31,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     { name: 'Trading', href: '/trading', icon: FiBarChart2 },
     { name: 'Journal', href: '/journal', icon: FiFileText },
     { name: 'Community', href: '/community', icon: FiUsers },
+    { name: 'Tools', href: '/tools', icon: FiGrid },
     { name: 'Settings', href: '/settings', icon: FiSettings },
   ];
 
