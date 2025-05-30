@@ -401,8 +401,8 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
               if (results.length > 0) setIsOpen(true);
             }}
             className={minimal
-              ? "w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white"
-              : "w-full pl-10 p-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 bg-white"
+              ? "w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white text-slate-900 placeholder-slate-500"
+              : "w-full pl-10 p-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 bg-white placeholder-slate-500"
             }
           />
           {loading && (
