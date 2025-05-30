@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS strategies (
   image_url TEXT,
   category TEXT,
   is_active BOOLEAN DEFAULT true,
+  is_private BOOLEAN DEFAULT true,
   success_rate DECIMAL(5,2) DEFAULT 0,
   total_trades INTEGER DEFAULT 0,
   profitable_trades INTEGER DEFAULT 0
@@ -93,6 +94,9 @@ CREATE POLICY "Users can insert own profile" ON profiles
 -- Strategies policies
 CREATE POLICY "Users can view own strategies" ON strategies
   FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can view public strategies" ON strategies
+  FOR SELECT USING (is_private = false);
 
 CREATE POLICY "Users can insert own strategies" ON strategies
   FOR INSERT WITH CHECK (auth.uid() = user_id);

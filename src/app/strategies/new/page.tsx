@@ -24,6 +24,7 @@ export default function NewStrategy() {
   const [category, setCategory] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [isActive, setIsActive] = useState(true);
+  const [isPrivate, setIsPrivate] = useState(true);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +50,7 @@ export default function NewStrategy() {
         category: category.trim() || null,
         image_url: imageUrl.trim() || null,
         is_active: isActive,
+        is_private: isPrivate,
         success_rate: 0,
         total_trades: 0,
         profitable_trades: 0
@@ -181,6 +183,23 @@ export default function NewStrategy() {
                 </label>
                 <p className="text-xs text-slate-500 mt-1">
                   Active strategies can be selected when recording trades
+                </p>
+              </div>
+
+              <div>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={isPrivate}
+                    onChange={(e) => setIsPrivate(e.target.checked)}
+                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span className="ml-2 text-sm font-medium text-slate-700">
+                    Private Strategy
+                  </span>
+                </label>
+                <p className="text-xs text-slate-500 mt-1">
+                  Private strategies are only visible to you. Uncheck to share with the community.
                 </p>
               </div>
             </div>

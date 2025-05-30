@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
 import { supabase } from '@/lib/supabase';
-import { FiUser, FiBarChart2, FiFileText, FiSearch } from 'react-icons/fi';
+import { FiUser, FiBarChart2, FiFileText, FiSearch, FiLayers } from 'react-icons/fi';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { Database } from '@/types/database.types';
@@ -12,6 +12,7 @@ import { Database } from '@/types/database.types';
 type Profile = Database['public']['Tables']['profiles']['Row'];
 type JournalEntry = Database['public']['Tables']['journal_entries']['Row'];
 type Trade = Database['public']['Tables']['trades']['Row'];
+type Strategy = Database['public']['Tables']['strategies']['Row'];
 
 export default function Community() {
   const { user, loading: authLoading } = useAuth();
@@ -19,6 +20,7 @@ export default function Community() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [publicJournals, setPublicJournals] = useState<JournalEntry[]>([]);
   const [publicTrades, setPublicTrades] = useState<Trade[]>([]);
+  const [publicStrategies, setPublicStrategies] = useState<Strategy[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('members');
 
@@ -64,6 +66,19 @@ export default function Community() {
         setPublicTrades(tradesData || []);
       }
 
+      // Fetch public strategies
+      const { data: strategiesData, error: strategiesError } = await supabase
+        .from('strategies')
+        .select('*')
+        .eq('is_private', false)
+        .order('created_at', { ascending: false });
+
+      if (strategiesError) {
+        console.error('Error fetching strategies:', strategiesError);
+      } else {
+        setPublicStrategies(strategiesData || []);
+      }
+
       setLoading(false);
     };
 
@@ -85,6 +100,12 @@ export default function Community() {
     trade.market.toLowerCase().includes(searchTerm.toLowerCase()) ||
     trade.trade_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (trade.notes && trade.notes.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const filteredStrategies = publicStrategies.filter(strategy =>
+    strategy.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (strategy.description && strategy.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (strategy.category && strategy.category.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const isLoading = authLoading || loading;
@@ -159,6 +180,17 @@ export default function Community() {
           >
             <FiBarChart2 className="inline mr-2" />
             Public Trades
+          </button>
+          <button
+            onClick={() => setActiveTab('strategies')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'strategies'
+                ? 'border-indigo-600 text-indigo-700'
+                : 'border-transparent text-slate-600 hover:text-slate-800 hover:border-slate-300'
+            }`}
+          >
+            <FiLayers className="inline mr-2" />
+            Public Strategies
           </button>
         </nav>
       </div>
@@ -326,6 +358,77 @@ export default function Community() {
                   </tbody>
                 </table>
               </div>
+            )}
+          </div>
+        )}
+
+        {/* Strategies Tab */}
+        {activeTab === 'strategies' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredStrategies.length === 0 ? (
+              <div className="col-span-full bg-white p-6 rounded-lg shadow-sm text-center">
+                <p className="text-slate-700 font-medium">No public strategies found</p>
+              </div>
+            ) : (
+              filteredStrategies.map(strategy => (
+                <Link key={strategy.id} href={`/community/strategy/${strategy.id}`}>
+                  <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-slate-200 hover:border-indigo-300">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-slate-900 hover:text-indigo-700 transition-colors mb-1">
+                          {strategy.name}
+                        </h3>
+                        <p className="text-sm text-slate-600 mb-2">
+                          by {profiles.find(p => p.id === strategy.user_id)?.username || 'Unknown User'}
+                        </p>
+                        {strategy.category && (
+                          <span className="inline-block px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 rounded-full">
+                            {strategy.category}
+                          </span>
+                        )}
+                      </div>
+                      {strategy.image_url && (
+                        <img
+                          src={strategy.image_url}
+                          alt={strategy.name}
+                          className="w-16 h-16 rounded-lg object-cover border border-slate-200 ml-4"
+                        />
+                      )}
+                    </div>
+
+                    {strategy.description && (
+                      <p className="text-sm text-slate-700 mb-4 line-clamp-3">
+                        {strategy.description}
+                      </p>
+                    )}
+
+                    <div className="flex justify-between items-center text-sm">
+                      <div className="flex space-x-4">
+                        <div className="text-slate-600">
+                          <span className="font-medium">Success Rate:</span>
+                          <span className={`ml-1 font-semibold ${
+                            strategy.success_rate >= 70 ? 'text-emerald-600' :
+                            strategy.success_rate >= 50 ? 'text-amber-600' : 'text-red-600'
+                          }`}>
+                            {strategy.success_rate.toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="text-slate-600">
+                          <span className="font-medium">Trades:</span>
+                          <span className="ml-1 font-semibold text-slate-800">{strategy.total_trades}</span>
+                        </div>
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        {format(new Date(strategy.created_at), 'MMM d, yyyy')}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 text-xs text-indigo-600 font-medium">
+                      Click to view strategy →
+                    </div>
+                  </div>
+                </Link>
+              ))
             )}
           </div>
         )}

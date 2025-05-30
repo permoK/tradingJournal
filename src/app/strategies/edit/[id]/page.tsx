@@ -30,6 +30,7 @@ export default function EditStrategy() {
   const [category, setCategory] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [isActive, setIsActive] = useState(true);
+  const [isPrivate, setIsPrivate] = useState(true);
 
   useEffect(() => {
     const fetchStrategy = async () => {
@@ -50,6 +51,7 @@ export default function EditStrategy() {
         setCategory(data.category || '');
         setImageUrl(data.image_url || '');
         setIsActive(data.is_active);
+        setIsPrivate(data.is_private ?? true);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -84,6 +86,7 @@ export default function EditStrategy() {
         category: category.trim() || null,
         image_url: imageUrl.trim() || null,
         is_active: isActive,
+        is_private: isPrivate,
       });
 
       if (updateError) {
@@ -241,6 +244,23 @@ export default function EditStrategy() {
                 </label>
                 <p className="text-xs text-slate-500 mt-1">
                   Active strategies can be selected when recording trades
+                </p>
+              </div>
+
+              <div>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={isPrivate}
+                    onChange={(e) => setIsPrivate(e.target.checked)}
+                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span className="ml-2 text-sm font-medium text-slate-700">
+                    Private Strategy
+                  </span>
+                </label>
+                <p className="text-xs text-slate-500 mt-1">
+                  Private strategies are only visible to you. Uncheck to share with the community.
                 </p>
               </div>
             </div>

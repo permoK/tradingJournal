@@ -56,6 +56,7 @@ export interface Database {
           image_url: string | null
           category: string | null
           is_active: boolean
+          is_private: boolean
           success_rate: number
           total_trades: number
           profitable_trades: number
@@ -71,6 +72,7 @@ export interface Database {
           image_url?: string | null
           category?: string | null
           is_active?: boolean
+          is_private?: boolean
           success_rate?: number
           total_trades?: number
           profitable_trades?: number
@@ -86,6 +88,7 @@ export interface Database {
           image_url?: string | null
           category?: string | null
           is_active?: boolean
+          is_private?: boolean
           success_rate?: number
           total_trades?: number
           profitable_trades?: number

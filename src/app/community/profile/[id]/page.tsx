@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
-import { FiArrowLeft, FiCalendar, FiBarChart2, FiFileText, FiAward } from 'react-icons/fi';
+import { FiArrowLeft, FiCalendar, FiBarChart2, FiFileText, FiAward, FiLayers } from 'react-icons/fi';
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase';
 import { Database } from '@/types/database.types';
@@ -12,12 +12,14 @@ import Link from 'next/link';
 type Profile = Database['public']['Tables']['profiles']['Row'];
 type JournalEntry = Database['public']['Tables']['journal_entries']['Row'];
 type Trade = Database['public']['Tables']['trades']['Row'];
+type Strategy = Database['public']['Tables']['strategies']['Row'];
 
 export default function UserProfile({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [publicJournals, setPublicJournals] = useState<JournalEntry[]>([]);
   const [publicTrades, setPublicTrades] = useState<Trade[]>([]);
+  const [publicStrategies, setPublicStrategies] = useState<Strategy[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('journals');
@@ -66,6 +68,19 @@ export default function UserProfile({ params }: { params: { id: string } }) {
 
         if (!tradeError && tradeData) {
           setPublicTrades(tradeData);
+        }
+
+        // Fetch public strategies
+        const { data: strategyData, error: strategyError } = await supabase
+          .from('strategies')
+          .select('*')
+          .eq('user_id', params.id)
+          .eq('is_private', false)
+          .order('created_at', { ascending: false })
+          .limit(20);
+
+        if (!strategyError && strategyData) {
+          setPublicStrategies(strategyData);
         }
       } catch (err) {
         console.error('Error fetching profile data:', err);
@@ -172,6 +187,17 @@ export default function UserProfile({ params }: { params: { id: string } }) {
           >
             <FiBarChart2 className="inline mr-2" />
             Public Trades ({publicTrades.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('strategies')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'strategies'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <FiLayers className="inline mr-2" />
+            Public Strategies ({publicStrategies.length})
           </button>
         </nav>
       </div>
@@ -292,6 +318,74 @@ export default function UserProfile({ params }: { params: { id: string } }) {
                   </tbody>
                 </table>
               </div>
+            )}
+          </div>
+        )}
+
+        {/* Strategies Tab */}
+        {activeTab === 'strategies' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {publicStrategies.length === 0 ? (
+              <div className="col-span-full bg-white p-6 rounded-lg shadow-sm text-center">
+                <p className="text-gray-500">No public strategies found</p>
+              </div>
+            ) : (
+              publicStrategies.map(strategy => (
+                <Link key={strategy.id} href={`/community/strategy/${strategy.id}`}>
+                  <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-slate-200 hover:border-indigo-300">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-slate-900 hover:text-indigo-700 transition-colors mb-1">
+                          {strategy.name}
+                        </h3>
+                        {strategy.category && (
+                          <span className="inline-block px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 rounded-full">
+                            {strategy.category}
+                          </span>
+                        )}
+                      </div>
+                      {strategy.image_url && (
+                        <img
+                          src={strategy.image_url}
+                          alt={strategy.name}
+                          className="w-16 h-16 rounded-lg object-cover border border-slate-200 ml-4"
+                        />
+                      )}
+                    </div>
+
+                    {strategy.description && (
+                      <p className="text-sm text-slate-700 mb-4 line-clamp-3">
+                        {strategy.description}
+                      </p>
+                    )}
+
+                    <div className="flex justify-between items-center text-sm">
+                      <div className="flex space-x-4">
+                        <div className="text-slate-600">
+                          <span className="font-medium">Success Rate:</span>
+                          <span className={`ml-1 font-semibold ${
+                            strategy.success_rate >= 70 ? 'text-emerald-600' :
+                            strategy.success_rate >= 50 ? 'text-amber-600' : 'text-red-600'
+                          }`}>
+                            {strategy.success_rate.toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="text-slate-600">
+                          <span className="font-medium">Trades:</span>
+                          <span className="ml-1 font-semibold text-slate-800">{strategy.total_trades}</span>
+                        </div>
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        {format(new Date(strategy.created_at), 'MMM d, yyyy')}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 text-xs text-indigo-600 font-medium">
+                      Click to view strategy →
+                    </div>
+                  </div>
+                </Link>
+              ))
             )}
           </div>
         )}
