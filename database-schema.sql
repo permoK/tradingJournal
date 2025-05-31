@@ -157,11 +157,12 @@ CREATE POLICY "Users can delete own activity logs" ON activity_logs
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, username, full_name)
+  INSERT INTO public.profiles (id, username, full_name, avatar_url)
   VALUES (
     NEW.id,
     NEW.raw_user_meta_data->>'username',
-    NEW.raw_user_meta_data->>'full_name'
+    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name'),
+    NEW.raw_user_meta_data->>'avatar_url'
   );
   RETURN NEW;
 END;

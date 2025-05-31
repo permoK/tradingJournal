@@ -26,11 +26,23 @@ export async function middleware(req: NextRequest) {
     '/auth/forgot-password',
   ];
 
+  // Special auth routes that don't redirect authenticated users
+  const specialAuthRoutes = [
+    '/auth/setup-username',
+    '/auth/callback',
+    '/auth/verify-email',
+    '/auth/reset-password',
+  ];
+
   const isProtectedRoute = protectedRoutes.some(route =>
     req.nextUrl.pathname === route || req.nextUrl.pathname.startsWith(`${route}/`)
   );
 
   const isAuthRoute = authRoutes.some(route =>
+    req.nextUrl.pathname === route || req.nextUrl.pathname.startsWith(`${route}/`)
+  );
+
+  const isSpecialAuthRoute = specialAuthRoutes.some(route =>
     req.nextUrl.pathname === route || req.nextUrl.pathname.startsWith(`${route}/`)
   );
 
@@ -41,8 +53,8 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  // If user is authenticated and trying to access auth routes, redirect to dashboard
-  if (isAuthRoute && session) {
+  // If user is authenticated and trying to access auth routes (but not special auth routes), redirect to dashboard
+  if (isAuthRoute && session && !isSpecialAuthRoute) {
     return NextResponse.redirect(new URL('/dashboard', req.url));
   }
 
