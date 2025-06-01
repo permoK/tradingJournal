@@ -104,6 +104,7 @@ export interface Database {
           content: string
           is_private: boolean
           tags: string[] | null
+          image_url: string | null
         }
         Insert: {
           id?: string
@@ -114,6 +115,7 @@ export interface Database {
           content: string
           is_private?: boolean
           tags?: string[] | null
+          image_url?: string | null
         }
         Update: {
           id?: string
@@ -124,6 +126,7 @@ export interface Database {
           content?: string
           is_private?: boolean
           tags?: string[] | null
+          image_url?: string | null
         }
       }
       trades: {

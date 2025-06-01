@@ -49,7 +49,8 @@ CREATE TABLE IF NOT EXISTS journal_entries (
   title TEXT NOT NULL,
   content TEXT NOT NULL,
   is_private BOOLEAN DEFAULT true,
-  tags TEXT[] DEFAULT '{}'
+  tags TEXT[] DEFAULT '{}',
+  image_url TEXT
 );
 
 -- Create trades table
@@ -92,6 +93,9 @@ ALTER TABLE strategies ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT true;
 
 -- Add is_demo column to trades if it doesn't exist
 ALTER TABLE trades ADD COLUMN IF NOT EXISTS is_demo BOOLEAN DEFAULT false;
+
+-- Add image_url column to journal_entries if it doesn't exist
+ALTER TABLE journal_entries ADD COLUMN IF NOT EXISTS image_url TEXT;
 
 -- Update existing trades to be real trades (not demo) if they have NULL values
 UPDATE trades SET is_demo = false WHERE is_demo IS NULL;
@@ -277,6 +281,16 @@ VALUES (
   ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 ) ON CONFLICT (id) DO NOTHING;
 
+-- Create the journal-images bucket
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'journal-images',
+  'journal-images',
+  true,
+  5242880, -- 5MB limit
+  ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+) ON CONFLICT (id) DO NOTHING;
+
 -- ============================================================================
 -- STEP 8: ADD HELPFUL COMMENTS
 -- ============================================================================
@@ -308,7 +322,7 @@ AND column_name IN ('is_demo', 'is_private');
 -- Verify storage buckets
 SELECT 'Storage buckets verified' as status;
 SELECT id, name, public FROM storage.buckets
-WHERE id IN ('avatars', 'trade-screenshots', 'strategy-images');
+WHERE id IN ('avatars', 'trade-screenshots', 'strategy-images', 'journal-images');
 
 -- Success message
 SELECT '✅ Database migration completed successfully!' as final_status;

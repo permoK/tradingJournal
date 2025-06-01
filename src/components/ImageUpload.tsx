@@ -10,7 +10,7 @@ interface ImageUploadProps {
   userId: string;
   disabled?: boolean;
   className?: string;
-  bucket?: 'trade-screenshots' | 'strategy-images';
+  bucket?: 'trade-screenshots' | 'strategy-images' | 'journal-images';
   label?: string;
   description?: string;
   maxSizeMB?: number;
@@ -123,7 +123,7 @@ export default function ImageUpload({
           <div className="w-full max-w-md border border-slate-300 rounded-lg overflow-hidden">
             <img
               src={currentImage}
-              alt={bucket === 'strategy-images' ? 'Strategy image' : 'Trade screenshot'}
+              alt={bucket === 'strategy-images' ? 'Strategy image' : bucket === 'journal-images' ? 'Journal image' : 'Trade screenshot'}
               className="w-full h-48 object-cover"
             />
           </div>
@@ -153,7 +153,7 @@ export default function ImageUpload({
               <div className="flex flex-col items-center">
                 <FiCamera className="w-8 h-8 mb-2" />
                 <span className="text-sm font-medium">
-                  {bucket === 'strategy-images' ? 'Upload Strategy Image' : 'Upload Screenshot'}
+                  {bucket === 'strategy-images' ? 'Upload Strategy Image' : bucket === 'journal-images' ? 'Upload Journal Image' : 'Upload Screenshot'}
                 </span>
                 <span className="text-xs">{description}</span>
               </div>

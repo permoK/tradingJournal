@@ -156,6 +156,16 @@ function JournalContent() {
                 </div>
               </div>
 
+              {entry.image_url && (
+                <div className="mt-3 mb-3">
+                  <img
+                    src={entry.image_url}
+                    alt="Journal entry image"
+                    className="w-full max-w-md h-48 object-cover rounded-lg border border-slate-200"
+                  />
+                </div>
+              )}
+
               <div className="mt-2 prose max-w-none text-slate-800">
                 {entry.content.length > 300
                   ? `${entry.content.substring(0, 300)}...`

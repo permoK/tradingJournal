@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useJournalEntries, useActivityLogs } from '@/lib/hooks';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
+import ImageUpload from '@/components/ImageUpload';
 import { FiSave, FiX } from 'react-icons/fi';
 
 export default function EditJournalEntry({ params }: { params: { id: string } }) {
@@ -17,6 +18,7 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
   const [content, setContent] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
   const [tags, setTags] = useState('');
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
@@ -33,6 +35,7 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
       setContent(entry.content);
       setIsPrivate(entry.is_private);
       setTags(entry.tags ? entry.tags.join(', ') : '');
+      setImageUrl(entry.image_url || null);
       setNotFound(false);
     } else if (entries.length > 0) {
       // Only set not found if entries have loaded but entry not found
@@ -68,7 +71,8 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
         title,
         content,
         is_private: isPrivate,
-        tags: tagArray.length > 0 ? tagArray : null
+        tags: tagArray.length > 0 ? tagArray : null,
+        image_url: imageUrl
       });
 
       if (error) {
@@ -167,6 +171,21 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
             className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
           />
         </div>
+
+        {user && (
+          <div className="mb-4">
+            <ImageUpload
+              onImageUpload={setImageUrl}
+              currentImage={imageUrl}
+              userId={user.id}
+              bucket="journal-images"
+              label="Journal Image (Optional)"
+              description="PNG, JPG up to 5MB"
+              maxSizeMB={5}
+              disabled={loading}
+            />
+          </div>
+        )}
 
         <div className="mb-6">
           <label className="flex items-center">

@@ -133,6 +133,16 @@ export default function JournalEntryView({ params }: { params: { id: string } })
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
+        {entry.image_url && (
+          <div className="mb-6">
+            <img
+              src={entry.image_url}
+              alt="Journal entry image"
+              className="w-full max-w-2xl h-auto rounded-lg border border-slate-200"
+            />
+          </div>
+        )}
+
         <div className="prose max-w-none">
           {entry.content.split('\n').map((paragraph: string, index: number) => (
             <p key={index}>{paragraph}</p>
