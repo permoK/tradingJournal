@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import TradeFlowLogo from '@/components/TradeFlowLogo';
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -32,38 +33,41 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-slate-50">
       <div className="w-full max-w-4xl">
+        <div className="text-center mb-8">
+          <TradeFlowLogo size="lg" variant="full" className="mx-auto mb-4" />
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="flex flex-col justify-center">
             <h1 className="text-4xl font-bold text-slate-800 mb-4">
-              Trading Progress Tracker
+              Master Your Trading Journey
             </h1>
             <p className="text-xl text-slate-700 mb-6">
-              Track your trading journey, learn together with friends, and master trading consistently.
+              Comprehensive progress tracking, community collaboration, and data-driven insights for serious traders.
             </p>
             <ul className="space-y-2 mb-8">
               <li className="flex items-start">
                 <svg className="h-6 w-6 text-emerald-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <span className="text-slate-800 font-medium">Track your learning progress</span>
+                <span className="text-slate-800 font-medium">Advanced trading analytics</span>
               </li>
               <li className="flex items-start">
                 <svg className="h-6 w-6 text-emerald-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <span className="text-slate-800 font-medium">Keep a private trading journal</span>
+                <span className="text-slate-800 font-medium">Strategy performance tracking</span>
               </li>
               <li className="flex items-start">
                 <svg className="h-6 w-6 text-emerald-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <span className="text-slate-800 font-medium">Share insights with friends</span>
+                <span className="text-slate-800 font-medium">Community learning & insights</span>
               </li>
               <li className="flex items-start">
                 <svg className="h-6 w-6 text-emerald-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <span className="text-slate-800 font-medium">Build consistency with streak tracking</span>
+                <span className="text-slate-800 font-medium">Demo & real trade separation</span>
               </li>
             </ul>
           </div>
@@ -71,10 +75,10 @@ export default function Home() {
           <div className="bg-white p-6 rounded-lg shadow-md border border-slate-200">
             <div className="text-center">
               <h2 className="text-2xl font-bold text-slate-800 mb-4">
-                Get Started Today
+                Start Your Trading Journey
               </h2>
               <p className="text-slate-600 mb-6">
-                Join thousands of traders improving their skills and tracking their progress.
+                Join the community of serious traders mastering their craft with TradeFlow.
               </p>
 
               <div className="space-y-3">

@@ -1,6 +1,6 @@
 # Authentication Setup Guide
 
-This guide will help you set up authentication for your Deriv Progress Tracker app using Supabase.
+This guide will help you set up authentication for your TradeFlow app using Supabase.
 
 ## Prerequisites
 
@@ -14,7 +14,7 @@ This guide will help you set up authentication for your Deriv Progress Tracker a
 1. Go to [supabase.com](https://supabase.com) and sign in
 2. Click "New Project"
 3. Choose your organization
-4. Enter a project name (e.g., "deriv-progress-tracker")
+4. Enter a project name (e.g., "tradeflow-app")
 5. Enter a database password
 6. Choose a region close to your users
 7. Click "Create new project"

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import TradeFlowLogo from './TradeFlowLogo';
 
 export default function Auth() {
   const [loading, setLoading] = useState(false);
@@ -43,7 +44,9 @@ export default function Auth() {
   return (
     <div className="flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
-        <h2 className="mb-6 text-2xl font-bold text-center">Deriv Progress Tracker</h2>
+        <div className="flex justify-center mb-6">
+          <TradeFlowLogo size="lg" variant="full" />
+        </div>
 
         {error && (
           <div className="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">

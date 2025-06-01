@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { FiHome, FiBook, FiBarChart2, FiFileText, FiUsers, FiSettings, FiLogOut, FiX, FiGrid } from 'react-icons/fi';
+import TradeFlowLogo from './TradeFlowLogo';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -54,10 +55,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
         <div className="flex flex-col w-64">
           <div className="flex flex-col flex-grow pt-5 overflow-y-auto bg-white border-r border-slate-200 shadow-sm">
             <div className="flex flex-col flex-shrink-0 px-4">
-              <Link href="/dashboard" className="text-lg font-semibold text-slate-900">
-                Deriv Progress Tracker
+              <Link href="/dashboard" className="flex items-center">
+                <TradeFlowLogo size="md" variant="full" />
               </Link>
-              <p className="text-sm text-slate-600 font-medium">Master trading together</p>
+              <p className="text-sm text-slate-600 font-medium mt-1">Master trading together</p>
             </div>
             <div className="flex flex-col flex-grow px-4 mt-5">
               <nav className="flex-1 space-y-1">
@@ -101,8 +102,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
       <div className="flex flex-col flex-1 overflow-hidden">
         <div className="md:hidden">
           <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-slate-200 shadow-sm">
-            <Link href="/dashboard" className="text-lg font-semibold text-slate-900">
-              Deriv Progress Tracker
+            <Link href="/dashboard" className="flex items-center">
+              <TradeFlowLogo size="sm" variant="full" />
             </Link>
             {/* Mobile menu button */}
             <button
@@ -139,8 +140,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
             {/* Drawer panel */}
             <div className="relative flex flex-col w-4/5 max-w-xs bg-white h-full shadow-xl">
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
-                <Link href="/dashboard" className="text-lg font-semibold text-slate-900">
-                  Deriv Progress Tracker
+                <Link href="/dashboard" className="flex items-center">
+                  <TradeFlowLogo size="sm" variant="full" />
                 </Link>
                 <button
                   onClick={toggleMobileMenu}

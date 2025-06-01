@@ -25,8 +25,12 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Deriv Progress Tracker",
-  description: "Track your Deriv trading learning progress and collaborate with friends",
+  title: "TradeFlow",
+  description: "Master your trading journey with comprehensive progress tracking and community collaboration",
+  icons: {
+    icon: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({
