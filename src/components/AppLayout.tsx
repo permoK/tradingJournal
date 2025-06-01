@@ -4,8 +4,10 @@ import { ReactNode, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { FiHome, FiBook, FiBarChart2, FiFileText, FiUsers, FiSettings, FiLogOut, FiX, FiGrid } from 'react-icons/fi';
+import { useProfile } from '@/lib/hooks';
+import { FiHome, FiBook, FiBarChart2, FiFileText, FiUsers, FiSettings, FiLogOut, FiX, FiGrid, FiUser } from 'react-icons/fi';
 import TradeFlowLogo from './TradeFlowLogo';
+import Avatar from './Avatar';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -16,6 +18,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, loading, signOut } = useAuth();
+  const { profile, loading: profileLoading } = useProfile(user?.id);
 
   const handleSignOut = async () => {
     await signOut();
@@ -85,6 +88,28 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 })}
               </nav>
               <div className="mt-auto">
+                {/* User Profile Section */}
+                {profile && (
+                  <Link href="/settings" className="block mb-3">
+                    <div className="flex items-center px-3 py-2 text-sm font-medium text-slate-800 rounded-md hover:bg-slate-100 border border-transparent hover:border-slate-200 group transition-colors">
+                      <div className="mr-3">
+                        <Avatar
+                          username={profile.username}
+                          avatarUrl={profile.avatar_url}
+                          size="sm"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-900 truncate">
+                          {profile.username}
+                        </p>
+                        <p className="text-xs text-slate-500 truncate">
+                          View Profile
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                )}
                 <button
                   onClick={handleSignOut}
                   className="flex items-center w-full px-3 py-2 mt-2 text-sm font-medium text-slate-800 rounded-md hover:bg-red-50 hover:text-red-700 border border-transparent hover:border-red-100 group transition-colors"
@@ -178,6 +203,28 @@ export default function AppLayout({ children }: AppLayoutProps) {
                   })}
                 </nav>
                 <div className="px-4 mt-6">
+                  {/* User Profile Section - Mobile */}
+                  {profile && (
+                    <Link href="/settings" className="block mb-4" onClick={toggleMobileMenu}>
+                      <div className="flex items-center px-3 py-3 text-base font-medium text-slate-800 rounded-md hover:bg-slate-100 border border-transparent hover:border-slate-200 group transition-colors">
+                        <div className="mr-3">
+                          <Avatar
+                            username={profile.username}
+                            avatarUrl={profile.avatar_url}
+                            size="sm"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-base font-medium text-slate-900 truncate">
+                            {profile.username}
+                          </p>
+                          <p className="text-sm text-slate-500 truncate">
+                            View Profile
+                          </p>
+                        </div>
+                      </div>
+                    </Link>
+                  )}
                   <button
                     onClick={() => {
                       toggleMobileMenu();
