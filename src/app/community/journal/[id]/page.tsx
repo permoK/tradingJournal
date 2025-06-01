@@ -109,6 +109,16 @@ export default function CommunityJournalView({ params }: { params: { id: string 
       </div>
 
       <div className="bg-white p-8 rounded-lg shadow-sm border border-slate-200 mb-6">
+        {entry.image_url && (
+          <div className="mb-6">
+            <img
+              src={entry.image_url}
+              alt="Journal entry image"
+              className="w-full max-w-2xl h-auto rounded-lg border border-slate-200"
+            />
+          </div>
+        )}
+
         <div className="prose prose-slate max-w-none">
           {entry.content.split('\n').map((paragraph, index) => (
             <p key={index} className="text-slate-800 leading-relaxed mb-4 text-base">

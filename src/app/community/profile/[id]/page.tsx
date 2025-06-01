@@ -433,6 +433,16 @@ export default function UserProfile({ params }: { params: { id: string } }) {
                       </p>
                     </div>
 
+                    {journal.image_url && (
+                      <div className="mt-3 mb-3">
+                        <img
+                          src={journal.image_url}
+                          alt="Journal entry image"
+                          className="w-full max-w-md h-48 object-cover rounded-lg border border-slate-200"
+                        />
+                      </div>
+                    )}
+
                     <div className="mt-2 prose max-w-none text-slate-800">
                       {journal.content.length > 200
                         ? `${journal.content.substring(0, 200)}...`
