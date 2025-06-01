@@ -116,9 +116,14 @@ export default function UserProfile({ params }: { params: { id: string } }) {
   // Calculate real-time strategy performance from real trades only
   const calculateStrategyPerformance = (strategy: any) => {
     const realTrades = strategy.real_trades || [];
-    const closedTrades = realTrades.filter((trade: any) => trade.status === 'closed' && trade.profit_loss !== null);
+    // Filter out demo trades and only include closed trades with profit/loss data
+    const closedRealTrades = realTrades.filter((trade: any) =>
+      trade.status === 'closed' &&
+      trade.profit_loss !== null &&
+      trade.is_demo === false
+    );
 
-    if (closedTrades.length === 0) {
+    if (closedRealTrades.length === 0) {
       return {
         totalTrades: 0,
         successRate: 0,
@@ -126,11 +131,11 @@ export default function UserProfile({ params }: { params: { id: string } }) {
       };
     }
 
-    const profitableTrades = closedTrades.filter((trade: any) => trade.profit_loss > 0);
-    const successRate = (profitableTrades.length / closedTrades.length) * 100;
+    const profitableTrades = closedRealTrades.filter((trade: any) => trade.profit_loss > 0);
+    const successRate = (profitableTrades.length / closedRealTrades.length) * 100;
 
     return {
-      totalTrades: closedTrades.length,
+      totalTrades: closedRealTrades.length,
       successRate: successRate,
       profitableTrades: profitableTrades.length
     };
@@ -191,12 +196,12 @@ export default function UserProfile({ params }: { params: { id: string } }) {
             real_trades:trades!strategy_id(
               id,
               profit_loss,
-              status
+              status,
+              is_demo
             )
           `)
           .eq('user_id', params.id)
           .eq('is_private', false)
-          .eq('trades.is_demo', false)
           .order('created_at', { ascending: false })
           .limit(20);
 
