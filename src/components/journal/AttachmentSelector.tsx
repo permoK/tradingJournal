@@ -121,7 +121,7 @@ export default function AttachmentSelector({
                     placeholder="Search trades..."
                     value={tradeSearchTerm}
                     onChange={(e) => setTradeSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-md text-sm text-slate-900 bg-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
               </div>
@@ -203,7 +203,7 @@ export default function AttachmentSelector({
                     placeholder="Search strategies..."
                     value={strategySearchTerm}
                     onChange={(e) => setStrategySearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-md text-sm text-slate-900 bg-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
               </div>
