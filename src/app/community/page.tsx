@@ -96,7 +96,7 @@ export default function Community() {
         setPublicTrades(tradesData || []);
       }
 
-      // Fetch public strategies with real trade performance only
+      // Fetch public strategies with real trade performance only (exclude duplicates)
       const { data: strategiesData, error: strategiesError } = await supabase
         .from('strategies')
         .select(`
@@ -109,6 +109,7 @@ export default function Community() {
           )
         `)
         .eq('is_private', false)
+        .eq('is_duplicate', false)
         .order('created_at', { ascending: false });
 
       if (strategiesError) {
@@ -471,6 +472,12 @@ export default function Community() {
                             <span className="font-medium">Real Trades:</span>
                             <span className="ml-1 font-semibold text-slate-800">{performance.totalTrades}</span>
                           </div>
+                          {strategy.duplicate_count > 0 && (
+                            <div className="text-slate-600">
+                              <span className="font-medium">Duplicated:</span>
+                              <span className="ml-1 font-semibold text-indigo-600">{strategy.duplicate_count} times</span>
+                            </div>
+                          )}
                         </div>
                         <div className="text-xs text-slate-500">
                           {format(new Date(strategy.created_at), 'MMM d, yyyy')}

@@ -60,6 +60,9 @@ export interface Database {
           success_rate: number
           total_trades: number
           profitable_trades: number
+          original_strategy_id: string | null
+          duplicate_count: number
+          is_duplicate: boolean
         }
         Insert: {
           id?: string
@@ -76,6 +79,9 @@ export interface Database {
           success_rate?: number
           total_trades?: number
           profitable_trades?: number
+          original_strategy_id?: string | null
+          duplicate_count?: number
+          is_duplicate?: boolean
         }
         Update: {
           id?: string
@@ -92,6 +98,9 @@ export interface Database {
           success_rate?: number
           total_trades?: number
           profitable_trades?: number
+          original_strategy_id?: string | null
+          duplicate_count?: number
+          is_duplicate?: boolean
         }
       }
       journal_entries: {

@@ -105,6 +105,11 @@ ALTER TABLE journal_entries ADD COLUMN IF NOT EXISTS trade_ids UUID[] DEFAULT '{
 -- Add strategy_ids column to journal_entries if it doesn't exist
 ALTER TABLE journal_entries ADD COLUMN IF NOT EXISTS strategy_ids UUID[] DEFAULT '{}';
 
+-- Add strategy duplication support columns
+ALTER TABLE strategies ADD COLUMN IF NOT EXISTS original_strategy_id UUID REFERENCES strategies(id) ON DELETE SET NULL;
+ALTER TABLE strategies ADD COLUMN IF NOT EXISTS duplicate_count INTEGER DEFAULT 0;
+ALTER TABLE strategies ADD COLUMN IF NOT EXISTS is_duplicate BOOLEAN DEFAULT false;
+
 -- Update existing trades to be real trades (not demo) if they have NULL values
 UPDATE trades SET is_demo = false WHERE is_demo IS NULL;
 
@@ -174,7 +179,7 @@ CREATE POLICY "Users can view own strategies" ON strategies
   FOR SELECT USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can view public strategies" ON strategies
-  FOR SELECT USING (is_private = false);
+  FOR SELECT USING (is_private = false AND is_duplicate = false);
 
 CREATE POLICY "Users can insert own strategies" ON strategies
   FOR INSERT WITH CHECK (auth.uid() = user_id);
@@ -308,6 +313,9 @@ COMMENT ON COLUMN trades.is_demo IS 'Indicates whether this trade is a demo trad
 COMMENT ON COLUMN strategies.is_private IS 'Indicates whether this strategy is private (true) or public (false)';
 COMMENT ON COLUMN journal_entries.is_private IS 'Indicates whether this journal entry is private (true) or public (false)';
 COMMENT ON COLUMN trades.is_private IS 'Indicates whether this trade is private (true) or public (false)';
+COMMENT ON COLUMN strategies.is_duplicate IS 'Indicates whether this strategy is a duplicate of another strategy (true) or an original (false)';
+COMMENT ON COLUMN strategies.original_strategy_id IS 'References the original strategy if this is a duplicate, NULL for original strategies';
+COMMENT ON COLUMN strategies.duplicate_count IS 'Number of times this strategy has been duplicated by other users';
 
 -- ============================================================================
 -- VERIFICATION QUERIES

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
 import Avatar from '@/components/Avatar';
-import { FiArrowLeft, FiUser, FiCalendar, FiBarChart2, FiLayers, FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
+import { FiArrowLeft, FiUser, FiCalendar, FiBarChart2, FiLayers, FiTrendingUp, FiTrendingDown, FiCopy } from 'react-icons/fi';
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase';
 import { Database } from '@/types/database.types';
@@ -32,6 +32,8 @@ export default function CommunityStrategyPage({ params }: CommunityStrategyPageP
   const [author, setAuthor] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [duplicating, setDuplicating] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   // Calculate real-time strategy performance from real trades only
   const calculateStrategyPerformance = (strategy: StrategyWithTrades) => {
@@ -65,6 +67,10 @@ export default function CommunityStrategyPage({ params }: CommunityStrategyPageP
     const fetchStrategy = async () => {
       try {
         const { id } = await params;
+
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        setCurrentUser(user);
 
         // Fetch strategy with real trades only
         const { data: strategyData, error: strategyError } = await supabase
@@ -107,6 +113,35 @@ export default function CommunityStrategyPage({ params }: CommunityStrategyPageP
 
     fetchStrategy();
   }, [params]);
+
+  const handleDuplicate = async () => {
+    if (!strategy || !currentUser) return;
+
+    setDuplicating(true);
+    try {
+      const response = await fetch(`/api/strategies/${strategy.id}/duplicate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to duplicate strategy');
+      }
+
+      const data = await response.json();
+
+      // Show success message and redirect to user's strategies
+      alert('Strategy duplicated successfully! You can find it in your strategies page.');
+      router.push('/strategies');
+    } catch (error: any) {
+      alert('Error duplicating strategy: ' + error.message);
+    } finally {
+      setDuplicating(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -162,6 +197,13 @@ export default function CommunityStrategyPage({ params }: CommunityStrategyPageP
               <span className="mx-3">•</span>
               <FiCalendar className="mr-2" />
               <span>{format(new Date(strategy.created_at), 'MMMM d, yyyy')}</span>
+              {strategy.duplicate_count > 0 && (
+                <>
+                  <span className="mx-3">•</span>
+                  <FiLayers className="mr-2" />
+                  <span>{strategy.duplicate_count} duplicates</span>
+                </>
+              )}
             </div>
             {strategy.category && (
               <span className="inline-block px-3 py-1 text-sm font-medium bg-indigo-100 text-indigo-800 rounded-full">
@@ -169,6 +211,20 @@ export default function CommunityStrategyPage({ params }: CommunityStrategyPageP
               </span>
             )}
           </div>
+
+          {/* Duplicate Button */}
+          {currentUser && currentUser.id !== strategy.user_id && (
+            <div className="ml-4">
+              <button
+                onClick={handleDuplicate}
+                disabled={duplicating}
+                className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400 disabled:cursor-not-allowed transition-colors font-medium"
+              >
+                <FiCopy className="mr-2 h-4 w-4" />
+                {duplicating ? 'Duplicating...' : 'Duplicate Strategy'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

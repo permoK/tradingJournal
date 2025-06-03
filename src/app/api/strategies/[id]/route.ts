@@ -114,6 +114,17 @@ export async function DELETE(
       );
     }
 
+    // First, check if this strategy has duplicates
+    const { data: duplicates, error: duplicatesError } = await supabase
+      .from('strategies')
+      .select('id, user_id, is_private')
+      .eq('original_strategy_id', id);
+
+    if (duplicatesError) {
+      console.error('Error checking duplicates:', duplicatesError);
+    }
+
+    // Delete the original strategy
     const { error } = await supabase
       .from('strategies')
       .delete()
@@ -126,6 +137,45 @@ export async function DELETE(
         { error: 'Failed to delete strategy' },
         { status: 400 }
       );
+    }
+
+    // If there are duplicates, promote one public duplicate to be the new "original"
+    if (duplicates && duplicates.length > 0) {
+      // Find a public duplicate to promote
+      const publicDuplicate = duplicates.find(dup => !dup.is_private);
+
+      if (publicDuplicate) {
+        // Promote this duplicate to be the new original
+        const { error: promoteError } = await supabase
+          .from('strategies')
+          .update({
+            is_duplicate: false,
+            original_strategy_id: null,
+            duplicate_count: duplicates.length - 1, // Count remaining duplicates
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', publicDuplicate.id);
+
+        if (promoteError) {
+          console.error('Error promoting duplicate to original:', promoteError);
+        } else {
+          // Update remaining duplicates to point to the new original
+          const remainingDuplicates = duplicates.filter(dup => dup.id !== publicDuplicate.id);
+          if (remainingDuplicates.length > 0) {
+            const { error: updateDuplicatesError } = await supabase
+              .from('strategies')
+              .update({
+                original_strategy_id: publicDuplicate.id,
+                updated_at: new Date().toISOString()
+              })
+              .in('id', remainingDuplicates.map(dup => dup.id));
+
+            if (updateDuplicatesError) {
+              console.error('Error updating duplicate references:', updateDuplicatesError);
+            }
+          }
+        }
+      }
     }
 
     return NextResponse.json({ success: true });

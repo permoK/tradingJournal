@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useStrategies } from '@/lib/hooks';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
-import { FiPlus, FiEdit, FiTrash2, FiBarChart2, FiTrendingUp, FiTrendingDown, FiFilter, FiEye, FiPieChart, FiLayers } from 'react-icons/fi';
+import { FiPlus, FiEdit, FiTrash2, FiBarChart2, FiTrendingUp, FiTrendingDown, FiFilter, FiEye, FiPieChart, FiLayers, FiCopy } from 'react-icons/fi';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -172,6 +172,12 @@ export default function Strategies() {
                         }`}>
                           {strategy.is_active ? 'Active' : 'Inactive'}
                         </span>
+                        {strategy.is_duplicate && (
+                          <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200 rounded-full">
+                            <FiCopy className="mr-1 h-3 w-3" />
+                            Duplicated
+                          </span>
+                        )}
                       </div>
 
                       {strategy.category && (
