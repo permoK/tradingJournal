@@ -66,111 +66,106 @@ export function useProfile(userId: string | undefined) {
   return { profile, loading, error, updateProfile };
 }
 
-// Hook for fetching learning topics
-export function useLearningTopics() {
-  const [topics, setTopics] = useState<Database['public']['Tables']['learning_topics']['Row'][]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const supabase = createClient();
-
-  useEffect(() => {
-    const fetchTopics = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from('learning_topics')
-          .select('*')
-          .order('order_index', { ascending: true });
-
-        if (error) throw error;
-
-        setTopics(data || []);
-        setError(null);
-      } catch (err: any) {
-        setError(err.message);
-        setTopics([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTopics();
-  }, [supabase]);
-
-  return { topics, loading, error };
-}
-
-// Hook for fetching user progress
-export function useUserProgress(userId: string | undefined) {
-  const [progress, setProgress] = useState<Database['public']['Tables']['user_progress']['Row'][]>([]);
+// Hook for fetching strategies
+export function useStrategies(userId: string | undefined) {
+  const [strategies, setStrategies] = useState<Database['public']['Tables']['strategies']['Row'][]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
     if (!userId) {
-      setProgress([]);
+      setStrategies([]);
       setLoading(false);
       return;
     }
 
-    const fetchProgress = async () => {
+    const fetchStrategies = async () => {
       try {
         setLoading(true);
         const { data, error } = await supabase
-          .from('user_progress')
+          .from('strategies')
           .select('*')
           .eq('user_id', userId)
           .order('created_at', { ascending: false });
 
         if (error) throw error;
 
-        setProgress(data || []);
+        setStrategies(data || []);
         setError(null);
       } catch (err: any) {
         setError(err.message);
-        setProgress([]);
+        setStrategies([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProgress();
+    fetchStrategies();
   }, [userId, supabase]);
 
-  const updateProgress = async (topicId: string, updates: Partial<Database['public']['Tables']['user_progress']['Update']>) => {
+  const createStrategy = async (strategyData: Omit<Database['public']['Tables']['strategies']['Insert'], 'user_id' | 'id' | 'created_at' | 'updated_at'>) => {
     if (!userId) return { error: 'No user ID provided' };
 
     try {
       const { data, error } = await supabase
-        .from('user_progress')
-        .upsert({
+        .from('strategies')
+        .insert({
+          ...strategyData,
           user_id: userId,
-          topic_id: topicId,
-          ...updates,
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      // Update local state
-      setProgress(prev => {
-        const existing = prev.find(p => p.topic_id === topicId);
-        if (existing) {
-          return prev.map(p => p.topic_id === topicId ? data : p);
-        } else {
-          return [...prev, data];
-        }
-      });
-
+      setStrategies(prev => [data, ...prev]);
       return { data, error: null };
     } catch (err: any) {
       return { data: null, error: err.message };
     }
   };
 
-  return { progress, loading, error, updateProgress };
+  const updateStrategy = async (strategyId: string, updates: Partial<Database['public']['Tables']['strategies']['Update']>) => {
+    try {
+      const { data, error } = await supabase
+        .from('strategies')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', strategyId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setStrategies(prev => prev.map(strategy =>
+        strategy.id === strategyId ? data : strategy
+      ));
+      return { data, error: null };
+    } catch (err: any) {
+      return { data: null, error: err.message };
+    }
+  };
+
+  const deleteStrategy = async (strategyId: string) => {
+    try {
+      const { error } = await supabase
+        .from('strategies')
+        .delete()
+        .eq('id', strategyId);
+
+      if (error) throw error;
+
+      setStrategies(prev => prev.filter(strategy => strategy.id !== strategyId));
+      return { error: null };
+    } catch (err: any) {
+      return { error: err.message };
+    }
+  };
+
+  return { strategies, loading, error, createStrategy, updateStrategy, deleteStrategy };
 }
 
 // Hook for fetching journal entries
@@ -278,49 +273,54 @@ export function useJournalEntries(userId: string | undefined, includePrivate = t
 }
 
 // Hook for fetching trades
-export function useTrades(userId: string | undefined, includePrivate = true) {
+export function useTrades(userId: string | undefined, includePrivate = true, isDemoMode?: boolean) {
   const [trades, setTrades] = useState<Database['public']['Tables']['trades']['Row'][]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
 
-  useEffect(() => {
+  const fetchTrades = async () => {
     if (!userId) {
       setTrades([]);
       setLoading(false);
       return;
     }
 
-    const fetchTrades = async () => {
-      try {
-        setLoading(true);
-        let query = supabase
-          .from('trades')
-          .select('*')
-          .order('trade_date', { ascending: false });
+    try {
+      setLoading(true);
+      let query = supabase
+        .from('trades')
+        .select('*')
+        .order('trade_date', { ascending: false });
 
-        if (includePrivate) {
-          query = query.eq('user_id', userId);
-        } else {
-          query = query.or(`user_id.eq.${userId},is_private.eq.false`);
-        }
-
-        const { data, error } = await query;
-
-        if (error) throw error;
-
-        setTrades(data || []);
-        setError(null);
-      } catch (err: any) {
-        setError(err.message);
-        setTrades([]);
-      } finally {
-        setLoading(false);
+      if (includePrivate) {
+        query = query.eq('user_id', userId);
+      } else {
+        query = query.or(`user_id.eq.${userId},is_private.eq.false`);
       }
-    };
 
+      // Filter by demo mode if specified
+      if (isDemoMode !== undefined) {
+        query = query.eq('is_demo', isDemoMode);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      setTrades(data || []);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message);
+      setTrades([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchTrades();
-  }, [userId, includePrivate, supabase]);
+  }, [userId, includePrivate, isDemoMode, supabase]);
 
   const createTrade = async (trade: Omit<Database['public']['Tables']['trades']['Insert'], 'user_id' | 'id' | 'created_at' | 'updated_at'>) => {
     if (!userId) return { error: 'No user ID provided' };
@@ -338,6 +338,29 @@ export function useTrades(userId: string | undefined, includePrivate = true) {
       if (error) throw error;
 
       setTrades(prev => [data, ...prev]);
+      return { data, error: null };
+    } catch (err: any) {
+      return { data: null, error: err.message };
+    }
+  };
+
+  const createMultipleTrades = async (trades: Omit<Database['public']['Tables']['trades']['Insert'], 'user_id' | 'id' | 'created_at' | 'updated_at'>[]) => {
+    if (!userId) return { error: 'No user ID provided' };
+
+    try {
+      const tradesWithUserId = trades.map(trade => ({
+        ...trade,
+        user_id: userId,
+      }));
+
+      const { data, error } = await supabase
+        .from('trades')
+        .insert(tradesWithUserId)
+        .select();
+
+      if (error) throw error;
+
+      setTrades(prev => [...data, ...prev]);
       return { data, error: null };
     } catch (err: any) {
       return { data: null, error: err.message };
@@ -378,7 +401,7 @@ export function useTrades(userId: string | undefined, includePrivate = true) {
     }
   };
 
-  return { trades, loading, error, createTrade, updateTrade, deleteTrade };
+  return { trades, loading, error, createTrade, createMultipleTrades, updateTrade, deleteTrade, refetch: fetchTrades };
 }
 
 // Hook for fetching activity logs (for streak tracking)
@@ -419,7 +442,7 @@ export function useActivityLogs(userId: string | undefined) {
     fetchActivities();
   }, [userId, supabase]);
 
-  const logActivity = async (activityType: 'learning' | 'trading' | 'journal', activityTitle: string) => {
+  const logActivity = async (activityType: 'strategies' | 'trading' | 'journal', activityTitle: string) => {
     if (!userId) return { error: 'No user ID provided' };
 
     try {

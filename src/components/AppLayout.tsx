@@ -4,7 +4,10 @@ import { ReactNode, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { FiHome, FiBook, FiBarChart2, FiFileText, FiUsers, FiSettings, FiLogOut, FiX } from 'react-icons/fi';
+import { useProfile } from '@/lib/hooks';
+import { FiHome, FiBook, FiBarChart2, FiFileText, FiUsers, FiSettings, FiLogOut, FiX, FiGrid, FiUser } from 'react-icons/fi';
+import TradeFlowLogo from './TradeFlowLogo';
+import Avatar from './Avatar';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -15,6 +18,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, loading, signOut } = useAuth();
+  const { profile, loading: profileLoading } = useProfile(user?.id);
 
   const handleSignOut = async () => {
     await signOut();
@@ -27,10 +31,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: FiHome },
-    { name: 'Learning', href: '/learning', icon: FiBook },
+    { name: 'Strategies', href: '/strategies', icon: FiBook },
     { name: 'Trading', href: '/trading', icon: FiBarChart2 },
     { name: 'Journal', href: '/journal', icon: FiFileText },
     { name: 'Community', href: '/community', icon: FiUsers },
+    { name: 'Tools', href: '/tools', icon: FiGrid },
     { name: 'Settings', href: '/settings', icon: FiSettings },
   ];
 
@@ -53,10 +58,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
         <div className="flex flex-col w-64">
           <div className="flex flex-col flex-grow pt-5 overflow-y-auto bg-white border-r border-slate-200 shadow-sm">
             <div className="flex flex-col flex-shrink-0 px-4">
-              <Link href="/dashboard" className="text-lg font-semibold text-slate-900">
-                Deriv Progress Tracker
+              <Link href="/dashboard" className="flex items-center">
+                <TradeFlowLogo size="md" variant="full" />
               </Link>
-              <p className="text-sm text-slate-600 font-medium">Master trading together</p>
+              <p className="text-sm text-slate-600 font-medium mt-1">Master trading together</p>
             </div>
             <div className="flex flex-col flex-grow px-4 mt-5">
               <nav className="flex-1 space-y-1">
@@ -83,6 +88,28 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 })}
               </nav>
               <div className="mt-auto">
+                {/* User Profile Section */}
+                {profile && (
+                  <Link href="/settings" className="block mb-3">
+                    <div className="flex items-center px-3 py-2 text-sm font-medium text-slate-800 rounded-md hover:bg-slate-100 border border-transparent hover:border-slate-200 group transition-colors">
+                      <div className="mr-3">
+                        <Avatar
+                          username={profile.username}
+                          avatarUrl={profile.avatar_url}
+                          size="sm"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-900 truncate">
+                          {profile.username}
+                        </p>
+                        <p className="text-xs text-slate-500 truncate">
+                          View Profile
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                )}
                 <button
                   onClick={handleSignOut}
                   className="flex items-center w-full px-3 py-2 mt-2 text-sm font-medium text-slate-800 rounded-md hover:bg-red-50 hover:text-red-700 border border-transparent hover:border-red-100 group transition-colors"
@@ -100,8 +127,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
       <div className="flex flex-col flex-1 overflow-hidden">
         <div className="md:hidden">
           <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-slate-200 shadow-sm">
-            <Link href="/dashboard" className="text-lg font-semibold text-slate-900">
-              Deriv Progress Tracker
+            <Link href="/dashboard" className="flex items-center">
+              <TradeFlowLogo size="sm" variant="full" />
             </Link>
             {/* Mobile menu button */}
             <button
@@ -138,8 +165,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
             {/* Drawer panel */}
             <div className="relative flex flex-col w-4/5 max-w-xs bg-white h-full shadow-xl">
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
-                <Link href="/dashboard" className="text-lg font-semibold text-slate-900">
-                  Deriv Progress Tracker
+                <Link href="/dashboard" className="flex items-center">
+                  <TradeFlowLogo size="sm" variant="full" />
                 </Link>
                 <button
                   onClick={toggleMobileMenu}
@@ -176,6 +203,28 @@ export default function AppLayout({ children }: AppLayoutProps) {
                   })}
                 </nav>
                 <div className="px-4 mt-6">
+                  {/* User Profile Section - Mobile */}
+                  {profile && (
+                    <Link href="/settings" className="block mb-4" onClick={toggleMobileMenu}>
+                      <div className="flex items-center px-3 py-3 text-base font-medium text-slate-800 rounded-md hover:bg-slate-100 border border-transparent hover:border-slate-200 group transition-colors">
+                        <div className="mr-3">
+                          <Avatar
+                            username={profile.username}
+                            avatarUrl={profile.avatar_url}
+                            size="sm"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-base font-medium text-slate-900 truncate">
+                            {profile.username}
+                          </p>
+                          <p className="text-sm text-slate-500 truncate">
+                            View Profile
+                          </p>
+                        </div>
+                      </div>
+                    </Link>
+                  )}
                   <button
                     onClick={() => {
                       toggleMobileMenu();

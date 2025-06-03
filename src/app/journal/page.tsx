@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useJournalEntries } from '@/lib/hooks';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
@@ -8,12 +9,21 @@ import { FiPlus, FiEye, FiEyeOff, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import { format } from 'date-fns';
 import Link from 'next/link';
 
-export default function Journal() {
+function JournalContent() {
   const { user, loading: authLoading } = useAuth();
   const { entries, loading: entriesLoading, deleteEntry: deleteEntryHook } = useJournalEntries(user?.id);
+  const searchParams = useSearchParams();
 
   const [showPrivate, setShowPrivate] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Handle search parameter from dashboard
+  useEffect(() => {
+    const searchParam = searchParams.get('search');
+    if (searchParam) {
+      setSearchTerm(searchParam);
+    }
+  }, [searchParams]);
 
   const isLoading = authLoading || entriesLoading;
 
@@ -131,18 +141,30 @@ export default function Journal() {
                 <div className="flex gap-2">
                   <Link
                     href={`/journal/edit/${entry.id}`}
-                    className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                    className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors"
+                    title="Edit entry"
                   >
-                    <FiEdit2 />
+                    <FiEdit2 size={16} />
                   </Link>
                   <button
                     onClick={() => deleteEntry(entry.id)}
-                    className="p-1 text-red-600 hover:bg-red-50 rounded"
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                    title="Delete entry"
                   >
-                    <FiTrash2 />
+                    <FiTrash2 size={16} />
                   </button>
                 </div>
               </div>
+
+              {entry.image_url && (
+                <div className="mt-3 mb-3">
+                  <img
+                    src={entry.image_url}
+                    alt="Journal entry image"
+                    className="w-full max-w-md h-48 object-cover rounded-lg border border-slate-200"
+                  />
+                </div>
+              )}
 
               <div className="mt-2 prose max-w-none text-slate-800">
                 {entry.content.length > 300
@@ -164,7 +186,7 @@ export default function Journal() {
                   {entry.tags.map(tag => (
                     <span
                       key={tag}
-                      className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full"
+                      className="inline-block px-3 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 rounded-full"
                     >
                       {tag}
                     </span>
@@ -176,5 +198,19 @@ export default function Journal() {
         )}
       </div>
     </AppLayout>
+  );
+}
+
+export default function Journal() {
+  return (
+    <Suspense fallback={
+      <AppLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="w-12 h-12 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
+        </div>
+      </AppLayout>
+    }>
+      <JournalContent />
+    </Suspense>
   );
 }

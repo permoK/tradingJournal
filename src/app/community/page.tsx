@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
+import Avatar from '@/components/Avatar';
 import { supabase } from '@/lib/supabase';
-import { FiUser, FiBarChart2, FiFileText, FiSearch } from 'react-icons/fi';
+import { FiUser, FiBarChart2, FiFileText, FiSearch, FiLayers } from 'react-icons/fi';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { Database } from '@/types/database.types';
@@ -12,6 +13,7 @@ import { Database } from '@/types/database.types';
 type Profile = Database['public']['Tables']['profiles']['Row'];
 type JournalEntry = Database['public']['Tables']['journal_entries']['Row'];
 type Trade = Database['public']['Tables']['trades']['Row'];
+type Strategy = Database['public']['Tables']['strategies']['Row'];
 
 export default function Community() {
   const { user, loading: authLoading } = useAuth();
@@ -19,8 +21,37 @@ export default function Community() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [publicJournals, setPublicJournals] = useState<JournalEntry[]>([]);
   const [publicTrades, setPublicTrades] = useState<Trade[]>([]);
+  const [publicStrategies, setPublicStrategies] = useState<Strategy[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('members');
+
+  // Calculate real-time strategy performance from real trades only
+  const calculateStrategyPerformance = (strategy: any) => {
+    const realTrades = strategy.real_trades || [];
+    // Filter out demo trades and only include closed trades with profit/loss data
+    const closedRealTrades = realTrades.filter((trade: any) =>
+      trade.status === 'closed' &&
+      trade.profit_loss !== null &&
+      trade.is_demo === false
+    );
+
+    if (closedRealTrades.length === 0) {
+      return {
+        totalTrades: 0,
+        successRate: 0,
+        profitableTrades: 0
+      };
+    }
+
+    const profitableTrades = closedRealTrades.filter((trade: any) => trade.profit_loss > 0);
+    const successRate = (profitableTrades.length / closedRealTrades.length) * 100;
+
+    return {
+      totalTrades: closedRealTrades.length,
+      successRate: successRate,
+      profitableTrades: profitableTrades.length
+    };
+  };
 
   useEffect(() => {
     const fetchCommunityData = async () => {
@@ -51,17 +82,39 @@ export default function Community() {
         setPublicJournals(journalsData || []);
       }
 
-      // Fetch public trades
+      // Fetch public trades (exclude demo trades)
       const { data: tradesData, error: tradesError } = await supabase
         .from('trades')
         .select('*')
         .eq('is_private', false)
+        .eq('is_demo', false)
         .order('trade_date', { ascending: false });
 
       if (tradesError) {
         console.error('Error fetching trades:', tradesError);
       } else {
         setPublicTrades(tradesData || []);
+      }
+
+      // Fetch public strategies with real trade performance only
+      const { data: strategiesData, error: strategiesError } = await supabase
+        .from('strategies')
+        .select(`
+          *,
+          real_trades:trades!strategy_id(
+            id,
+            profit_loss,
+            status,
+            is_demo
+          )
+        `)
+        .eq('is_private', false)
+        .order('created_at', { ascending: false });
+
+      if (strategiesError) {
+        console.error('Error fetching strategies:', strategiesError);
+      } else {
+        setPublicStrategies(strategiesData || []);
       }
 
       setLoading(false);
@@ -85,6 +138,12 @@ export default function Community() {
     trade.market.toLowerCase().includes(searchTerm.toLowerCase()) ||
     trade.trade_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (trade.notes && trade.notes.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const filteredStrategies = publicStrategies.filter(strategy =>
+    strategy.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (strategy.description && strategy.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (strategy.category && strategy.category.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const isLoading = authLoading || loading;
@@ -160,6 +219,17 @@ export default function Community() {
             <FiBarChart2 className="inline mr-2" />
             Public Trades
           </button>
+          <button
+            onClick={() => setActiveTab('strategies')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'strategies'
+                ? 'border-indigo-600 text-indigo-700'
+                : 'border-transparent text-slate-600 hover:text-slate-800 hover:border-slate-300'
+            }`}
+          >
+            <FiLayers className="inline mr-2" />
+            Public Strategies
+          </button>
         </nav>
       </div>
 
@@ -174,32 +244,41 @@ export default function Community() {
               </div>
             ) : (
               filteredProfiles.map(profile => (
-                <div key={profile.id} className="bg-white p-6 rounded-lg shadow-sm">
-                  <div className="flex items-center">
-                    <div className="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xl mr-4">
-                      {profile.username.charAt(0).toUpperCase()}
+                <Link key={profile.id} href={`/community/profile/${profile.id}`}>
+                  <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-slate-200 hover:border-indigo-300">
+                    <div className="flex items-center">
+                      <div className="mr-4">
+                        <Avatar
+                          username={profile.username}
+                          avatarUrl={profile.avatar_url}
+                          size="md"
+                        />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-slate-900 hover:text-indigo-700 transition-colors">{profile.username}</h3>
+                        {profile.full_name && (
+                          <p className="text-sm text-slate-600">{profile.full_name}</p>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900">{profile.username}</h3>
-                      {profile.full_name && (
-                        <p className="text-sm text-slate-600">{profile.full_name}</p>
+                    <div className="mt-4">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-600 font-medium">Streak:</span>
+                        <span className="font-medium text-slate-800">{profile.streak_count} days</span>
+                      </div>
+                      <div className="flex justify-between text-sm mt-1">
+                        <span className="text-slate-600 font-medium">Member since:</span>
+                        <span className="font-medium text-slate-800">{format(new Date(profile.created_at), 'MMM yyyy')}</span>
+                      </div>
+                      {profile.bio && (
+                        <p className="mt-3 text-sm text-slate-700 line-clamp-2">{profile.bio}</p>
                       )}
                     </div>
-                  </div>
-                  <div className="mt-4">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-600 font-medium">Streak:</span>
-                      <span className="font-medium text-slate-800">{profile.streak_count} days</span>
+                    <div className="mt-4 text-xs text-indigo-600 font-medium">
+                      Click to view profile →
                     </div>
-                    <div className="flex justify-between text-sm mt-1">
-                      <span className="text-slate-600 font-medium">Member since:</span>
-                      <span className="font-medium text-slate-800">{format(new Date(profile.created_at), 'MMM yyyy')}</span>
-                    </div>
-                    {profile.bio && (
-                      <p className="mt-3 text-sm text-slate-700">{profile.bio}</p>
-                    )}
                   </div>
-                </div>
+                </Link>
               ))
             )}
           </div>
@@ -214,46 +293,56 @@ export default function Community() {
               </div>
             ) : (
               filteredJournals.map(journal => (
-                <div key={journal.id} className="bg-white p-6 rounded-lg shadow-sm">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-lg font-semibold text-slate-900">{journal.title}</h3>
-                      <p className="text-sm text-slate-600 mb-2">
-                        {format(new Date(journal.created_at), 'MMMM d, yyyy')} • by {
-                          profiles.find(p => p.id === journal.user_id)?.username || 'Unknown User'
-                        }
-                      </p>
+                <Link key={journal.id} href={`/community/journal/${journal.id}`}>
+                  <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-slate-200 hover:border-indigo-300">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-slate-900 hover:text-indigo-700 transition-colors">{journal.title}</h3>
+                        <p className="text-sm text-slate-600 mb-2">
+                          {format(new Date(journal.created_at), 'MMMM d, yyyy')} • by {
+                            profiles.find(p => p.id === journal.user_id)?.username || 'Unknown User'
+                          }
+                        </p>
+                      </div>
+                    </div>
+
+                    {journal.image_url && (
+                      <div className="mt-3 mb-3">
+                        <img
+                          src={journal.image_url}
+                          alt="Journal entry image"
+                          className="w-full max-w-md h-48 object-cover rounded-lg border border-slate-200"
+                        />
+                      </div>
+                    )}
+
+                    <div className="mt-2 prose max-w-none text-slate-800">
+                      {journal.content.length > 200
+                        ? `${journal.content.substring(0, 200)}...`
+                        : journal.content}
+                    </div>
+
+                    {journal.tags && journal.tags.length > 0 && (
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {journal.tags.slice(0, 3).map(tag => (
+                          <span
+                            key={tag}
+                            className="inline-block px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 rounded-full"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                        {journal.tags.length > 3 && (
+                          <span className="text-xs text-slate-500">+{journal.tags.length - 3} more</span>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="mt-4 text-xs text-indigo-600 font-medium">
+                      Click to read full entry →
                     </div>
                   </div>
-
-                  <div className="mt-2 prose max-w-none text-slate-800">
-                    {journal.content.length > 300
-                      ? `${journal.content.substring(0, 300)}...`
-                      : journal.content}
-                  </div>
-
-                  {journal.content.length > 300 && (
-                    <Link
-                      href={`/community/journal/${journal.id}`}
-                      className="inline-block mt-2 text-indigo-700 font-medium hover:underline"
-                    >
-                      Read more
-                    </Link>
-                  )}
-
-                  {journal.tags && journal.tags.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {journal.tags.map(tag => (
-                        <span
-                          key={tag}
-                          className="inline-block px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 rounded-full"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                </Link>
               ))
             )}
           </div>
@@ -282,33 +371,119 @@ export default function Community() {
                   </thead>
                   <tbody className="bg-white divide-y divide-slate-200">
                     {filteredTrades.map(trade => (
-                      <tr key={trade.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-medium">
-                          {profiles.find(p => p.id === trade.user_id)?.username || 'Unknown User'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">
-                          {format(new Date(trade.trade_date), 'MMM d, yyyy')}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">{trade.market}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">{trade.trade_type}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">{trade.entry_price}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">{trade.exit_price || '-'}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <span className={`${
-                            trade.profit_loss > 0
-                              ? 'text-emerald-600 font-medium'
-                              : trade.profit_loss < 0
-                                ? 'text-red-600 font-medium'
-                                : 'text-slate-800 font-medium'
-                          }`}>
-                            {trade.profit_loss !== null ? (trade.profit_loss > 0 ? '+' : '') + trade.profit_loss.toFixed(2) : '-'}
-                          </span>
-                        </td>
+                      <tr key={trade.id} className="hover:bg-slate-50 cursor-pointer transition-colors">
+                        <Link href={`/community/trade/${trade.id}`} className="contents">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-medium hover:text-indigo-700">
+                            {profiles.find(p => p.id === trade.user_id)?.username || 'Unknown User'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">
+                            {format(new Date(trade.trade_date), 'MMM d, yyyy')}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-medium">{trade.market}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                              trade.trade_type === 'buy'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {trade.trade_type.toUpperCase()}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">{trade.entry_price.toFixed(4)}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">
+                            {trade.exit_price ? trade.exit_price.toFixed(4) : '-'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <span className={`font-medium ${
+                              trade.profit_loss > 0
+                                ? 'text-emerald-600'
+                                : trade.profit_loss < 0
+                                  ? 'text-red-600'
+                                  : 'text-slate-800'
+                            }`}>
+                              {trade.profit_loss !== null ? (trade.profit_loss > 0 ? '+$' : '-$') + Math.abs(trade.profit_loss).toFixed(2) : '-'}
+                            </span>
+                          </td>
+                        </Link>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+            )}
+          </div>
+        )}
+
+        {/* Strategies Tab */}
+        {activeTab === 'strategies' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredStrategies.length === 0 ? (
+              <div className="col-span-full bg-white p-6 rounded-lg shadow-sm text-center">
+                <p className="text-slate-700 font-medium">No public strategies found</p>
+              </div>
+            ) : (
+              filteredStrategies.map(strategy => {
+                const performance = calculateStrategyPerformance(strategy);
+                return (
+                  <Link key={strategy.id} href={`/community/strategy/${strategy.id}`}>
+                    <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-slate-200 hover:border-indigo-300">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-slate-900 hover:text-indigo-700 transition-colors mb-1">
+                            {strategy.name}
+                          </h3>
+                          <p className="text-sm text-slate-600 mb-2">
+                            by {profiles.find(p => p.id === strategy.user_id)?.username || 'Unknown User'}
+                          </p>
+                          {strategy.category && (
+                            <span className="inline-block px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 rounded-full">
+                              {strategy.category}
+                            </span>
+                          )}
+                        </div>
+                        {strategy.image_url && (
+                          <img
+                            src={strategy.image_url}
+                            alt={strategy.name}
+                            className="w-16 h-16 rounded-lg object-cover border border-slate-200 ml-4"
+                          />
+                        )}
+                      </div>
+
+                      {strategy.description && (
+                        <p className="text-sm text-slate-700 mb-4 line-clamp-3">
+                          {strategy.description}
+                        </p>
+                      )}
+
+                      <div className="flex justify-between items-center text-sm">
+                        <div className="flex space-x-4">
+                          <div className="text-slate-600">
+                            <span className="font-medium">Success Rate:</span>
+                            <span className={`ml-1 font-semibold ${
+                              performance.successRate >= 70 ? 'text-emerald-600' :
+                              performance.successRate >= 50 ? 'text-amber-600' : 'text-red-600'
+                            }`}>
+                              {performance.successRate.toFixed(1)}%
+                            </span>
+                          </div>
+                          <div className="text-slate-600">
+                            <span className="font-medium">Real Trades:</span>
+                            <span className="ml-1 font-semibold text-slate-800">{performance.totalTrades}</span>
+                          </div>
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {format(new Date(strategy.created_at), 'MMM d, yyyy')}
+                        </div>
+                      </div>
+
+                      <div className="mt-4 text-xs text-indigo-600 font-medium">
+                        Click to view strategy →
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })
             )}
           </div>
         )}

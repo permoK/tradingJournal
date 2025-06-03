@@ -3,15 +3,21 @@
 import { useState, useEffect } from 'react';
 import { useTrades } from '@/lib/hooks';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTradeMode } from '@/contexts/TradeModeContext';
 import AppLayout from '@/components/AppLayout';
-import { FiPlus, FiEye, FiEyeOff, FiEdit2, FiTrash2, FiFilter, FiTrendingUp } from 'react-icons/fi';
+import TradeModeToggle from '@/components/TradeModeToggle';
+import DemoTradeReset from '@/components/DemoTradeReset';
+import { FiPlus, FiEye, FiEyeOff, FiEdit2, FiTrash2, FiFilter, FiTrendingUp, FiPause } from 'react-icons/fi';
 import { format, subDays } from 'date-fns';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import TradePerformanceChart from '@/components/TradePerformanceChart';
 
 export default function Trading() {
+  const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const { trades, loading: tradesLoading, deleteTrade: deleteTradeHook } = useTrades(user?.id);
+  const { isDemoMode } = useTradeMode();
+  const { trades, loading: tradesLoading, deleteTrade: deleteTradeHook, refetch } = useTrades(user?.id, true, isDemoMode);
 
   const [showPrivate, setShowPrivate] = useState(true);
   const [marketFilter, setMarketFilter] = useState('all');
@@ -92,9 +98,15 @@ export default function Trading() {
     <AppLayout>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Trading Journal</h1>
+          <div className="flex items-center gap-4 mb-2">
+            <h1 className="text-2xl font-bold text-slate-900">Trading Journal</h1>
+            <TradeModeToggle />
+          </div>
           <p className="text-slate-700 font-medium">
             Track and analyze your Deriv trades
+            {isDemoMode && (
+              <span className="text-amber-600 font-medium"> • Demo Mode Active</span>
+            )}
           </p>
         </div>
         <Link
@@ -156,11 +168,11 @@ export default function Trading() {
             <select
               value={marketFilter}
               onChange={(e) => setMarketFilter(e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full p-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
             >
-              <option value="all">All Markets</option>
+              <option value="all" className="text-slate-800">All Markets</option>
               {markets.map(market => (
-                <option key={market} value={market}>{market}</option>
+                <option key={market} value={market} className="text-slate-800">{market}</option>
               ))}
             </select>
           </div>
@@ -171,14 +183,14 @@ export default function Trading() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full p-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
             >
-              <option value="all">All Statuses</option>
-              <option value="open">Open</option>
-              <option value="closed">Closed</option>
+              <option value="all" className="text-slate-800">All Statuses</option>
+              <option value="open" className="text-slate-800">Open</option>
+              <option value="closed" className="text-slate-800">Closed</option>
             </select>
           </div>
-          <div className="flex items-end">
+          <div className="flex items-end gap-2">
             <button
               onClick={() => setShowPrivate(!showPrivate)}
               className="flex items-center px-4 py-2 border border-slate-300 rounded-md hover:bg-slate-50 text-slate-700"
@@ -195,6 +207,13 @@ export default function Trading() {
                 </>
               )}
             </button>
+            {isDemoMode && (
+              <DemoTradeReset
+                onReset={() => {
+                  if (refetch) refetch();
+                }}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -230,13 +249,23 @@ export default function Trading() {
                 </thead>
                 <tbody className="bg-white divide-y divide-slate-200">
                   {filteredTrades.map(trade => (
-                    <tr key={trade.id} className="hover:bg-slate-50">
+                    <tr
+                      key={trade.id}
+                      className="hover:bg-slate-50 cursor-pointer"
+                      onClick={() => router.push(`/trading/${trade.id}`)}
+                    >
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 font-medium">
                         {format(new Date(trade.trade_date), 'MMM d, yyyy')}
                         {trade.is_private && (
                           <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800 border border-slate-200">
                             <FiEyeOff className="mr-1" size={10} />
                             Private
+                          </span>
+                        )}
+                        {trade.is_demo && (
+                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                            <FiPause className="mr-1" size={10} />
+                            Demo
                           </span>
                         )}
                       </td>
@@ -265,20 +294,32 @@ export default function Trading() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex justify-end gap-3">
+                        <div className="flex justify-end gap-2">
+                          <Link
+                            href={`/trading/${trade.id}`}
+                            className="text-slate-600 hover:text-indigo-600 p-1 hover:bg-indigo-50 rounded-full"
+                            title="View trade details"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <FiEye size={16} />
+                          </Link>
                           <Link
                             href={`/trading/edit/${trade.id}`}
-                            className="text-indigo-600 hover:text-indigo-900 p-1 hover:bg-indigo-50 rounded-full"
+                            className="text-slate-600 hover:text-amber-600 p-1 hover:bg-amber-50 rounded-full"
                             title="Edit trade"
+                            onClick={(e) => e.stopPropagation()}
                           >
-                            <FiEdit2 size={18} />
+                            <FiEdit2 size={16} />
                           </Link>
                           <button
-                            onClick={() => deleteTrade(trade.id)}
-                            className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded-full"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteTrade(trade.id);
+                            }}
+                            className="text-slate-600 hover:text-red-600 p-1 hover:bg-red-50 rounded-full"
                             title="Delete trade"
                           >
-                            <FiTrash2 size={18} />
+                            <FiTrash2 size={16} />
                           </button>
                         </div>
                       </td>
@@ -291,7 +332,11 @@ export default function Trading() {
             {/* Mobile card view */}
             <div className="md:hidden divide-y divide-slate-200">
               {filteredTrades.map(trade => (
-                <div key={trade.id} className="p-4 hover:bg-slate-50">
+                <div
+                  key={trade.id}
+                  className="p-4 hover:bg-slate-50 cursor-pointer"
+                  onClick={() => router.push(`/trading/${trade.id}`)}
+                >
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <div className="font-medium text-slate-900">
@@ -300,6 +345,12 @@ export default function Trading() {
                           <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800 border border-slate-200">
                             <FiEyeOff className="mr-1" size={10} />
                             Private
+                          </span>
+                        )}
+                        {trade.is_demo && (
+                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                            <FiPause className="mr-1" size={10} />
+                            Demo
                           </span>
                         )}
                       </div>
@@ -335,20 +386,32 @@ export default function Trading() {
                     </div>
                   </div>
 
-                  <div className="flex justify-end gap-3 border-t border-slate-100 pt-2">
+                  <div className="flex justify-end gap-2 border-t border-slate-100 pt-2">
+                    <Link
+                      href={`/trading/${trade.id}`}
+                      className="text-slate-600 hover:text-indigo-600 p-2 hover:bg-indigo-50 rounded-full"
+                      title="View trade details"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <FiEye size={16} />
+                    </Link>
                     <Link
                       href={`/trading/edit/${trade.id}`}
-                      className="text-indigo-600 hover:text-indigo-900 p-2 hover:bg-indigo-50 rounded-full"
+                      className="text-slate-600 hover:text-amber-600 p-2 hover:bg-amber-50 rounded-full"
                       title="Edit trade"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <FiEdit2 size={18} />
+                      <FiEdit2 size={16} />
                     </Link>
                     <button
-                      onClick={() => deleteTrade(trade.id)}
-                      className="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded-full"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteTrade(trade.id);
+                      }}
+                      className="text-slate-600 hover:text-red-600 p-2 hover:bg-red-50 rounded-full"
                       title="Delete trade"
                     >
-                      <FiTrash2 size={18} />
+                      <FiTrash2 size={16} />
                     </button>
                   </div>
                 </div>

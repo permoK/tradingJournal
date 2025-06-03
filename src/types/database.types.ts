@@ -44,62 +44,54 @@ export interface Database {
           last_active?: string | null
         }
       }
-      learning_topics: {
+      strategies: {
         Row: {
           id: string
           created_at: string
-          title: string
+          updated_at: string
+          user_id: string
+          name: string
           description: string | null
+          details: string | null
+          image_url: string | null
           category: string | null
-          difficulty: string | null
-          order_index: number
+          is_active: boolean
+          is_private: boolean
+          success_rate: number
+          total_trades: number
+          profitable_trades: number
         }
         Insert: {
           id?: string
           created_at?: string
-          title: string
+          updated_at?: string
+          user_id: string
+          name: string
           description?: string | null
+          details?: string | null
+          image_url?: string | null
           category?: string | null
-          difficulty?: string | null
-          order_index?: number
+          is_active?: boolean
+          is_private?: boolean
+          success_rate?: number
+          total_trades?: number
+          profitable_trades?: number
         }
         Update: {
           id?: string
           created_at?: string
-          title?: string
-          description?: string | null
-          category?: string | null
-          difficulty?: string | null
-          order_index?: number
-        }
-      }
-      user_progress: {
-        Row: {
-          id: string
-          created_at: string
-          user_id: string
-          topic_id: string
-          status: 'not_started' | 'in_progress' | 'completed'
-          completion_date: string | null
-          notes: string | null
-        }
-        Insert: {
-          id?: string
-          created_at?: string
-          user_id: string
-          topic_id: string
-          status?: 'not_started' | 'in_progress' | 'completed'
-          completion_date?: string | null
-          notes?: string | null
-        }
-        Update: {
-          id?: string
-          created_at?: string
+          updated_at?: string
           user_id?: string
-          topic_id?: string
-          status?: 'not_started' | 'in_progress' | 'completed'
-          completion_date?: string | null
-          notes?: string | null
+          name?: string
+          description?: string | null
+          details?: string | null
+          image_url?: string | null
+          category?: string | null
+          is_active?: boolean
+          is_private?: boolean
+          success_rate?: number
+          total_trades?: number
+          profitable_trades?: number
         }
       }
       journal_entries: {
@@ -112,6 +104,7 @@ export interface Database {
           content: string
           is_private: boolean
           tags: string[] | null
+          image_url: string | null
         }
         Insert: {
           id?: string
@@ -122,6 +115,7 @@ export interface Database {
           content: string
           is_private?: boolean
           tags?: string[] | null
+          image_url?: string | null
         }
         Update: {
           id?: string
@@ -132,6 +126,7 @@ export interface Database {
           content?: string
           is_private?: boolean
           tags?: string[] | null
+          image_url?: string | null
         }
       }
       trades: {
@@ -140,6 +135,7 @@ export interface Database {
           created_at: string
           updated_at: string
           user_id: string
+          strategy_id: string | null
           trade_date: string
           market: string
           trade_type: string
@@ -151,12 +147,14 @@ export interface Database {
           notes: string | null
           screenshot_url: string | null
           is_private: boolean
+          is_demo: boolean
         }
         Insert: {
           id?: string
           created_at?: string
           updated_at?: string
           user_id: string
+          strategy_id?: string | null
           trade_date: string
           market: string
           trade_type: string
@@ -168,12 +166,14 @@ export interface Database {
           notes?: string | null
           screenshot_url?: string | null
           is_private?: boolean
+          is_demo?: boolean
         }
         Update: {
           id?: string
           created_at?: string
           updated_at?: string
           user_id?: string
+          strategy_id?: string | null
           trade_date?: string
           market?: string
           trade_type?: string
@@ -185,6 +185,7 @@ export interface Database {
           notes?: string | null
           screenshot_url?: string | null
           is_private?: boolean
+          is_demo?: boolean
         }
       }
       activity_logs: {
@@ -192,7 +193,7 @@ export interface Database {
           id: string
           created_at: string
           user_id: string
-          activity_type: 'learning' | 'trading' | 'journal'
+          activity_type: 'strategies' | 'trading' | 'journal'
           activity_title: string
           activity_date: string
         }
@@ -200,7 +201,7 @@ export interface Database {
           id?: string
           created_at?: string
           user_id: string
-          activity_type: 'learning' | 'trading' | 'journal'
+          activity_type: 'strategies' | 'trading' | 'journal'
           activity_title: string
           activity_date?: string
         }
@@ -208,7 +209,7 @@ export interface Database {
           id?: string
           created_at?: string
           user_id?: string
-          activity_type?: 'learning' | 'trading' | 'journal'
+          activity_type?: 'strategies' | 'trading' | 'journal'
           activity_title?: string
           activity_date?: string
         }

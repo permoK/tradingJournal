@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { FiEye, FiEyeOff, FiLock } from 'react-icons/fi';
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -14,7 +14,7 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  
+
   const { updatePassword } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -23,7 +23,7 @@ export default function ResetPasswordPage() {
     // Check if we have the required tokens/session for password reset
     const accessToken = searchParams.get('access_token');
     const refreshToken = searchParams.get('refresh_token');
-    
+
     if (!accessToken || !refreshToken) {
       setError('Invalid or expired reset link. Please request a new password reset.');
     }
@@ -52,7 +52,7 @@ export default function ResetPasswordPage() {
     }
 
     const { error } = await updatePassword(password);
-    
+
     if (error) {
       setError(error.message);
     } else {
@@ -62,7 +62,7 @@ export default function ResetPasswordPage() {
         router.push('/auth/login');
       }, 3000);
     }
-    
+
     setLoading(false);
   };
 
@@ -103,7 +103,7 @@ export default function ResetPasswordPage() {
             Enter your new password below
           </p>
         </div>
-        
+
         <div className="bg-white rounded-lg shadow-md p-8">
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
@@ -128,7 +128,7 @@ export default function ResetPasswordPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   placeholder="Enter your new password"
                 />
                 <button
@@ -161,7 +161,7 @@ export default function ResetPasswordPage() {
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   placeholder="Confirm your new password"
                 />
                 <button
@@ -203,5 +203,20 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }

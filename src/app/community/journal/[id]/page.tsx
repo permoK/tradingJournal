@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
+import Avatar from '@/components/Avatar';
 import { FiArrowLeft } from 'react-icons/fi';
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase';
@@ -21,66 +22,42 @@ export default function CommunityJournalView({ params }: { params: { id: string 
   useEffect(() => {
     const fetchEntry = async () => {
       setLoading(true);
-      
-      // For demo purposes, we'll use mock data
-      // In a real application, you would fetch from Supabase
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data for demonstration
-      const mockEntries = [
-        {
-          id: '1',
-          created_at: '2023-03-10T00:00:00.000Z',
-          user_id: '1',
-          title: 'My First Week of Trading',
-          content: 'This week I started trading on Deriv. I focused on learning the platform and making small trades to get comfortable with the process.\n\nI began by watching some tutorial videos and reading the documentation. The platform is quite intuitive, but there are many features to explore.\n\nI made my first trade on EUR/USD with a small amount. It was a buy position based on a support level I identified. The trade was successful, and I made a small profit.\n\nI\'m planning to continue with small trades while I learn more about technical analysis and develop my trading strategy.',
-          is_private: false,
-          tags: ['beginner', 'learning']
-        },
-        {
-          id: '3',
-          created_at: '2023-03-20T00:00:00.000Z',
-          user_id: '1',
-          title: 'Trading Psychology',
-          content: 'I realized how important emotional control is in trading. Today I made a mistake by letting fear drive my decision to exit a trade too early.\n\nI had a good position on Gold, and all indicators were pointing to continued upward movement. However, after a small pullback, I got nervous and closed the position. Shortly after, the price continued upward as initially expected.\n\nThis experience taught me that I need to work on my emotional discipline. I\'m going to start keeping a separate journal specifically for tracking my emotional state during trades.\n\nSome strategies I plan to implement:\n1. Set clear entry and exit points before entering a trade\n2. Use stop losses instead of manually exiting due to fear\n3. Take breaks when feeling emotionally charged\n4. Review my trades objectively after the fact',
-          is_private: false,
-          tags: ['psychology', 'emotions']
+
+      try {
+        // Fetch journal entry
+        const { data: journalData, error: journalError } = await supabase
+          .from('journal_entries')
+          .select('*')
+          .eq('id', params.id)
+          .eq('is_private', false)
+          .single();
+
+        if (journalError || !journalData) {
+          setError('Journal entry not found or is private');
+          setLoading(false);
+          return;
         }
-      ];
-      
-      const mockProfiles = [
-        {
-          id: '1',
-          created_at: '2023-01-01T00:00:00.000Z',
-          updated_at: '2023-01-01T00:00:00.000Z',
-          username: 'demo_user',
-          full_name: 'Demo User',
-          avatar_url: null,
-          bio: 'I am learning Deriv trading',
-          streak_count: 5,
-          last_active: '2023-06-01T00:00:00.000Z'
+
+        setEntry(journalData);
+
+        // Fetch author profile
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', journalData.user_id)
+          .single();
+
+        if (!profileError && profileData) {
+          setAuthor(profileData);
         }
-      ];
-      
-      const foundEntry = mockEntries.find(e => e.id === params.id);
-      
-      if (foundEntry) {
-        setEntry(foundEntry as JournalEntry);
-        
-        // Find the author
-        const foundAuthor = mockProfiles.find(p => p.id === foundEntry.user_id);
-        if (foundAuthor) {
-          setAuthor(foundAuthor as Profile);
-        }
-      } else {
-        setError('Journal entry not found or is private');
+      } catch (err) {
+        console.error('Error fetching journal entry:', err);
+        setError('Failed to load journal entry');
       }
-      
+
       setLoading(false);
     };
-    
+
     fetchEntry();
   }, [params.id]);
 
@@ -88,7 +65,7 @@ export default function CommunityJournalView({ params }: { params: { id: string 
     return (
       <AppLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="w-12 h-12 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
         </div>
       </AppLayout>
     );
@@ -97,12 +74,12 @@ export default function CommunityJournalView({ params }: { params: { id: string 
   if (error || !entry) {
     return (
       <AppLayout>
-        <div className="bg-white p-6 rounded-lg shadow-sm text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Entry Not Found</h1>
-          <p className="text-gray-600 mb-4">The journal entry you're looking for doesn't exist or is private.</p>
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 text-center">
+          <h1 className="text-2xl font-bold text-slate-900 mb-4">Entry Not Found</h1>
+          <p className="text-slate-600 mb-4">The journal entry you're looking for doesn't exist or is private.</p>
           <button
             onClick={() => router.push('/community')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
           >
             Back to Community
           </button>
@@ -116,37 +93,49 @@ export default function CommunityJournalView({ params }: { params: { id: string 
       <div className="mb-6">
         <button
           onClick={() => router.push('/community')}
-          className="flex items-center text-blue-600 hover:underline mb-4"
+          className="flex items-center text-indigo-600 hover:text-indigo-800 mb-4 font-medium transition-colors"
         >
           <FiArrowLeft className="mr-2" />
           Back to Community
         </button>
-        
+
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{entry.title}</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">{entry.title}</h1>
+          <p className="text-slate-600 text-lg">
             {format(new Date(entry.created_at), 'MMMM d, yyyy')}
             {author && ` • by ${author.username}`}
           </p>
         </div>
       </div>
-      
-      <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-        <div className="prose max-w-none">
+
+      <div className="bg-white p-8 rounded-lg shadow-sm border border-slate-200 mb-6">
+        {entry.image_url && (
+          <div className="mb-6">
+            <img
+              src={entry.image_url}
+              alt="Journal entry image"
+              className="w-full max-w-2xl h-auto rounded-lg border border-slate-200"
+            />
+          </div>
+        )}
+
+        <div className="prose prose-slate max-w-none">
           {entry.content.split('\n').map((paragraph, index) => (
-            <p key={index}>{paragraph}</p>
+            <p key={index} className="text-slate-800 leading-relaxed mb-4 text-base">
+              {paragraph || '\u00A0'}
+            </p>
           ))}
         </div>
       </div>
-      
+
       {entry.tags && entry.tags.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-2">Tags</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-3">Tags</h2>
           <div className="flex flex-wrap gap-2">
             {entry.tags.map(tag => (
               <span
                 key={tag}
-                className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full"
+                className="inline-block px-3 py-1 text-sm font-medium bg-indigo-100 text-indigo-800 rounded-full"
               >
                 {tag}
               </span>
@@ -154,22 +143,27 @@ export default function CommunityJournalView({ params }: { params: { id: string 
           </div>
         </div>
       )}
-      
+
       {author && (
-        <div className="bg-gray-50 p-6 rounded-lg">
-          <h2 className="text-lg font-semibold mb-2">Author</h2>
-          <div className="flex items-center">
-            <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xl mr-4">
-              {author.username.charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <p className="font-medium">{author.username}</p>
+        <div className="bg-slate-50 p-6 rounded-lg border border-slate-200">
+          <h2 className="text-lg font-semibold text-slate-900 mb-3">About the Author</h2>
+          <div className="flex items-start space-x-4">
+            <Avatar
+              username={author.username}
+              avatarUrl={author.avatar_url}
+              size="lg"
+            />
+            <div className="flex-1">
+              <p className="font-semibold text-slate-900 text-lg">{author.username}</p>
               {author.full_name && (
-                <p className="text-sm text-gray-500">{author.full_name}</p>
+                <p className="text-slate-600 mb-2">{author.full_name}</p>
               )}
               {author.bio && (
-                <p className="text-sm text-gray-600 mt-1">{author.bio}</p>
+                <p className="text-slate-700 leading-relaxed">{author.bio}</p>
               )}
+              <div className="mt-3 text-sm text-slate-500">
+                Member since {format(new Date(author.created_at), 'MMMM yyyy')} • {author.streak_count} day streak
+              </div>
             </div>
           </div>
         </div>

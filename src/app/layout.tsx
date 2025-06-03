@@ -4,6 +4,9 @@ import "./globals.css";
 import ServerCompileLoader from "@/components/ServerCompileLoader";
 import ClientOnly from "@/components/ClientOnly";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { TradeModeProvider } from "@/contexts/TradeModeContext";
+
+import { Analytics } from "@vercel/analytics/next"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,8 +25,12 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Deriv Progress Tracker",
-  description: "Track your Deriv trading learning progress and collaborate with friends",
+  title: "TradeFlow",
+  description: "Master your trading journey with comprehensive progress tracking and community collaboration",
+  icons: {
+    icon: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({
@@ -37,10 +44,12 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} antialiased`}
       >
         <AuthProvider>
-          <ClientOnly>
-            <ServerCompileLoader />
-          </ClientOnly>
-          {children}
+          <TradeModeProvider>
+            <ClientOnly>
+              <ServerCompileLoader />
+            </ClientOnly>
+            {children}
+          </TradeModeProvider>
         </AuthProvider>
       </body>
     </html>

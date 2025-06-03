@@ -1,19 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { FiEye, FiEyeOff, FiMail, FiLock, FiGithub } from 'react-icons/fi';
 import { FcGoogle } from 'react-icons/fc';
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const { signIn, signInWithProvider, user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -31,13 +31,13 @@ export default function LoginPage() {
     setError(null);
 
     const { error } = await signIn(email, password);
-    
+
     if (error) {
       setError(error.message);
     } else {
       router.push(redirectTo);
     }
-    
+
     setLoading(false);
   };
 
@@ -46,11 +46,11 @@ export default function LoginPage() {
     setError(null);
 
     const { error } = await signInWithProvider(provider);
-    
+
     if (error) {
       setError(error.message);
     }
-    
+
     setLoading(false);
   };
 
@@ -65,7 +65,7 @@ export default function LoginPage() {
             Sign in to your Deriv Progress Tracker account
           </p>
         </div>
-        
+
         <div className="bg-white rounded-lg shadow-md p-8">
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
@@ -90,7 +90,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   placeholder="Enter your email"
                 />
               </div>
@@ -112,7 +112,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   placeholder="Enter your password"
                 />
                 <button
@@ -194,5 +194,20 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }

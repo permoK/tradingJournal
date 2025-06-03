@@ -28,8 +28,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get initial session
     const getInitialSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user ?? null);
+
+      // Check if the account is disabled
+      if (session?.user?.user_metadata?.account_disabled) {
+        console.log('Disabled account detected on initial load, signing out...');
+        await supabase.auth.signOut();
+        setSession(null);
+        setUser(null);
+      } else {
+        setSession(session);
+        setUser(session?.user ?? null);
+      }
       setLoading(false);
     };
 
@@ -38,8 +47,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+        // Check if the account is disabled
+        if (session?.user?.user_metadata?.account_disabled) {
+          console.log('Disabled account detected, signing out...');
+          await supabase.auth.signOut();
+          setSession(null);
+          setUser(null);
+        } else {
+          setSession(session);
+          setUser(session?.user ?? null);
+        }
         setLoading(false);
       }
     );
