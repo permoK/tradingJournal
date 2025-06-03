@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useJournalEntries, useActivityLogs } from '@/lib/hooks';
 import AppLayout from '@/components/AppLayout';
 import ImageUpload from '@/components/ImageUpload';
+import AttachmentSelector from '@/components/journal/AttachmentSelector';
 import { FiSave, FiX } from 'react-icons/fi';
 
 export default function NewJournalEntry() {
@@ -19,6 +20,8 @@ export default function NewJournalEntry() {
   const [isPrivate, setIsPrivate] = useState(false);
   const [tags, setTags] = useState('');
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [selectedTradeIds, setSelectedTradeIds] = useState<string[]>([]);
+  const [selectedStrategyIds, setSelectedStrategyIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,7 +54,9 @@ export default function NewJournalEntry() {
         content,
         is_private: isPrivate,
         tags: tagArray.length > 0 ? tagArray : null,
-        image_url: imageUrl
+        image_url: imageUrl,
+        trade_ids: selectedTradeIds.length > 0 ? selectedTradeIds : null,
+        strategy_ids: selectedStrategyIds.length > 0 ? selectedStrategyIds : null
       });
 
       if (error) {
@@ -146,6 +151,15 @@ export default function NewJournalEntry() {
             />
           </div>
         )}
+
+        <div className="mb-6">
+          <AttachmentSelector
+            selectedTradeIds={selectedTradeIds}
+            selectedStrategyIds={selectedStrategyIds}
+            onTradeIdsChange={setSelectedTradeIds}
+            onStrategyIdsChange={setSelectedStrategyIds}
+          />
+        </div>
 
         <div className="mb-6">
           <label className="flex items-center">

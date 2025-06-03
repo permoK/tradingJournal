@@ -6,6 +6,7 @@ import { useJournalEntries, useActivityLogs } from '@/lib/hooks';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
 import ImageUpload from '@/components/ImageUpload';
+import AttachmentSelector from '@/components/journal/AttachmentSelector';
 import { FiSave, FiX } from 'react-icons/fi';
 
 export default function EditJournalEntry({ params }: { params: { id: string } }) {
@@ -19,6 +20,8 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
   const [isPrivate, setIsPrivate] = useState(false);
   const [tags, setTags] = useState('');
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [selectedTradeIds, setSelectedTradeIds] = useState<string[]>([]);
+  const [selectedStrategyIds, setSelectedStrategyIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
@@ -36,6 +39,8 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
       setIsPrivate(entry.is_private);
       setTags(entry.tags ? entry.tags.join(', ') : '');
       setImageUrl(entry.image_url || null);
+      setSelectedTradeIds(entry.trade_ids || []);
+      setSelectedStrategyIds(entry.strategy_ids || []);
       setNotFound(false);
     } else if (entries.length > 0) {
       // Only set not found if entries have loaded but entry not found
@@ -72,7 +77,9 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
         content,
         is_private: isPrivate,
         tags: tagArray.length > 0 ? tagArray : null,
-        image_url: imageUrl
+        image_url: imageUrl,
+        trade_ids: selectedTradeIds.length > 0 ? selectedTradeIds : null,
+        strategy_ids: selectedStrategyIds.length > 0 ? selectedStrategyIds : null
       });
 
       if (error) {
@@ -186,6 +193,15 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
             />
           </div>
         )}
+
+        <div className="mb-6">
+          <AttachmentSelector
+            selectedTradeIds={selectedTradeIds}
+            selectedStrategyIds={selectedStrategyIds}
+            onTradeIdsChange={setSelectedTradeIds}
+            onStrategyIdsChange={setSelectedStrategyIds}
+          />
+        </div>
 
         <div className="mb-6">
           <label className="flex items-center">

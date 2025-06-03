@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { useJournalEntries } from '@/lib/hooks';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
-import { FiPlus, FiEye, FiEyeOff, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { FiPlus, FiEye, FiEyeOff, FiEdit2, FiTrash2, FiTrendingUp, FiTarget } from 'react-icons/fi';
 import { format } from 'date-fns';
 import Link from 'next/link';
 
@@ -179,6 +179,24 @@ function JournalContent() {
                 >
                   Read more
                 </Link>
+              )}
+
+              {/* Attachment indicators */}
+              {((entry.trade_ids && entry.trade_ids.length > 0) || (entry.strategy_ids && entry.strategy_ids.length > 0)) && (
+                <div className="mt-3 flex items-center gap-4 text-sm text-slate-600">
+                  {entry.trade_ids && entry.trade_ids.length > 0 && (
+                    <div className="flex items-center">
+                      <FiTrendingUp className="mr-1" size={14} />
+                      <span>{entry.trade_ids.length} trade{entry.trade_ids.length !== 1 ? 's' : ''}</span>
+                    </div>
+                  )}
+                  {entry.strategy_ids && entry.strategy_ids.length > 0 && (
+                    <div className="flex items-center">
+                      <FiTarget className="mr-1" size={14} />
+                      <span>{entry.strategy_ids.length} strateg{entry.strategy_ids.length !== 1 ? 'ies' : 'y'}</span>
+                    </div>
+                  )}
+                </div>
               )}
 
               {entry.tags && entry.tags.length > 0 && (

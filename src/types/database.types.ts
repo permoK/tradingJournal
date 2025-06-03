@@ -105,6 +105,8 @@ export interface Database {
           is_private: boolean
           tags: string[] | null
           image_url: string | null
+          trade_ids: string[] | null
+          strategy_ids: string[] | null
         }
         Insert: {
           id?: string
@@ -116,6 +118,8 @@ export interface Database {
           is_private?: boolean
           tags?: string[] | null
           image_url?: string | null
+          trade_ids?: string[] | null
+          strategy_ids?: string[] | null
         }
         Update: {
           id?: string
@@ -127,6 +131,8 @@ export interface Database {
           is_private?: boolean
           tags?: string[] | null
           image_url?: string | null
+          trade_ids?: string[] | null
+          strategy_ids?: string[] | null
         }
       }
       trades: {

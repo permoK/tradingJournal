@@ -50,7 +50,9 @@ CREATE TABLE IF NOT EXISTS journal_entries (
   content TEXT NOT NULL,
   is_private BOOLEAN DEFAULT true,
   tags TEXT[] DEFAULT '{}',
-  image_url TEXT
+  image_url TEXT,
+  trade_ids UUID[] DEFAULT '{}',
+  strategy_ids UUID[] DEFAULT '{}'
 );
 
 -- Create trades table
@@ -96,6 +98,12 @@ ALTER TABLE trades ADD COLUMN IF NOT EXISTS is_demo BOOLEAN DEFAULT false;
 
 -- Add image_url column to journal_entries if it doesn't exist
 ALTER TABLE journal_entries ADD COLUMN IF NOT EXISTS image_url TEXT;
+
+-- Add trade_ids column to journal_entries if it doesn't exist
+ALTER TABLE journal_entries ADD COLUMN IF NOT EXISTS trade_ids UUID[] DEFAULT '{}';
+
+-- Add strategy_ids column to journal_entries if it doesn't exist
+ALTER TABLE journal_entries ADD COLUMN IF NOT EXISTS strategy_ids UUID[] DEFAULT '{}';
 
 -- Update existing trades to be real trades (not demo) if they have NULL values
 UPDATE trades SET is_demo = false WHERE is_demo IS NULL;

@@ -6,6 +6,7 @@ import { useJournalEntries, useProfile } from '@/lib/hooks';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
 import Avatar from '@/components/Avatar';
+import AttachedItems from '@/components/journal/AttachedItems';
 import { FiEdit2, FiTrash2, FiArrowLeft, FiEyeOff } from 'react-icons/fi';
 import { format } from 'date-fns';
 import Link from 'next/link';
@@ -148,6 +149,12 @@ export default function JournalEntryView({ params }: { params: { id: string } })
             <p key={index}>{paragraph}</p>
           ))}
         </div>
+
+        {/* Display attached trades and strategies */}
+        <AttachedItems
+          tradeIds={entry.trade_ids}
+          strategyIds={entry.strategy_ids}
+        />
       </div>
 
       {entry.tags && entry.tags.length > 0 && (
