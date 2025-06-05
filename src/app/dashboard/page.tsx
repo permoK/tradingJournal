@@ -18,6 +18,8 @@ import TradingPairsChart from '@/components/TradingPairsChart';
 import ProgressTracker from '@/components/ProgressTracker';
 import AdvancedSearch from '@/components/AdvancedSearch';
 import NewUserWelcome from '@/components/NewUserWelcome';
+import NewsWidget from '@/components/news/NewsWidget';
+import CurrencyStrength from '@/components/news/CurrencyStrength';
 
 // Register Chart.js components
 ChartJS.register(ArcElement, ChartTooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
@@ -574,6 +576,12 @@ export default function Dashboard() {
           <h2 className="text-lg font-semibold text-slate-900">Activity Streak</h2>
         </div>
         {user && <StreakHeatmap userId={user.id} />}
+      </div>
+
+      {/* News and Currency Widgets */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <NewsWidget />
+        <CurrencyStrength />
       </div>
 
       {/* Quick Actions */}

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/lib/hooks';
-import { FiHome, FiBook, FiBarChart2, FiFileText, FiUsers, FiSettings, FiLogOut, FiX, FiGrid, FiUser } from 'react-icons/fi';
+import { FiHome, FiBook, FiBarChart2, FiFileText, FiUsers, FiSettings, FiLogOut, FiX, FiGrid, FiUser, FiGlobe } from 'react-icons/fi';
 import TradeFlowLogo from './TradeFlowLogo';
 import Avatar from './Avatar';
 
@@ -34,6 +34,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     { name: 'Strategies', href: '/strategies', icon: FiBook },
     { name: 'Trading', href: '/trading', icon: FiBarChart2 },
     { name: 'Journal', href: '/journal', icon: FiFileText },
+    { name: 'News', href: '/news', icon: FiGlobe },
     { name: 'Community', href: '/community', icon: FiUsers },
     { name: 'Tools', href: '/tools', icon: FiGrid },
     { name: 'Settings', href: '/settings', icon: FiSettings },

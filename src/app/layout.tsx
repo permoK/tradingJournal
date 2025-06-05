@@ -5,6 +5,8 @@ import ServerCompileLoader from "@/components/ServerCompileLoader";
 import ClientOnly from "@/components/ClientOnly";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { TradeModeProvider } from "@/contexts/TradeModeContext";
+import { NotificationProvider } from "@/contexts/NotificationContext";
+import ToastContainer from "@/components/notifications/Toast";
 
 import { Analytics } from "@vercel/analytics/next"
 
@@ -45,10 +47,13 @@ export default function RootLayout({
       >
         <AuthProvider>
           <TradeModeProvider>
-            <ClientOnly>
-              <ServerCompileLoader />
-            </ClientOnly>
-            {children}
+            <NotificationProvider>
+              <ClientOnly>
+                <ServerCompileLoader />
+              </ClientOnly>
+              {children}
+              <ToastContainer />
+            </NotificationProvider>
           </TradeModeProvider>
         </AuthProvider>
       </body>

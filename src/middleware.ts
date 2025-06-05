@@ -15,6 +15,7 @@ export async function middleware(req: NextRequest) {
     '/strategies',
     '/journal',
     '/trading',
+    '/news',
     '/community',
     '/settings',
   ];
