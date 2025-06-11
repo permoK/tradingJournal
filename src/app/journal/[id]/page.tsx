@@ -2,59 +2,66 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useJournalEntries, useProfile } from '@/lib/hooks';
-import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 import AppLayout from '@/components/AppLayout';
 import Avatar from '@/components/Avatar';
 import AttachedItems from '@/components/journal/AttachedItems';
 import { FiEdit2, FiTrash2, FiArrowLeft, FiEyeOff } from 'react-icons/fi';
 import { format } from 'date-fns';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
 import ReactMarkdown from 'react-markdown';
 
 export default function JournalEntryView({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const { user } = useAuth();
-  const { entries } = useJournalEntries(user?.id);
-  const { profile } = useProfile(user?.id);
-
   const [entry, setEntry] = useState<any>(null);
+  const [author, setAuthor] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Find the entry with the matching ID
-    const foundEntry = entries.find(e => e.id === params.id);
+    const fetchEntry = async () => {
+      setLoading(true);
+      try {
+        const { data: journalData, error: journalError } = await supabase
+          .from('journal_entries')
+          .select('*')
+          .eq('id', params.id)
+          .single();
 
-    if (foundEntry) {
-      setEntry(foundEntry);
-    } else {
-      setError('Journal entry not found');
-    }
+        if (journalError || !journalData) {
+          setError('Journal entry not found or you do not have permission to view it.');
+          setLoading(false);
+          return;
+        }
+        setEntry(journalData);
 
-    setLoading(false);
-  }, [entries, params.id]);
+        // Fetch author profile
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', journalData.user_id)
+          .single();
+        if (!profileError && profileData) {
+          setAuthor(profileData);
+        }
+      } catch (err) {
+        setError('Failed to load journal entry');
+      }
+      setLoading(false);
+    };
+    fetchEntry();
+  }, [params.id]);
 
   const deleteEntry = async () => {
     if (!confirm('Are you sure you want to delete this journal entry?')) return;
-
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // In a real app, you would do:
-      // const { error } = await supabase
-      //   .from('journal_entries')
-      //   .delete()
-      //   .eq('id', params.id);
-
-      // if (error) throw error;
-
-      // Redirect to journal page
+      const { error } = await supabase
+        .from('journal_entries')
+        .delete()
+        .eq('id', params.id);
+      if (error) throw error;
       router.push('/journal');
     } catch (err) {
-      console.error('Error deleting journal entry:', err);
       setError('Failed to delete journal entry');
     }
   };
@@ -74,7 +81,7 @@ export default function JournalEntryView({ params }: { params: { id: string } })
       <AppLayout>
         <div className="bg-white p-6 rounded-lg shadow-sm text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Entry Not Found</h1>
-          <p className="text-gray-600 mb-4">The journal entry you're looking for doesn't exist or you don't have permission to view it.</p>
+          <p className="text-gray-600 mb-4">{error || 'The journal entry you\'re looking for doesn\'t exist or you don\'t have permission to view it.'}</p>
           <button
             onClick={() => router.push('/journal')}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -85,8 +92,6 @@ export default function JournalEntryView({ params }: { params: { id: string } })
       </AppLayout>
     );
   }
-
-  const isOwner = entry.user_id === user?.id;
 
   return (
     <AppLayout>
@@ -113,24 +118,7 @@ export default function JournalEntryView({ params }: { params: { id: string } })
             </p>
           </div>
 
-          {isOwner && (
-            <div className="flex gap-2">
-              <Link
-                href={`/journal/edit/${entry.id}`}
-                className="flex items-center px-3 py-2 text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100"
-              >
-                <FiEdit2 className="mr-2" />
-                Edit
-              </Link>
-              <button
-                onClick={deleteEntry}
-                className="flex items-center px-3 py-2 text-red-600 bg-red-50 rounded-md hover:bg-red-100"
-              >
-                <FiTrash2 className="mr-2" />
-                Delete
-              </button>
-            </div>
-          )}
+          {/* Only show edit/delete if author is current user (optional, needs auth context) */}
         </div>
       </div>
 
@@ -172,24 +160,26 @@ export default function JournalEntryView({ params }: { params: { id: string } })
         </div>
       )}
 
-      <div className="bg-gray-50 p-6 rounded-lg">
-        <h2 className="text-lg font-semibold mb-2">Author</h2>
-        <div className="flex items-center">
-          <div className="mr-4">
-            <Avatar
-              username={profile?.username || 'Unknown'}
-              avatarUrl={profile?.avatar_url}
-              size="md"
-            />
-          </div>
-          <div>
-            <p className="font-medium">{profile?.username}</p>
-            {profile?.full_name && (
-              <p className="text-sm text-gray-500">{profile.full_name}</p>
-            )}
+      {author && (
+        <div className="bg-gray-50 p-6 rounded-lg">
+          <h2 className="text-lg font-semibold mb-2">Author</h2>
+          <div className="flex items-center">
+            <div className="mr-4">
+              <Avatar
+                username={author.username || 'Unknown'}
+                avatarUrl={author.avatar_url}
+                size="md"
+              />
+            </div>
+            <div>
+              <p className="font-medium">{author.username}</p>
+              {author.full_name && (
+                <p className="text-sm text-gray-500">{author.full_name}</p>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </AppLayout>
   );
 }
