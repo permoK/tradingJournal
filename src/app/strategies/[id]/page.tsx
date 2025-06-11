@@ -18,6 +18,7 @@ export default function StrategyDetail() {
   const [strategy, setStrategy] = useState<Strategy | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showImageModal, setShowImageModal] = useState(false);
 
   useEffect(() => {
     const fetchStrategy = async () => {
@@ -127,8 +128,25 @@ export default function StrategyDetail() {
               <img
                 src={strategy.image_url}
                 alt={strategy.name}
-                className="w-full h-64 object-cover rounded-lg"
+                className="w-full h-64 object-cover rounded-lg cursor-pointer hover:opacity-80 transition"
+                onClick={() => setShowImageModal(true)}
               />
+              {showImageModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80" onClick={() => setShowImageModal(false)}>
+                  <div className="relative max-w-3xl w-full" onClick={e => e.stopPropagation()}>
+                    <button
+                      className="absolute top-2 right-2 text-white text-3xl font-bold z-10"
+                      onClick={() => setShowImageModal(false)}
+                      aria-label="Close image preview"
+                    >&times;</button>
+                    <img
+                      src={strategy.image_url}
+                      alt={strategy.name}
+                      className="w-full h-auto max-h-[80vh] rounded-lg shadow-lg border border-white"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

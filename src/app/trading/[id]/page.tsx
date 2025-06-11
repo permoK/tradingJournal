@@ -36,6 +36,7 @@ export default function TradeDetail() {
   const [trade, setTrade] = useState<Trade | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showImageModal, setShowImageModal] = useState(false);
 
   useEffect(() => {
     const fetchTrade = async () => {
@@ -129,8 +130,25 @@ export default function TradeDetail() {
             <img
               src={trade.screenshot_url}
               alt="Trade screenshot"
-              className="w-full h-auto max-h-96 object-contain"
+              className="w-full h-auto max-h-96 object-contain cursor-pointer hover:opacity-80 transition"
+              onClick={() => setShowImageModal(true)}
             />
+            {showImageModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80" onClick={() => setShowImageModal(false)}>
+                <div className="relative max-w-3xl w-full" onClick={e => e.stopPropagation()}>
+                  <button
+                    className="absolute top-2 right-2 text-white text-3xl font-bold z-10"
+                    onClick={() => setShowImageModal(false)}
+                    aria-label="Close image preview"
+                  >&times;</button>
+                  <img
+                    src={trade.screenshot_url}
+                    alt="Trade screenshot"
+                    className="w-full h-auto max-h-[80vh] rounded-lg shadow-lg border border-white"
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
