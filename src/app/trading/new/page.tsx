@@ -38,6 +38,7 @@ export default function NewTrade() {
   const [isPrivate, setIsPrivate] = useState(false);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
   const [strategyId, setStrategyId] = useState<string>('');
+  const [accountBalance, setAccountBalance] = useState<number | undefined>(undefined);
 
   // UI state
   const [loading, setLoading] = useState(false);
@@ -282,6 +283,17 @@ export default function NewTrade() {
 
   return (
     <AppLayout>
+      {profile && typeof profile.balance === 'number' && (
+        <div className="mb-4 flex items-center justify-center">
+          <div className="bg-white border border-slate-200 rounded-lg px-4 py-2 flex items-center gap-3 shadow-sm">
+            <FiInfo className="text-slate-600 text-2xl" />
+            <div>
+              <div className="text-sm text-slate-600">Account Balance</div>
+              <div className="text-xl font-semibold text-slate-900">${profile.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex justify-between items-center mb-6">
         <div>
           <div className="flex items-center gap-4 mb-2">

@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTradeMode } from '@/contexts/TradeModeContext';
 import AppLayout from '@/components/AppLayout';
 import TradeModeToggle from '@/components/TradeModeToggle';
-import { FiBook, FiBarChart2, FiFileText, FiUsers, FiAward, FiCalendar, FiSearch, FiTrendingUp, FiTrendingDown, FiFilter, FiEye, FiGrid } from 'react-icons/fi';
+import { FiBook, FiBarChart2, FiFileText, FiUsers, FiAward, FiCalendar, FiSearch, FiTrendingUp, FiTrendingDown, FiFilter, FiEye, FiGrid, FiDollarSign } from 'react-icons/fi';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, subWeeks, subMonths } from 'date-fns';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -251,6 +251,19 @@ export default function Dashboard() {
             </p>
           )}
         </div>
+
+        {/* Balance Display - Prominent and Noticeable */}
+        {profile && typeof profile.balance === 'number' && (
+          <div className="mt-4 sm:mt-0 flex items-center">
+            <div className="bg-gradient-to-r from-indigo-500 to-emerald-500 shadow-lg rounded-xl px-6 py-4 flex items-center gap-4 border-4 border-emerald-200 animate-pulse">
+              <FiDollarSign className="text-white text-4xl drop-shadow" />
+              <div>
+                <div className="text-lg font-semibold text-white opacity-80">Account Balance</div>
+                <div className="text-3xl font-extrabold text-white tracking-wider">${profile.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Universal Real-time Search */}
         <div className="mt-4 sm:mt-0 w-full sm:w-auto">

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTrades } from '@/lib/hooks';
+import { useTrades, useProfile } from '@/lib/hooks';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTradeMode } from '@/contexts/TradeModeContext';
 import AppLayout from '@/components/AppLayout';
@@ -18,6 +18,7 @@ export default function Trading() {
   const { user, loading: authLoading } = useAuth();
   const { isDemoMode } = useTradeMode();
   const { trades, loading: tradesLoading, deleteTrade: deleteTradeHook, refetch } = useTrades(user?.id, true, isDemoMode);
+  const { profile, updateProfile } = useProfile(user?.id);
 
   const [showPrivate, setShowPrivate] = useState(true);
   const [marketFilter, setMarketFilter] = useState('all');
@@ -63,11 +64,31 @@ export default function Trading() {
   const deleteTrade = async (tradeId: string) => {
     if (!confirm('Are you sure you want to delete this trade?')) return;
 
+    // Find the trade to get its profit_loss before deletion
+    const tradeToDelete = trades.find(trade => trade.id === tradeId);
+    if (!tradeToDelete) {
+      alert('Trade not found');
+      return;
+    }
+
+    // Update profile balance if possible
+    if (profile && typeof profile.balance === 'number' && typeof tradeToDelete.profit_loss === 'number') {
+      const newBalance = profile.balance - tradeToDelete.profit_loss;
+      const { error: updateError } = await updateProfile({ balance: newBalance });
+      if (updateError) {
+        alert('Failed to update profile balance');
+        return;
+      }
+    }
+
     const { error } = await deleteTradeHook(tradeId);
 
     if (error) {
       console.error('Error deleting trade:', error);
       alert('Failed to delete trade');
+    } else {
+      // Optionally refetch profile/trades to update UI
+      if (refetch) refetch();
     }
   };
 
