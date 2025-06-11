@@ -32,18 +32,18 @@ interface ProfileStats {
 }
 
 function calculateProfileStats(trades: Trade[]): ProfileStats {
-  // Filter only closed trades with profit/loss data
-  const closedTrades = trades.filter(trade => trade.status === 'closed' && trade.profit_loss !== null);
+  // Only real (non-demo) closed trades with profit/loss data
+  const closedRealTrades = trades.filter(trade => trade.status === 'closed' && trade.profit_loss !== null && trade.is_demo === false);
 
   // Sort trades by date for streak calculation
-  const sortedTrades = [...closedTrades].sort((a, b) => new Date(a.trade_date).getTime() - new Date(b.trade_date).getTime());
+  const sortedTrades = [...closedRealTrades].sort((a, b) => new Date(a.trade_date).getTime() - new Date(b.trade_date).getTime());
 
   // Basic statistics
-  const totalTrades = closedTrades.length;
-  const winningTrades = closedTrades.filter(trade => trade.profit_loss! > 0).length;
-  const losingTrades = closedTrades.filter(trade => trade.profit_loss! < 0).length;
+  const totalTrades = closedRealTrades.length;
+  const winningTrades = closedRealTrades.filter(trade => trade.profit_loss! > 0).length;
+  const losingTrades = closedRealTrades.filter(trade => trade.profit_loss! < 0).length;
   const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
-  const totalProfitLoss = closedTrades.reduce((sum, trade) => sum + (trade.profit_loss || 0), 0);
+  const totalProfitLoss = closedRealTrades.reduce((sum, trade) => sum + (trade.profit_loss || 0), 0);
 
   // Calculate winning streaks
   let currentWinStreak = 0;
@@ -69,8 +69,8 @@ function calculateProfileStats(trades: Trade[]): ProfileStats {
     }
   }
 
-  // Calculate top traded pairs
-  const pairStats = trades.reduce((acc, trade) => {
+  // Calculate top traded pairs (only real trades)
+  const pairStats = closedRealTrades.reduce((acc, trade) => {
     if (!acc[trade.market]) {
       acc[trade.market] = { count: 0, profitLoss: 0 };
     }
@@ -211,7 +211,7 @@ export default function UserProfile({ params }: { params: { id: string } }) {
           setPublicStrategies(strategyData);
         }
 
-        // Fetch ALL trades for statistics calculation (both public and private)
+        // Fetch ALL trades for statistics calculation (both public and private, but only real trades for stats)
         const { data: allTradesData, error: allTradesError } = await supabase
           .from('trades')
           .select('*')
@@ -219,6 +219,7 @@ export default function UserProfile({ params }: { params: { id: string } }) {
           .order('trade_date', { ascending: false });
 
         if (!allTradesError && allTradesData) {
+          // Only pass real trades to stats function
           const stats = calculateProfileStats(allTradesData);
           setProfileStats(stats);
         }
