@@ -9,6 +9,7 @@ import ImageUpload from '@/components/ImageUpload';
 import { FiArrowLeft, FiX } from 'react-icons/fi';
 import Link from 'next/link';
 import { Database } from '@/types/database.types';
+import ReactMarkdown from 'react-markdown';
 
 type Strategy = Database['public']['Tables']['strategies']['Row'];
 
@@ -31,6 +32,7 @@ export default function EditStrategy() {
   const [imageUrl, setImageUrl] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [isPrivate, setIsPrivate] = useState(true);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     const fetchStrategy = async () => {
@@ -271,21 +273,36 @@ export default function EditStrategy() {
                 <label htmlFor="details" className="block text-sm font-medium text-slate-700 mb-2">
                   Detailed Strategy Description
                 </label>
-                <textarea
-                  id="details"
-                  value={details}
-                  onChange={(e) => setDetails(e.target.value)}
-                  rows={12}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-900 bg-white"
-                  placeholder="Detailed explanation of your strategy including:
-- Entry conditions
-- Exit conditions
-- Risk management rules
-- Market conditions
-- Timeframes
-- Indicators used
-- Examples..."
-                />
+                <div className="flex justify-between items-center mb-1">
+                  <button
+                    type="button"
+                    className={`text-xs px-2 py-1 rounded ${showPreview ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-700'}`}
+                    onClick={() => setShowPreview(false)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    className={`text-xs px-2 py-1 rounded ${showPreview ? 'bg-slate-100 text-slate-700' : 'bg-indigo-100 text-indigo-700'}`}
+                    onClick={() => setShowPreview(true)}
+                  >
+                    Preview
+                  </button>
+                </div>
+                {!showPreview ? (
+                  <textarea
+                    id="details"
+                    value={details}
+                    onChange={(e) => setDetails(e.target.value)}
+                    rows={12}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-900 bg-white font-mono"
+                    placeholder="Detailed explanation of your strategy including:\n- Entry conditions\n- Exit conditions\n- Risk management rules\n- Market conditions\n- Timeframes\n- Indicators used\n- Examples..."
+                  />
+                ) : (
+                  <div className="w-full px-3 py-2 border border-slate-300 rounded-md bg-slate-50 min-h-[180px] prose max-w-none text-slate-800">
+                    <ReactMarkdown>{details || 'Nothing to preview.'}</ReactMarkdown>
+                  </div>
+                )}
               </div>
 
 

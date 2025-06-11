@@ -7,6 +7,7 @@ import AppLayout from '@/components/AppLayout';
 import { FiArrowLeft, FiEdit, FiBarChart2, FiTrendingUp, FiTrendingDown, FiCalendar, FiPieChart } from 'react-icons/fi';
 import Link from 'next/link';
 import { Database } from '@/types/database.types';
+import ReactMarkdown from 'react-markdown';
 
 type Strategy = Database['public']['Tables']['strategies']['Row'];
 
@@ -135,7 +136,9 @@ export default function StrategyDetail() {
           {strategy.description && (
             <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 sm:p-6">
               <h2 className="text-lg font-semibold text-slate-900 mb-3">Overview</h2>
-              <p className="text-slate-700 leading-relaxed">{strategy.description}</p>
+              <div className="prose max-w-none text-slate-800">
+                <ReactMarkdown>{strategy.description}</ReactMarkdown>
+              </div>
             </div>
           )}
 
@@ -143,10 +146,8 @@ export default function StrategyDetail() {
           {strategy.details && (
             <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 sm:p-6">
               <h2 className="text-lg font-semibold text-slate-900 mb-3">Strategy Details</h2>
-              <div className="prose prose-slate max-w-none">
-                <pre className="whitespace-pre-wrap text-slate-700 leading-relaxed font-sans">
-                  {strategy.details}
-                </pre>
+              <div className="prose prose-slate max-w-none text-slate-800">
+                <ReactMarkdown>{strategy.details}</ReactMarkdown>
               </div>
             </div>
           )}
