@@ -8,6 +8,7 @@ import AppLayout from '@/components/AppLayout';
 import { FiPlus, FiEye, FiEyeOff, FiEdit2, FiTrash2, FiTrendingUp, FiTarget } from 'react-icons/fi';
 import { format } from 'date-fns';
 import Link from 'next/link';
+import ReactMarkdown from 'react-markdown';
 
 function JournalContent() {
   const { user, loading: authLoading } = useAuth();
@@ -167,9 +168,9 @@ function JournalContent() {
               )}
 
               <div className="mt-2 prose max-w-none text-slate-800">
-                {entry.content.length > 300
-                  ? `${entry.content.substring(0, 300)}...`
-                  : entry.content}
+                <ReactMarkdown>
+                  {entry.content.length > 300 ? `${entry.content.substring(0, 300)}...` : entry.content}
+                </ReactMarkdown>
               </div>
 
               {entry.content.length > 300 && (

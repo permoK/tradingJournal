@@ -11,6 +11,7 @@ import { FiEdit2, FiTrash2, FiArrowLeft, FiEyeOff } from 'react-icons/fi';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import ReactMarkdown from 'react-markdown';
 
 export default function JournalEntryView({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -145,9 +146,7 @@ export default function JournalEntryView({ params }: { params: { id: string } })
         )}
 
         <div className="prose max-w-none">
-          {entry.content.split('\n').map((paragraph: string, index: number) => (
-            <p key={index}>{paragraph}</p>
-          ))}
+          <ReactMarkdown>{entry.content}</ReactMarkdown>
         </div>
 
         {/* Display attached trades and strategies */}
