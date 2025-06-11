@@ -133,7 +133,7 @@ export default function JournalEntryView({ params }: { params: { id: string } })
           </div>
         )}
 
-        <div className="prose max-w-none">
+        <div className="prose prose-slate max-w-none text-slate-900">
           <ReactMarkdown>{entry.content}</ReactMarkdown>
         </div>
 
@@ -146,12 +146,12 @@ export default function JournalEntryView({ params }: { params: { id: string } })
 
       {entry.tags && entry.tags.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-2">Tags</h2>
+          <h2 className="text-lg font-semibold mb-2 text-slate-900">Tags</h2>
           <div className="flex flex-wrap gap-2">
             {entry.tags.map((tag: string) => (
               <span
                 key={tag}
-                className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full"
+                className="inline-block px-2 py-1 text-xs font-medium bg-blue-200 text-blue-900 rounded-full"
               >
                 {tag}
               </span>
@@ -162,7 +162,7 @@ export default function JournalEntryView({ params }: { params: { id: string } })
 
       {author && (
         <div className="bg-gray-50 p-6 rounded-lg">
-          <h2 className="text-lg font-semibold mb-2">Author</h2>
+          <h2 className="text-lg font-semibold mb-2 text-slate-900">Author</h2>
           <div className="flex items-center">
             <div className="mr-4">
               <Avatar
@@ -172,9 +172,9 @@ export default function JournalEntryView({ params }: { params: { id: string } })
               />
             </div>
             <div>
-              <p className="font-medium">{author.username}</p>
+              <p className="font-medium text-slate-900">{author.username}</p>
               {author.full_name && (
-                <p className="text-sm text-gray-500">{author.full_name}</p>
+                <p className="text-sm text-slate-700">{author.full_name}</p>
               )}
             </div>
           </div>
