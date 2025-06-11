@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import AppLayout from '@/components/AppLayout';
 import Avatar from '@/components/Avatar';
 import AttachedItems from '@/components/journal/AttachedItems';
-import { FiEdit2, FiTrash2, FiArrowLeft, FiEyeOff } from 'react-icons/fi';
+import { FiEdit2, FiTrash2, FiArrowLeft, FiEyeOff, FiPlus, FiMinus } from 'react-icons/fi';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
@@ -18,6 +18,7 @@ export default function JournalEntryView({ params }: { params: { id: string } })
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [imageZoom, setImageZoom] = useState(1);
 
   useEffect(() => {
     const fetchEntry = async () => {
@@ -129,24 +130,43 @@ export default function JournalEntryView({ params }: { params: { id: string } })
             <img
               src={entry.image_url}
               alt="Journal entry image"
-              className="w-full max-w-2xl h-auto rounded-lg border border-slate-200 cursor-pointer transition-transform hover:scale-105"
-              onClick={() => setShowImageModal(true)}
+              className="w-full max-w-2xl h-auto rounded-lg border border-slate-200 cursor-pointer hover:opacity-80 transition"
+              onClick={() => {
+                setShowImageModal(true);
+                setImageZoom(1);
+              }}
             />
             {showImageModal && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80" onClick={() => setShowImageModal(false)}>
-                <img
-                  src={entry.image_url}
-                  alt="Journal entry preview"
-                  className="max-w-full max-h-[90vh] rounded-lg shadow-lg border-4 border-white"
-                  onClick={e => e.stopPropagation()}
-                />
-                <button
-                  className="absolute top-8 right-8 text-white text-3xl font-bold bg-black bg-opacity-40 rounded-full px-3 py-1 hover:bg-opacity-70 focus:outline-none"
-                  onClick={() => setShowImageModal(false)}
-                  aria-label="Close preview"
-                >
-                  &times;
-                </button>
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80" onClick={() => { setShowImageModal(false); setImageZoom(1); }}>
+                <div className="relative max-w-3xl w-full" onClick={e => e.stopPropagation()}>
+                  <button
+                    className="absolute top-2 right-2 text-white text-3xl font-bold z-10"
+                    onClick={() => { setShowImageModal(false); setImageZoom(1); }}
+                    aria-label="Close image preview"
+                  >&times;</button>
+                  <div className="absolute top-2 left-2 flex gap-2 z-10">
+                    <button
+                      className="bg-white rounded-full p-2 shadow hover:bg-slate-100 transition flex items-center justify-center"
+                      onClick={() => setImageZoom(z => Math.max(0.5, z - 0.2))}
+                      aria-label="Zoom out"
+                    >
+                      <FiMinus className="w-5 h-5 text-black" />
+                    </button>
+                    <button
+                      className="bg-white rounded-full p-2 shadow hover:bg-slate-100 transition flex items-center justify-center"
+                      onClick={() => setImageZoom(z => Math.min(3, z + 0.2))}
+                      aria-label="Zoom in"
+                    >
+                      <FiPlus className="w-5 h-5 text-black" />
+                    </button>
+                  </div>
+                  <img
+                    src={entry.image_url}
+                    alt="Journal entry image"
+                    className="w-full h-auto max-h-[80vh] rounded-lg shadow-lg border border-white"
+                    style={{ transform: `scale(${imageZoom})`, transition: 'transform 0.2s' }}
+                  />
+                </div>
               </div>
             )}
           </div>

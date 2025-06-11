@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
-import { FiArrowLeft, FiEdit, FiBarChart2, FiTrendingUp, FiTrendingDown, FiCalendar, FiPieChart } from 'react-icons/fi';
+import { FiArrowLeft, FiEdit, FiBarChart2, FiTrendingUp, FiTrendingDown, FiCalendar, FiPieChart, FiPlus, FiMinus } from 'react-icons/fi';
 import Link from 'next/link';
 import { Database } from '@/types/database.types';
 import ReactMarkdown from 'react-markdown';
@@ -19,6 +19,7 @@ export default function StrategyDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [imageZoom, setImageZoom] = useState(1);
 
   useEffect(() => {
     const fetchStrategy = async () => {
@@ -129,20 +130,40 @@ export default function StrategyDetail() {
                 src={strategy.image_url}
                 alt={strategy.name}
                 className="w-full h-64 object-cover rounded-lg cursor-pointer hover:opacity-80 transition"
-                onClick={() => setShowImageModal(true)}
+                onClick={() => {
+                  setShowImageModal(true);
+                  setImageZoom(1);
+                }}
               />
               {showImageModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80" onClick={() => setShowImageModal(false)}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80" onClick={() => { setShowImageModal(false); setImageZoom(1); }}>
                   <div className="relative max-w-3xl w-full" onClick={e => e.stopPropagation()}>
                     <button
                       className="absolute top-2 right-2 text-white text-3xl font-bold z-10"
-                      onClick={() => setShowImageModal(false)}
+                      onClick={() => { setShowImageModal(false); setImageZoom(1); }}
                       aria-label="Close image preview"
                     >&times;</button>
+                    <div className="absolute top-2 left-2 flex gap-2 z-10">
+                      <button
+                        className="bg-white rounded-full p-2 shadow hover:bg-slate-100 transition flex items-center justify-center"
+                        onClick={() => setImageZoom(z => Math.max(0.5, z - 0.2))}
+                        aria-label="Zoom out"
+                      >
+                        <FiMinus className="w-5 h-5 text-black" />
+                      </button>
+                      <button
+                        className="bg-white rounded-full p-2 shadow hover:bg-slate-100 transition flex items-center justify-center"
+                        onClick={() => setImageZoom(z => Math.min(3, z + 0.2))}
+                        aria-label="Zoom in"
+                      >
+                        <FiPlus className="w-5 h-5 text-black" />
+                      </button>
+                    </div>
                     <img
                       src={strategy.image_url}
                       alt={strategy.name}
                       className="w-full h-auto max-h-[80vh] rounded-lg shadow-lg border border-white"
+                      style={{ transform: `scale(${imageZoom})`, transition: 'transform 0.2s' }}
                     />
                   </div>
                 </div>
