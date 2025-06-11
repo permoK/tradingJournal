@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProfile } from '@/lib/hooks';
 import AppLayout from '@/components/AppLayout';
 import MarketSelector from '@/components/MarketSelector';
 import { FiPieChart, FiShield, FiInfo, FiArrowLeft, FiAlertTriangle } from 'react-icons/fi';
@@ -16,6 +17,7 @@ import {
 
 export default function PositionSizeCalculator() {
   const { user } = useAuth();
+  const { profile } = useProfile(user?.id);
 
   // Form state
   const [selectedMarket, setSelectedMarket] = useState<MarketInfo | null>(null);
@@ -27,6 +29,13 @@ export default function PositionSizeCalculator() {
   // Results state
   const [result, setResult] = useState<PositionSizeResult | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  // Set default balance from profile
+  useEffect(() => {
+    if (profile && profile.balance !== null && profile.balance !== undefined && accountBalance === '') {
+      setAccountBalance(String(profile.balance));
+    }
+  }, [profile, accountBalance]);
 
   // Calculate position size when inputs change
   useEffect(() => {

@@ -18,6 +18,7 @@ export default function Settings() {
   const [fullName, setFullName] = useState('');
   const [bio, setBio] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [balance, setBalance] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -36,6 +37,7 @@ export default function Settings() {
       setFullName(profile.full_name || '');
       setBio(profile.bio || '');
       setAvatarUrl(profile.avatar_url || '');
+      setBalance(profile.balance !== null && profile.balance !== undefined ? String(profile.balance) : '10000');
     }
   }, [profile]);
 
@@ -171,6 +173,13 @@ export default function Settings() {
       return;
     }
 
+    // Validate balance
+    const balanceNum = parseFloat(balance);
+    if (isNaN(balanceNum) || balanceNum < 0) {
+      setMessage({ type: 'error', text: 'Balance must be a positive number' });
+      return;
+    }
+
     setLoading(true);
     setMessage(null);
 
@@ -182,6 +191,7 @@ export default function Settings() {
           full_name: fullName.trim() || null,
           bio: bio.trim() || null,
           avatar_url: avatarUrl || null,
+          balance: balanceNum,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
@@ -501,6 +511,23 @@ export default function Settings() {
                 rows={4}
                 className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
               />
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor="balance" className="block text-sm font-medium text-slate-700 mb-1">
+                Default Account Balance (USD)
+              </label>
+              <input
+                id="balance"
+                type="number"
+                min="0"
+                step="any"
+                value={balance}
+                onChange={e => setBalance(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
+                placeholder="e.g. 10000"
+              />
+              <p className="mt-1 text-xs text-slate-600">This will be used as your default balance in trading tools.</p>
             </div>
 
             <button

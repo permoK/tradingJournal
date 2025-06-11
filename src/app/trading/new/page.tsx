@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTradeMode } from '@/contexts/TradeModeContext';
-import { useTrades, useActivityLogs, useStrategies } from '@/lib/hooks';
+import { useTrades, useActivityLogs, useStrategies, useProfile } from '@/lib/hooks';
 import AppLayout from '@/components/AppLayout';
 import MarketSelector from '@/components/MarketSelector';
 import ImageUpload from '@/components/ImageUpload';
@@ -23,6 +23,7 @@ export default function NewTrade() {
   const { createMultipleTrades } = useTrades(user?.id);
   const { logActivity } = useActivityLogs(user?.id);
   const { strategies } = useStrategies(user?.id);
+  const { profile, updateProfile } = useProfile(user?.id);
 
   // Form state
   const [market, setMarket] = useState('');
@@ -116,6 +117,13 @@ export default function NewTrade() {
       setValidationError(null);
     }
   }, [entryPrice, exitPrice, quantity, tradeType, status, selectedMarket]);
+
+  // Set default balance from profile
+  useEffect(() => {
+    if (profile && profile.balance !== null && profile.balance !== undefined && accountBalance === undefined) {
+      setAccountBalance(profile.balance);
+    }
+  }, [profile]);
 
   const handleMarketSelect = (marketObj: any) => {
     setSelectedMarket(marketObj);
@@ -249,6 +257,12 @@ export default function NewTrade() {
 
       if (error) {
         throw new Error(error);
+      }
+
+      // Update profile balance
+      const totalPL = tradesToRecord.reduce((sum, t) => sum + (t.profit_loss || 0), 0);
+      if (profile && typeof profile.balance === 'number') {
+        await updateProfile({ balance: profile.balance + totalPL });
       }
 
       // Log activity for streak tracking

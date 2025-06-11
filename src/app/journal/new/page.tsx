@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { useJournalEntries, useActivityLogs } from '@/lib/hooks';
+import { useJournalEntries, useActivityLogs, useProfile } from '@/lib/hooks';
 import AppLayout from '@/components/AppLayout';
 import ImageUpload from '@/components/ImageUpload';
 import AttachmentSelector from '@/components/journal/AttachmentSelector';
@@ -15,6 +15,7 @@ export default function NewJournalEntry() {
   const { user } = useAuth();
   const { createEntry } = useJournalEntries(user?.id);
   const { logActivity } = useActivityLogs(user?.id);
+  const { profile } = useProfile(user?.id);
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -26,6 +27,8 @@ export default function NewJournalEntry() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+
+  const currentBalance = profile && typeof profile.balance === 'number' ? profile.balance : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,6 +96,13 @@ export default function NewJournalEntry() {
       {error && (
         <div className="p-4 mb-6 bg-red-50 border border-red-200 text-red-800 rounded-md">
           {error}
+        </div>
+      )}
+
+      {currentBalance !== null && (
+        <div className="mb-6 p-4 bg-indigo-50 border border-indigo-200 rounded-lg text-indigo-900 text-lg font-semibold flex items-center gap-2">
+          <span>Current Balance:</span>
+          <span className="ml-2">${currentBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
         </div>
       )}
 

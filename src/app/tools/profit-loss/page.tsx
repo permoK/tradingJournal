@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProfile } from '@/lib/hooks';
 import AppLayout from '@/components/AppLayout';
 import MarketSelector from '@/components/MarketSelector';
 import { FiDollarSign, FiTrendingUp, FiTrendingDown, FiInfo, FiArrowLeft } from 'react-icons/fi';
@@ -21,6 +22,7 @@ import {
 
 export default function ProfitLossCalculator() {
   const { user } = useAuth();
+  const { profile } = useProfile(user?.id);
 
   // Form state
   const [selectedMarket, setSelectedMarket] = useState<MarketInfo | null>(null);
@@ -28,10 +30,18 @@ export default function ProfitLossCalculator() {
   const [entryPrice, setEntryPrice] = useState('');
   const [exitPrice, setExitPrice] = useState('');
   const [quantity, setQuantity] = useState('');
+  const [accountBalance, setAccountBalance] = useState('');
 
   // Results state
   const [result, setResult] = useState<PLResult | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  // Set default balance from profile
+  useEffect(() => {
+    if (profile && profile.balance !== null && profile.balance !== undefined && accountBalance === '') {
+      setAccountBalance(String(profile.balance));
+    }
+  }, [profile, accountBalance]);
 
   // Calculate P&L when inputs change
   useEffect(() => {

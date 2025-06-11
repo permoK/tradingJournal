@@ -20,6 +20,7 @@ export interface Database {
           bio: string | null
           streak_count: number
           last_active: string | null
+          balance: number | null
         }
         Insert: {
           id: string
@@ -31,6 +32,7 @@ export interface Database {
           bio?: string | null
           streak_count?: number
           last_active?: string | null
+          balance?: number | null
         }
         Update: {
           id?: string
@@ -42,6 +44,7 @@ export interface Database {
           bio?: string | null
           streak_count?: number
           last_active?: string | null
+          balance?: number | null
         }
       }
       strategies: {

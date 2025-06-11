@@ -11,7 +11,8 @@ CREATE TABLE IF NOT EXISTS profiles (
   avatar_url TEXT,
   bio TEXT,
   streak_count INTEGER DEFAULT 0,
-  last_active TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  last_active TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  balance NUMERIC DEFAULT 10000
 );
 
 -- Create strategies table

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProfile } from '@/lib/hooks';
 import AppLayout from '@/components/AppLayout';
 import MarketSelector from '@/components/MarketSelector';
 import { FiTarget, FiTrendingUp, FiTrendingDown, FiInfo, FiArrowLeft, FiCheckCircle, FiXCircle } from 'react-icons/fi';
@@ -16,6 +17,7 @@ import {
 
 export default function RiskRewardCalculator() {
   const { user } = useAuth();
+  const { profile } = useProfile(user?.id);
 
   // Form state
   const [selectedMarket, setSelectedMarket] = useState<MarketInfo | null>(null);
@@ -23,10 +25,18 @@ export default function RiskRewardCalculator() {
   const [stopLossPrice, setStopLossPrice] = useState('');
   const [takeProfitPrice, setTakeProfitPrice] = useState('');
   const [positionSize, setPositionSize] = useState('1');
+  const [accountBalance, setAccountBalance] = useState('');
 
   // Results state
   const [result, setResult] = useState<RiskRewardResult | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  // Set default balance from profile
+  useEffect(() => {
+    if (profile && profile.balance !== null && profile.balance !== undefined && accountBalance === '') {
+      setAccountBalance(String(profile.balance));
+    }
+  }, [profile, accountBalance]);
 
   // Calculate risk/reward when inputs change
   useEffect(() => {
