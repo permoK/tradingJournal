@@ -17,6 +17,8 @@ interface Trade {
   trade_type: 'buy' | 'sell';
   entry_price: number | null;
   exit_price: number | null;
+  take_profit?: number | null;
+  stop_loss?: number | null;
   quantity: number | null;
   profit_loss: number | null;
   trade_date: string;
@@ -205,29 +207,51 @@ export default function TradeDetail() {
               </span>
             </div>
 
-            <div className="flex justify-between items-center">
-              <span className="text-slate-600">Entry Price:</span>
-              <span className="font-semibold text-slate-900">
-                {trade.entry_price ? `$${trade.entry_price.toFixed(4)}` : '-'}
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-slate-600">Exit Price:</span>
-              <span className="font-semibold text-slate-900">
-                {trade.exit_price ? `$${trade.exit_price.toFixed(4)}` : '-'}
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-slate-600">Quantity:</span>
-              <span className="font-semibold text-slate-900">
-                {trade.quantity ? trade.quantity.toFixed(4) : '-'}
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-slate-600">Strategy:</span>
+            <div className="space-y-4">
+              <div>
+                <span className="block text-slate-500 text-sm mb-1">Trade Type</span>
+                <span className="font-semibold text-slate-900 capitalize">{trade.trade_type}</span>
+              </div>
+              <div>
+                <span className="block text-slate-500 text-sm mb-1">Entry Price</span>
+                <span className="font-semibold text-slate-900">{trade.entry_price !== null ? `$${trade.entry_price.toFixed(4)}` : 'N/A'}</span>
+              </div>
+              <div>
+                <span className="block text-slate-500 text-sm mb-1">Take Profit (TP)</span>
+                <span className="font-semibold text-slate-900">{trade.take_profit !== undefined && trade.take_profit !== null ? `$${trade.take_profit.toFixed(4)}` : 'N/A'}</span>
+              </div>
+              <div>
+                <span className="block text-slate-500 text-sm mb-1">Stop Loss (SL)</span>
+                <span className="font-semibold text-slate-900">{trade.stop_loss !== undefined && trade.stop_loss !== null ? `$${trade.stop_loss.toFixed(4)}` : 'N/A'}</span>
+              </div>
+              <div>
+                <span className="block text-slate-500 text-sm mb-1">Exit Price</span>
+                <span className="font-semibold text-slate-900">{trade.exit_price !== null ? `$${trade.exit_price.toFixed(4)}` : 'N/A'}</span>
+              </div>
+              <div>
+                <span className="block text-slate-500 text-sm mb-1">Quantity</span>
+                <span className="font-semibold text-slate-900">{trade.quantity !== null ? trade.quantity.toFixed(4) : 'N/A'}</span>
+              </div>
+              <div>
+                <span className="block text-slate-500 text-sm mb-1">Strategy:</span>
+                <span className="font-semibold text-slate-900">
+                  {trade.strategy_id ? (
+                    (() => {
+                      const strategy = strategies.find(s => s.id === trade.strategy_id);
+                      return strategy ? (
+                        <Link
+                          href={`/strategies/${strategy.id}`}
+                          className="text-indigo-600 hover:text-indigo-800 hover:underline"
+                        >
+                          {strategy.name}
+                        </Link>
+                      ) : 'Unknown Strategy';
+                    })()
+                  ) : (
+                    <span className="text-slate-500">No strategy</span>
+                  )}
+                </span>
+              </div>
               <span className="font-semibold text-slate-900">
                 {trade.strategy_id ? (
                   (() => {

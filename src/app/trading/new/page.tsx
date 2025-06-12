@@ -32,6 +32,8 @@ export default function NewTrade() {
   const [tradeDate, setTradeDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [entryPrice, setEntryPrice] = useState('');
   const [exitPrice, setExitPrice] = useState('');
+  const [takeProfit, setTakeProfit] = useState('');
+  const [stopLoss, setStopLoss] = useState('');
   const [quantity, setQuantity] = useState('');
   const [status, setStatus] = useState('open');
   const [notes, setNotes] = useState('');
@@ -142,6 +144,8 @@ export default function NewTrade() {
     setTradeDate(format(new Date(), 'yyyy-MM-dd'));
     setEntryPrice('');
     setExitPrice('');
+    setTakeProfit('');
+    setStopLoss('');
     setQuantity('');
     setStatus('open');
     setNotes('');
@@ -176,6 +180,8 @@ export default function NewTrade() {
       tradeDate,
       entryPrice,
       exitPrice,
+      takeProfit,
+      stopLoss,
       quantity,
       status: status as 'open' | 'closed',
       notes,
@@ -206,6 +212,8 @@ export default function NewTrade() {
     setTradeDate(trade.tradeDate);
     setEntryPrice(trade.entryPrice);
     setExitPrice(trade.exitPrice);
+    setTakeProfit(trade.takeProfit || '');
+    setStopLoss(trade.stopLoss || '');
     setQuantity(trade.quantity);
     setStatus(trade.status);
     setNotes(trade.notes);
@@ -399,6 +407,61 @@ export default function NewTrade() {
               onChange={(e) => setEntryPrice(e.target.value)}
               className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
               required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="takeProfit" className="block text-sm font-medium text-slate-700 mb-1">
+              Take Profit (TP) *
+            </label>
+            <input
+              id="takeProfit"
+              type="number"
+              step="any"
+              value={takeProfit}
+              onChange={(e) => setTakeProfit(e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
+              required
+              disabled={status === 'closed'}
+            />
+            {/* Risk/Reward Calculation for TP/SL */}
+            {selectedMarket && entryPrice && takeProfit && stopLoss && quantity && !isNaN(Number(entryPrice)) && !isNaN(Number(takeProfit)) && !isNaN(Number(stopLoss)) && !isNaN(Number(quantity)) && (
+              (() => {
+                try {
+                  const rr = require('@/utils/plCalculator').calculateRiskReward({
+                    entryPrice: parseFloat(entryPrice),
+                    takeProfitPrice: parseFloat(takeProfit),
+                    stopLossPrice: parseFloat(stopLoss),
+                    positionSize: parseFloat(quantity),
+                    market: selectedMarket
+                  });
+                  return (
+                    <div className="mt-2 p-3 bg-slate-50 border border-slate-200 rounded text-xs text-slate-700">
+                      <div><b>Risk:</b> ${rr.riskAmount} | <b>Reward:</b> ${rr.rewardAmount}</div>
+                      <div><b>Risk/Reward:</b> {rr.riskRewardRatio > 0 ? `1:${rr.riskRewardRatio}` : 'N/A'} | <b>Risk Pips:</b> {rr.riskPips} | <b>Reward Pips:</b> {rr.rewardPips}</div>
+                      <div><b>Break-even Win Rate:</b> {rr.breakEvenWinRate}%</div>
+                    </div>
+                  );
+                } catch (e) {
+                  return null;
+                }
+              })()
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="stopLoss" className="block text-sm font-medium text-slate-700 mb-1">
+              Stop Loss (SL) *
+            </label>
+            <input
+              id="stopLoss"
+              type="number"
+              step="any"
+              value={stopLoss}
+              onChange={(e) => setStopLoss(e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
+              required
+              disabled={status === 'closed'}
             />
           </div>
 

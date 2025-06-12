@@ -27,6 +27,8 @@ export default function EditTrade({ params }: { params: { id: string } }) {
   const [tradeDate, setTradeDate] = useState('');
   const [entryPrice, setEntryPrice] = useState('');
   const [exitPrice, setExitPrice] = useState('');
+  const [takeProfit, setTakeProfit] = useState('');
+  const [stopLoss, setStopLoss] = useState('');
   const [quantity, setQuantity] = useState('');
   const [status, setStatus] = useState('open');
   const [notes, setNotes] = useState('');
@@ -121,6 +123,8 @@ export default function EditTrade({ params }: { params: { id: string } }) {
       setTradeDate(format(new Date(trade.trade_date), 'yyyy-MM-dd'));
       setEntryPrice(trade.entry_price.toString());
       setExitPrice(trade.exit_price ? trade.exit_price.toString() : '');
+      setTakeProfit(trade.take_profit ? trade.take_profit.toString() : '');
+      setStopLoss(trade.stop_loss ? trade.stop_loss.toString() : '');
       setQuantity(trade.quantity.toString());
       setStatus(trade.status);
       setNotes(trade.notes || '');
@@ -166,6 +170,8 @@ export default function EditTrade({ params }: { params: { id: string } }) {
         trade_type: tradeType,
         entry_price: parseFloat(entryPrice),
         exit_price: exitPrice ? parseFloat(exitPrice) : null,
+        take_profit: takeProfit ? parseFloat(takeProfit) : null,
+        stop_loss: stopLoss ? parseFloat(stopLoss) : null,
         quantity: parseFloat(quantity),
         profit_loss: profitLoss,
         status,
@@ -318,6 +324,38 @@ export default function EditTrade({ params }: { params: { id: string } }) {
           </div>
 
           <div>
+            <label htmlFor="takeProfit" className="block text-sm font-medium text-slate-700 mb-1">
+              Take Profit (TP) *
+            </label>
+            <input
+              id="takeProfit"
+              type="number"
+              step="any"
+              value={takeProfit}
+              onChange={(e) => setTakeProfit(e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
+              required
+              disabled={status === 'closed'}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="stopLoss" className="block text-sm font-medium text-slate-700 mb-1">
+              Stop Loss (SL) *
+            </label>
+            <input
+              id="stopLoss"
+              type="number"
+              step="any"
+              value={stopLoss}
+              onChange={(e) => setStopLoss(e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
+              required
+              disabled={status === 'closed'}
+            />
+          </div>
+
+          <div>
             <label htmlFor="exitPrice" className="block text-sm font-medium text-slate-700 mb-1">
               Exit Price {status === 'closed' && '*'}
             </label>
@@ -328,7 +366,7 @@ export default function EditTrade({ params }: { params: { id: string } }) {
               value={exitPrice}
               onChange={(e) => setExitPrice(e.target.value)}
               placeholder="e.g. 1.0550, 51000, 2010"
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 disabled:bg-slate-100 disabled:text-slate-500"
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
               required={status === 'closed'}
               disabled={status === 'open'}
             />
