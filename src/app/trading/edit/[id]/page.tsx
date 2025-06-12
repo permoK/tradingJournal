@@ -8,7 +8,7 @@ import { useTradeMode } from '@/contexts/TradeModeContext';
 import AppLayout from '@/components/AppLayout';
 import MarketSelector from '@/components/MarketSelector';
 import TradeModeToggle from '@/components/TradeModeToggle';
-import { FiSave, FiX, FiDollarSign, FiTrendingUp, FiTrendingDown, FiInfo } from 'react-icons/fi';
+import { FiSave, FiX, FiDollarSign, FiTrendingUp, FiTrendingDown, FiInfo, FiTarget } from 'react-icons/fi';
 import { format } from 'date-fns';
 import { calculatePL, getMarketInfo, formatPL, formatPips, formatPercentage, validateTradeInputs, getSuggestedLotSizes } from '@/utils/plCalculator';
 import ReactMarkdown from 'react-markdown';
@@ -42,6 +42,8 @@ export default function EditTrade({ params }: { params: { id: string } }) {
   const [recentMarkets, setRecentMarkets] = useState<string[]>([]);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [expectedTPProfit, setExpectedTPProfit] = useState<number | null>(null);
+  const [expectedSLLoss, setExpectedSLLoss] = useState<number | null>(null);
 
   // Load recent markets from localStorage
   useEffect(() => {
@@ -99,6 +101,54 @@ export default function EditTrade({ params }: { params: { id: string } }) {
       setValidationError(null);
     }
   }, [entryPrice, exitPrice, quantity, tradeType, status, selectedMarket]);
+
+  // Calculate expected profit/loss for take profit and stop loss
+  useEffect(() => {
+    if (entryPrice && takeProfit && stopLoss && quantity && selectedMarket && status === 'open') {
+      const entry = parseFloat(entryPrice);
+      const tp = parseFloat(takeProfit);
+      const sl = parseFloat(stopLoss);
+      const qty = parseFloat(quantity);
+
+      if (!isNaN(entry) && !isNaN(tp) && !isNaN(sl) && !isNaN(qty)) {
+        const marketInfo = getMarketInfo(selectedMarket.symbol);
+        if (marketInfo) {
+          try {
+            // Calculate take profit scenario
+            const tpResult = calculatePL({
+              market: marketInfo,
+              tradeType,
+              entryPrice: entry,
+              exitPrice: tp,
+              quantity: qty
+            });
+
+            // Calculate stop loss scenario
+            const slResult = calculatePL({
+              market: marketInfo,
+              tradeType,
+              entryPrice: entry,
+              exitPrice: sl,
+              quantity: qty
+            });
+
+            setExpectedTPProfit(tpResult.profitLoss);
+            setExpectedSLLoss(slResult.profitLoss);
+          } catch (error) {
+            console.error('Expected P&L calculation error:', error);
+            setExpectedTPProfit(null);
+            setExpectedSLLoss(null);
+          }
+        }
+      } else {
+        setExpectedTPProfit(null);
+        setExpectedSLLoss(null);
+      }
+    } else {
+      setExpectedTPProfit(null);
+      setExpectedSLLoss(null);
+    }
+  }, [entryPrice, takeProfit, stopLoss, quantity, tradeType, selectedMarket, status]);
 
   const handleMarketSelect = (marketObj: any) => {
     setSelectedMarket(marketObj);
@@ -354,6 +404,42 @@ export default function EditTrade({ params }: { params: { id: string } }) {
               disabled={status === 'closed'}
             />
           </div>
+
+          {/* Expected Profit/Loss Display */}
+          {status === 'open' && expectedTPProfit !== null && expectedSLLoss !== null && (
+            <div className="md:col-span-2">
+              <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                <h4 className="text-sm font-medium text-slate-700 mb-3 flex items-center">
+                  <FiTarget className="mr-2 text-slate-600" />
+                  Expected Outcomes
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center justify-between p-3 bg-white rounded-md border border-slate-200">
+                    <div className="flex items-center">
+                      <FiTrendingUp className="w-4 h-4 text-emerald-600 mr-2" />
+                      <span className="text-sm text-slate-600">Take Profit</span>
+                    </div>
+                    <span className={`text-sm font-semibold ${
+                      expectedTPProfit >= 0 ? 'text-emerald-600' : 'text-red-600'
+                    }`}>
+                      {formatPL(expectedTPProfit)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-white rounded-md border border-slate-200">
+                    <div className="flex items-center">
+                      <FiTrendingDown className="w-4 h-4 text-red-600 mr-2" />
+                      <span className="text-sm text-slate-600">Stop Loss</span>
+                    </div>
+                    <span className={`text-sm font-semibold ${
+                      expectedSLLoss >= 0 ? 'text-emerald-600' : 'text-red-600'
+                    }`}>
+                      {formatPL(expectedSLLoss)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div>
             <label htmlFor="exitPrice" className="block text-sm font-medium text-slate-700 mb-1">
