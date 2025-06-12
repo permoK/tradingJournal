@@ -90,11 +90,13 @@ const MARKET_CONFIGS: Record<string, MarketInfo> = {
   'GBP/PLN': { symbol: 'GBP/PLN', category: 'forex', pip: 0.0001, contractSize: 100000, quoteCurrency: 'PLN' },
   'GBP/ZAR': { symbol: 'GBP/ZAR', category: 'forex', pip: 0.0001, contractSize: 100000, quoteCurrency: 'ZAR' },
 
-  // Precious Metals
-  'GOLD': { symbol: 'GOLD', category: 'commodities', pip: 0.01, contractSize: 100, tickValue: 1 },
-  'SILVER': { symbol: 'SILVER', category: 'commodities', pip: 0.001, contractSize: 5000, tickValue: 5 },
-  'PLATINUM': { symbol: 'PLATINUM', category: 'commodities', pip: 0.01, contractSize: 50, tickValue: 0.5 },
-  'PALLADIUM': { symbol: 'PALLADIUM', category: 'commodities', pip: 0.01, contractSize: 100, tickValue: 1 },
+  // Precious Metals (XAU/USD style - treated as forex-like instruments)
+  'GOLD': { symbol: 'GOLD', category: 'commodities', pip: 0.01, contractSize: 100, tickValue: 1, quoteCurrency: 'USD' },
+  'XAU/USD': { symbol: 'XAU/USD', category: 'commodities', pip: 0.01, contractSize: 100, tickValue: 1, quoteCurrency: 'USD' },
+  'SILVER': { symbol: 'SILVER', category: 'commodities', pip: 0.001, contractSize: 5000, tickValue: 5, quoteCurrency: 'USD' },
+  'XAG/USD': { symbol: 'XAG/USD', category: 'commodities', pip: 0.001, contractSize: 5000, tickValue: 5, quoteCurrency: 'USD' },
+  'PLATINUM': { symbol: 'PLATINUM', category: 'commodities', pip: 0.01, contractSize: 50, tickValue: 0.5, quoteCurrency: 'USD' },
+  'PALLADIUM': { symbol: 'PALLADIUM', category: 'commodities', pip: 0.01, contractSize: 100, tickValue: 1, quoteCurrency: 'USD' },
 
   // Energy Commodities
   'OIL': { symbol: 'OIL', category: 'commodities', pip: 0.01, contractSize: 1000, tickValue: 10 },
@@ -191,40 +193,56 @@ export function calculatePL(params: TradeParams): PLResult {
   // Determine if this is a profitable move based on trade type
   const effectiveMovement = tradeType === 'buy' ? priceMovement : -priceMovement;
 
-  // Calculate pip movement
-  const pipMovement = Math.abs(priceMovement) / market.pip;
+  // Calculate pip movement (preserve sign for direction)
+  const pipMovement = effectiveMovement / market.pip;
 
   let profitLoss = 0;
   let contractValue = 0;
 
   switch (market.category) {
     case 'forex':
-      // Forex calculation: (Price Movement) × (Lot Size) × (Contract Size)
+      // Forex calculation: (Pip Movement) × (Pip Value) × (Position Size)
       contractValue = quantity * (market.contractSize || 100000);
-      profitLoss = effectiveMovement * contractValue;
 
-      // For JPY pairs, convert from JPY to USD (approximate)
-      if (market.quoteCurrency === 'JPY') {
-        profitLoss = profitLoss / 150; // Approximate USD/JPY rate
+      // Calculate pip value in account currency (USD)
+      let pipValue = market.pip * contractValue;
+
+      // Convert to USD if quote currency is not USD
+      if (market.quoteCurrency && market.quoteCurrency !== 'USD') {
+        const rate = getCurrencyRate(market.quoteCurrency);
+        pipValue = pipValue * rate;
       }
+
+      profitLoss = pipMovement * pipValue;
       break;
 
     case 'commodities':
-      // Commodities: (Price Movement) × (Quantity) × (Contract Size)
-      contractValue = quantity * (market.contractSize || 1);
-      profitLoss = effectiveMovement * contractValue;
+      // Check if this is a precious metal (special calculation)
+      if (market.symbol.includes('GOLD') || market.symbol.includes('XAU') ||
+          market.symbol.includes('SILVER') || market.symbol.includes('XAG') ||
+          market.symbol.includes('PLATINUM') || market.symbol.includes('PALLADIUM')) {
+        // Precious metals: $1 move = $1 profit per lot
+        // This means: profitLoss = priceMovement × quantity
+        contractValue = quantity * (market.contractSize || 100);
+        profitLoss = effectiveMovement * quantity; // Simple: $1 move × 1 lot = $1 profit
+      } else {
+        // Traditional commodities: (Price Movement) × (Contract Size) × (Position Size)
+        contractValue = quantity * (market.contractSize || 1);
+        profitLoss = effectiveMovement * contractValue;
+      }
       break;
 
     case 'indices':
-      // Indices: (Point Movement) × (Quantity) × (Tick Value)
-      contractValue = quantity * (market.tickValue || 1);
-      profitLoss = effectiveMovement * contractValue;
+      // Indices: (Point Movement) × (Position Size) × (Point Value)
+      const pointValue = market.tickValue || 1;
+      profitLoss = effectiveMovement * quantity * pointValue;
+      contractValue = quantity;
       break;
 
     case 'crypto':
-      // Crypto: (Price Movement) × (Quantity)
+      // Crypto: (Price Movement) × (Position Size)
+      profitLoss = effectiveMovement * quantity;
       contractValue = quantity;
-      profitLoss = effectiveMovement * contractValue;
       break;
 
     default:
@@ -233,17 +251,27 @@ export function calculatePL(params: TradeParams): PLResult {
       contractValue = quantity;
   }
 
-  // Calculate percentage return
-  const totalInvestment = entryPrice * quantity;
+  // Calculate percentage return based on margin/investment
+  let totalInvestment: number;
+
+  if (market.category === 'forex') {
+    // For forex, calculate based on margin (typically 1-2% of notional value)
+    const notionalValue = entryPrice * contractValue;
+    totalInvestment = notionalValue * 0.01; // Assume 1% margin requirement
+  } else {
+    // For other instruments, use full notional value
+    totalInvestment = entryPrice * contractValue;
+  }
+
   const percentage = totalInvestment > 0 ? (profitLoss / totalInvestment) * 100 : 0;
 
   return {
     profitLoss: Math.round(profitLoss * 100) / 100, // Round to 2 decimal places
-    pips: Math.round(pipMovement * 100) / 100,
+    pips: Math.round(Math.abs(pipMovement) * 100) / 100, // Always positive for display
     percentage: Math.round(percentage * 100) / 100,
     breakdown: {
       priceMovement: Math.round(priceMovement * 100000) / 100000, // 5 decimal places for forex
-      pipMovement: Math.round(pipMovement * 100) / 100,
+      pipMovement: Math.round(pipMovement * 100) / 100, // Preserve sign
       contractValue,
       totalValue: Math.round((entryPrice * contractValue) * 100) / 100
     }
@@ -354,18 +382,79 @@ export function calculatePositionSize(params: PositionSizeParams): PositionSizeR
   const priceRisk = Math.abs(entryPrice - stopLossPrice);
   const pipRisk = priceRisk / market.pip;
 
-  // Calculate pip value for 1 lot
-  const contractSize = market.contractSize || 100000;
-  let pipValuePerLot = market.pip * contractSize;
+  let positionSize = 0;
+  let contractValue = 0;
 
-  // Adjust for JPY pairs
-  if (market.quoteCurrency === 'JPY') {
-    pipValuePerLot = pipValuePerLot / 150; // Approximate USD/JPY rate
+  switch (market.category) {
+    case 'forex':
+      // Calculate pip value for 1 lot in account currency
+      const contractSize = market.contractSize || 100000;
+      let pipValuePerLot = market.pip * contractSize;
+
+      // Convert to USD if quote currency is not USD
+      if (market.quoteCurrency && market.quoteCurrency !== 'USD') {
+        const rate = getCurrencyRate(market.quoteCurrency);
+        pipValuePerLot = pipValuePerLot * rate;
+      }
+
+      // Calculate position size in lots
+      positionSize = riskAmount / (pipRisk * pipValuePerLot);
+      contractValue = entryPrice * positionSize * contractSize;
+      break;
+
+    case 'commodities':
+      // Check if this is a precious metal (special calculation)
+      if (market.symbol.includes('GOLD') || market.symbol.includes('XAU') ||
+          market.symbol.includes('SILVER') || market.symbol.includes('XAG') ||
+          market.symbol.includes('PLATINUM') || market.symbol.includes('PALLADIUM')) {
+        // Precious metals: $1 move = $1 profit per lot
+        // So: positionSize = riskAmount / priceRisk
+        positionSize = riskAmount / priceRisk;
+        contractValue = entryPrice * positionSize * (market.contractSize || 100);
+      } else {
+        // Traditional commodities
+        const commodityContractSize = market.contractSize || 1;
+        const riskPerContract = priceRisk * commodityContractSize;
+
+        positionSize = riskAmount / riskPerContract;
+        contractValue = entryPrice * positionSize * commodityContractSize;
+      }
+      break;
+
+    case 'indices':
+      // For indices, calculate based on point value
+      const pointValue = market.tickValue || 1;
+      const riskPerUnit = priceRisk * pointValue;
+
+      positionSize = riskAmount / riskPerUnit;
+      contractValue = entryPrice * positionSize;
+      break;
+
+    case 'crypto':
+      // For crypto, simple calculation
+      positionSize = riskAmount / priceRisk;
+      contractValue = entryPrice * positionSize;
+      break;
+
+    default:
+      // Fallback calculation
+      positionSize = riskAmount / priceRisk;
+      contractValue = entryPrice * positionSize;
   }
 
-  // Calculate position size
-  const positionSize = riskAmount / (pipRisk * pipValuePerLot);
-  const contractValue = entryPrice * positionSize * contractSize;
+  // Calculate margin requirement (varies by instrument)
+  let marginPercentage = 0.01; // Default 1%
+  if (market.category === 'forex') {
+    marginPercentage = 0.01; // 1% for forex
+  } else if (market.category === 'commodities') {
+    marginPercentage = 0.05; // 5% for commodities
+  } else if (market.category === 'indices') {
+    marginPercentage = 0.02; // 2% for indices
+  } else if (market.category === 'crypto') {
+    marginPercentage = 0.1; // 10% for crypto
+  }
+
+  const marginRequired = contractValue * marginPercentage;
 
   return {
     positionSize: Math.round(positionSize * 100) / 100,
@@ -373,7 +462,7 @@ export function calculatePositionSize(params: PositionSizeParams): PositionSizeR
     pipRisk: Math.round(pipRisk * 100) / 100,
     lotSize: Math.round(positionSize * 100) / 100,
     contractValue: Math.round(contractValue * 100) / 100,
-    marginRequired: Math.round((contractValue * 0.01) * 100) / 100 // Assuming 1% margin
+    marginRequired: Math.round(marginRequired * 100) / 100
   };
 }
 
@@ -385,23 +474,69 @@ export function calculateRiskReward(params: RiskRewardParams): RiskRewardResult 
   const riskPips = Math.abs(entryPrice - stopLossPrice) / market.pip;
   const rewardPips = Math.abs(takeProfitPrice - entryPrice) / market.pip;
 
-  // Calculate monetary amounts
-  const contractSize = market.contractSize || 100000;
-  let pipValue = market.pip * positionSize * contractSize;
+  let riskAmount = 0;
+  let rewardAmount = 0;
 
-  // Adjust for JPY pairs
-  if (market.quoteCurrency === 'JPY') {
-    pipValue = pipValue / 150;
+  switch (market.category) {
+    case 'forex':
+      // Calculate pip value for the position
+      const contractSize = market.contractSize || 100000;
+      let pipValue = market.pip * positionSize * contractSize;
+
+      // Convert to USD if quote currency is not USD
+      if (market.quoteCurrency && market.quoteCurrency !== 'USD') {
+        const rate = getCurrencyRate(market.quoteCurrency);
+        pipValue = pipValue * rate;
+      }
+
+      riskAmount = riskPips * pipValue;
+      rewardAmount = rewardPips * pipValue;
+      break;
+
+    case 'commodities':
+      // Check if this is a precious metal (special calculation)
+      if (market.symbol.includes('GOLD') || market.symbol.includes('XAU') ||
+          market.symbol.includes('SILVER') || market.symbol.includes('XAG') ||
+          market.symbol.includes('PLATINUM') || market.symbol.includes('PALLADIUM')) {
+        // Precious metals: $1 move = $1 profit per lot
+        riskAmount = Math.abs(entryPrice - stopLossPrice) * positionSize;
+        rewardAmount = Math.abs(takeProfitPrice - entryPrice) * positionSize;
+      } else {
+        // Traditional commodities
+        const commodityContractSize = market.contractSize || 1;
+        const riskPerContract = Math.abs(entryPrice - stopLossPrice) * commodityContractSize;
+        const rewardPerContract = Math.abs(takeProfitPrice - entryPrice) * commodityContractSize;
+
+        riskAmount = riskPerContract * positionSize;
+        rewardAmount = rewardPerContract * positionSize;
+      }
+      break;
+
+    case 'indices':
+      // For indices
+      const pointValue = market.tickValue || 1;
+      riskAmount = Math.abs(entryPrice - stopLossPrice) * positionSize * pointValue;
+      rewardAmount = Math.abs(takeProfitPrice - entryPrice) * positionSize * pointValue;
+      break;
+
+    case 'crypto':
+      // For crypto
+      riskAmount = Math.abs(entryPrice - stopLossPrice) * positionSize;
+      rewardAmount = Math.abs(takeProfitPrice - entryPrice) * positionSize;
+      break;
+
+    default:
+      // Fallback
+      riskAmount = Math.abs(entryPrice - stopLossPrice) * positionSize;
+      rewardAmount = Math.abs(takeProfitPrice - entryPrice) * positionSize;
   }
 
-  const riskAmount = riskPips * pipValue;
-  const rewardAmount = rewardPips * pipValue;
-
   // Calculate risk/reward ratio
-  const riskRewardRatio = rewardAmount / riskAmount;
+  const riskRewardRatio = riskAmount > 0 ? rewardAmount / riskAmount : 0;
 
-  // Calculate break-even win rate
-  const breakEvenWinRate = (1 / (1 + riskRewardRatio)) * 100;
+  // Calculate break-even win rate: Risk / (Risk + Reward)
+  const breakEvenWinRate = (riskAmount + rewardAmount) > 0 ?
+    (riskAmount / (riskAmount + rewardAmount)) * 100 : 0;
 
   return {
     riskAmount: Math.round(riskAmount * 100) / 100,
@@ -417,12 +552,51 @@ export function calculateRiskReward(params: RiskRewardParams): RiskRewardResult 
 export function calculatePipValue(params: PipValueParams): PipValueResult {
   const { market, positionSize } = params;
 
-  const contractSize = market.contractSize || 100000;
-  let pipValue = market.pip * positionSize * contractSize;
+  let pipValue = 0;
+  let contractSize = 0;
 
-  // Adjust for JPY pairs
-  if (market.quoteCurrency === 'JPY') {
-    pipValue = pipValue / 150; // Convert to USD
+  switch (market.category) {
+    case 'forex':
+      contractSize = market.contractSize || 100000;
+      pipValue = market.pip * positionSize * contractSize;
+
+      // Convert to USD if quote currency is not USD
+      if (market.quoteCurrency && market.quoteCurrency !== 'USD') {
+        const rate = getCurrencyRate(market.quoteCurrency);
+        pipValue = pipValue * rate;
+      }
+      break;
+
+    case 'commodities':
+      // Check if this is a precious metal (special calculation)
+      if (market.symbol.includes('GOLD') || market.symbol.includes('XAU') ||
+          market.symbol.includes('SILVER') || market.symbol.includes('XAG') ||
+          market.symbol.includes('PLATINUM') || market.symbol.includes('PALLADIUM')) {
+        // Precious metals: $1 move = $1 profit per lot
+        // So pip value = positionSize / (1 / pip)
+        // For gold: pip = 0.01, so 1 pip = positionSize * 0.01
+        contractSize = market.contractSize || 100;
+        pipValue = positionSize * market.pip; // 1 lot × 0.01 = $0.01 per pip
+      } else {
+        // Traditional commodities
+        contractSize = market.contractSize || 1;
+        pipValue = market.pip * positionSize * contractSize;
+      }
+      break;
+
+    case 'indices':
+      contractSize = 1; // Indices typically don't have contract sizes
+      pipValue = market.pip * positionSize * (market.tickValue || 1);
+      break;
+
+    case 'crypto':
+      contractSize = 1;
+      pipValue = market.pip * positionSize;
+      break;
+
+    default:
+      contractSize = market.contractSize || 1;
+      pipValue = market.pip * positionSize * contractSize;
   }
 
   return {
@@ -446,4 +620,88 @@ export function formatCurrency(amount: number, currency: string = 'USD'): string
 // Helper function to format ratio
 export function formatRatio(ratio: number): string {
   return `1:${ratio.toFixed(2)}`;
+}
+
+// Currency conversion rates (in a real app, these would come from an API)
+const CURRENCY_RATES: Record<string, number> = {
+  'USD': 1.0,
+  'EUR': 1.08,
+  'GBP': 1.27,
+  'JPY': 0.0067,
+  'CHF': 1.10,
+  'CAD': 0.74,
+  'AUD': 0.66,
+  'NZD': 0.61,
+  'SEK': 0.096,
+  'NOK': 0.094,
+  'DKK': 0.145,
+  'PLN': 0.25,
+  'HUF': 0.0027,
+  'CZK': 0.044,
+  'TRY': 0.031,
+  'ZAR': 0.055,
+  'MXN': 0.059,
+  'SGD': 0.74,
+  'HKD': 0.128
+};
+
+// Get conversion rate to USD
+export function getCurrencyRate(currency: string): number {
+  return CURRENCY_RATES[currency] || 1.0;
+}
+
+// Convert amount from one currency to USD
+export function convertToUSD(amount: number, fromCurrency: string): number {
+  const rate = getCurrencyRate(fromCurrency);
+  return amount * rate;
+}
+
+// Validate trade setup for common errors
+export function validateTradeSetup(
+  entryPrice: number,
+  stopLoss: number,
+  takeProfit: number,
+  tradeType: 'buy' | 'sell'
+): string | null {
+  if (tradeType === 'buy') {
+    if (stopLoss >= entryPrice) {
+      return 'For buy trades, stop loss must be below entry price';
+    }
+    if (takeProfit <= entryPrice) {
+      return 'For buy trades, take profit must be above entry price';
+    }
+  } else {
+    if (stopLoss <= entryPrice) {
+      return 'For sell trades, stop loss must be above entry price';
+    }
+    if (takeProfit >= entryPrice) {
+      return 'For sell trades, take profit must be below entry price';
+    }
+  }
+  return null;
+}
+
+// Calculate margin requirement based on instrument type
+export function calculateMarginRequirement(
+  notionalValue: number,
+  category: string,
+  leverage?: number
+): number {
+  if (leverage) {
+    return notionalValue / leverage;
+  }
+
+  // Default margin requirements by category
+  switch (category) {
+    case 'forex':
+      return notionalValue * 0.01; // 1% (100:1 leverage)
+    case 'commodities':
+      return notionalValue * 0.05; // 5% (20:1 leverage)
+    case 'indices':
+      return notionalValue * 0.02; // 2% (50:1 leverage)
+    case 'crypto':
+      return notionalValue * 0.1; // 10% (10:1 leverage)
+    default:
+      return notionalValue * 0.1; // 10% default
+  }
 }

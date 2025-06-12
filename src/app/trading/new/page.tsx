@@ -424,29 +424,6 @@ export default function NewTrade() {
               required
               disabled={status === 'closed'}
             />
-            {/* Risk/Reward Calculation for TP/SL */}
-            {selectedMarket && entryPrice && takeProfit && stopLoss && quantity && !isNaN(Number(entryPrice)) && !isNaN(Number(takeProfit)) && !isNaN(Number(stopLoss)) && !isNaN(Number(quantity)) && (
-              (() => {
-                try {
-                  const rr = require('@/utils/plCalculator').calculateRiskReward({
-                    entryPrice: parseFloat(entryPrice),
-                    takeProfitPrice: parseFloat(takeProfit),
-                    stopLossPrice: parseFloat(stopLoss),
-                    positionSize: parseFloat(quantity),
-                    market: selectedMarket
-                  });
-                  return (
-                    <div className="mt-2 p-3 bg-slate-50 border border-slate-200 rounded text-xs text-slate-700">
-                      <div><b>Risk:</b> ${rr.riskAmount} | <b>Reward:</b> ${rr.rewardAmount}</div>
-                      <div><b>Risk/Reward:</b> {rr.riskRewardRatio > 0 ? `1:${rr.riskRewardRatio}` : 'N/A'} | <b>Risk Pips:</b> {rr.riskPips} | <b>Reward Pips:</b> {rr.rewardPips}</div>
-                      <div><b>Break-even Win Rate:</b> {rr.breakEvenWinRate}%</div>
-                    </div>
-                  );
-                } catch (e) {
-                  return null;
-                }
-              })()
-            )}
           </div>
 
           <div>

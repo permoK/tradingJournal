@@ -140,6 +140,22 @@ export default function ToolsPage() {
         })}
       </div>
 
+      {/* Development Tools */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mb-8">
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">Development Tools</h3>
+            <Link
+              href="/tools/test-calculators"
+              className="inline-flex items-center px-4 py-2 bg-slate-600 text-white rounded-md hover:bg-slate-700 transition-colors"
+            >
+              Test Calculator Accuracy
+              <FiArrowRight className="ml-2 w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Tips Section */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
         <h2 className="text-xl font-semibold text-slate-900 mb-4">Trading Calculator Tips</h2>
