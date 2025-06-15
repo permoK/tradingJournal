@@ -243,23 +243,28 @@ export default function CommunityStrategyPage({ params }: CommunityStrategyPageP
           )}
 
           {/* Description */}
-          {strategy.description && (
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 sm:p-6">
-              <h2 className="text-lg font-semibold text-slate-900 mb-3">Overview</h2>
-              <p className="text-slate-700 leading-relaxed">{strategy.description}</p>
-            </div>
-          )}
+          <div className="prose prose-slate max-w-none">
+            <div 
+              className="text-slate-800 leading-relaxed text-base"
+              dangerouslySetInnerHTML={{ 
+                __html: strategy.description 
+                  ? strategy.description.replace(/\n/g, '<br>')
+                  : 'No description available.' 
+              }} 
+            />
+          </div>
 
           {/* Detailed Description */}
           {strategy.details && (
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 sm:p-6">
-              <h2 className="text-lg font-semibold text-slate-900 mb-3">Strategy Details</h2>
+            <div className="mt-8">
+              <h2 className="text-xl font-semibold text-slate-900 mb-4">Detailed Description</h2>
               <div className="prose prose-slate max-w-none">
-                {strategy.details.split('\n').map((paragraph, index) => (
-                  <p key={index} className="text-slate-700 leading-relaxed mb-4">
-                    {paragraph || '\u00A0'}
-                  </p>
-                ))}
+                <div 
+                  className="text-slate-800 leading-relaxed text-base"
+                  dangerouslySetInnerHTML={{ 
+                    __html: strategy.details.replace(/\n/g, '<br>')
+                  }} 
+                />
               </div>
             </div>
           )}

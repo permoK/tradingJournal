@@ -230,16 +230,17 @@ export default function CommunityTradeDetail({ params }: { params: { id: string 
         </div>
       </div>
 
-      {/* Notes */}
+      {/* Trade Notes */}
       {trade.notes && (
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 mb-6">
-          <h3 className="text-lg font-semibold text-slate-900 mb-3">Trade Notes</h3>
-          <div className="prose max-w-none text-slate-800 leading-relaxed">
-            {trade.notes.split('\n').map((paragraph, index) => (
-              <p key={index} className="mb-2 last:mb-0">
-                {paragraph}
-              </p>
-            ))}
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">Trade Notes</h3>
+          <div className="prose prose-slate max-w-none">
+            <div 
+              className="text-slate-800 leading-relaxed text-base"
+              dangerouslySetInnerHTML={{ 
+                __html: trade.notes.replace(/\n/g, '<br>')
+              }} 
+            />
           </div>
         </div>
       )}

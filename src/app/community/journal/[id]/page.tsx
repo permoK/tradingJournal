@@ -120,11 +120,14 @@ export default function CommunityJournalView({ params }: { params: { id: string 
         )}
 
         <div className="prose prose-slate max-w-none">
-          {entry.content.split('\n').map((paragraph, index) => (
-            <p key={index} className="text-slate-800 leading-relaxed mb-4 text-base">
-              {paragraph || '\u00A0'}
-            </p>
-          ))}
+          <div 
+            className="text-slate-800 leading-relaxed text-base"
+            dangerouslySetInnerHTML={{ 
+              __html: entry.content 
+                ? entry.content.replace(/\n/g, '<br>')
+                : 'No content available.' 
+            }} 
+          />
         </div>
       </div>
 
