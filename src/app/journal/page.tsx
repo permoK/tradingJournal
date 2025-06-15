@@ -8,7 +8,7 @@ import AppLayout from '@/components/AppLayout';
 import { FiPlus, FiEye, FiEyeOff, FiEdit2, FiTrash2, FiTrendingUp, FiTarget } from 'react-icons/fi';
 import { format } from 'date-fns';
 import Link from 'next/link';
-import ReactMarkdown from 'react-markdown';
+import { Editor } from '@tinymce/tinymce-react';
 
 function JournalContent() {
   const { user, loading: authLoading } = useAuth();
@@ -17,6 +17,8 @@ function JournalContent() {
 
   const [showPrivate, setShowPrivate] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [editorContents, setEditorContents] = useState<Record<string, string>>({});
+  const [isEditing, setIsEditing] = useState(false);
 
   // Handle search parameter from dashboard
   useEffect(() => {
@@ -124,105 +126,137 @@ function JournalContent() {
             </Link>
           </div>
         ) : (
-          filteredEntries.map(entry => (
-            <div key={entry.id} className="relative group">
-              <Link
-                href={`/journal/${entry.id}`}
-                className="absolute inset-0 z-0"
-                aria-label={`View details for ${entry.title}`}
-                tabIndex={-1}
-              />
-              <div className="bg-white p-6 rounded-lg shadow-sm group-hover:shadow-md transition-shadow border border-slate-200 hover:border-indigo-300 cursor-pointer relative z-10">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-lg font-semibold text-slate-900 group-hover:text-indigo-700 transition-colors">{entry.title}</h3>
-                    <p className="text-sm text-slate-600 mb-2">
-                      {format(new Date(entry.created_at), 'MMMM d, yyyy')}
-                      {entry.is_private && (
-                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-200 text-slate-800">
-                          <FiEyeOff className="mr-1" />
-                          Private
-                        </span>
-                      )}
-                    </p>
+          filteredEntries.map(entry => {
+            const handleEditorChange = (content: string) => {
+              setEditorContents(prev => ({ ...prev, [entry.id]: content }));
+            };
+
+            return (
+              <div key={entry.id} className="relative group">
+                <Link
+                  href={`/journal/${entry.id}`}
+                  className="absolute inset-0 z-0"
+                  aria-label={`View details for ${entry.title}`}
+                  tabIndex={-1}
+                />
+                <div className="bg-white p-6 rounded-lg shadow-sm group-hover:shadow-md transition-shadow border border-slate-200 hover:border-indigo-300 cursor-pointer relative z-10">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-900 group-hover:text-indigo-700 transition-colors">{entry.title}</h3>
+                      <p className="text-sm text-slate-600 mb-2">
+                        {format(new Date(entry.created_at), 'MMMM d, yyyy')}
+                        {entry.is_private && (
+                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-200 text-slate-800">
+                            <FiEyeOff className="mr-1" />
+                            Private
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    <div className="flex gap-2 z-20" onClick={e => e.stopPropagation()}>
+                      <Link
+                        href={`/journal/edit/${entry.id}`}
+                        className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors"
+                        title="Edit entry"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsEditing(true);
+                        }}
+                      >
+                        <FiEdit2 size={16} />
+                      </Link>
+                      <button
+                        onClick={e => { e.stopPropagation(); deleteEntry(entry.id); }}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                        title="Delete entry"
+                      >
+                        <FiTrash2 size={16} />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-2 z-20" onClick={e => e.stopPropagation()}>
+
+                  {entry.image_url && (
+                    <div className="mt-3 mb-3">
+                      <img
+                        src={entry.image_url}
+                        alt="Journal entry image"
+                        className="w-full max-w-md h-48 object-cover rounded-lg border border-slate-200"
+                      />
+                    </div>
+                  )}
+
+                  {isEditing ? (
+                    <Editor
+                      apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+                      init={{
+                        height: 500,
+                        menubar: false,
+                        plugins: [
+                          'advlist autolink lists link image charmap print preview anchor',
+                          'searchreplace visualblocks code fullscreen',
+                          'insertdatetime media table paste code help wordcount'
+                        ],
+                        toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help'
+                      }}
+                      value={editorContents[entry.id] || entry.content}
+                      onEditorChange={(content) => handleEditorChange(content)}
+                    />
+                  ) : (
+                    <div className="prose prose-slate max-w-none text-slate-800">
+                      <div 
+                        className="text-base leading-relaxed whitespace-pre-wrap"
+                        dangerouslySetInnerHTML={{ 
+                          __html: entry.content 
+                            ? entry.content.replace(/\n/g, '<br>')
+                            : 'No content available.' 
+                        }} 
+                      />
+                    </div>
+                  )}
+
+                  {/* Attachment indicators */}
+                  {((entry.trade_ids && entry.trade_ids.length > 0) || (entry.strategy_ids && entry.strategy_ids.length > 0)) && (
+                    <div className="mt-3 flex items-center gap-4 text-sm text-slate-600">
+                      {entry.trade_ids && entry.trade_ids.length > 0 && (
+                        <div className="flex items-center">
+                          <FiTrendingUp className="mr-1" size={14} />
+                          <span>{entry.trade_ids.length} trade{entry.trade_ids.length !== 1 ? 's' : ''}</span>
+                        </div>
+                      )}
+                      {entry.strategy_ids && entry.strategy_ids.length > 0 && (
+                        <div className="flex items-center">
+                          <FiTarget className="mr-1" size={14} />
+                          <span>{entry.strategy_ids.length} strateg{entry.strategy_ids.length !== 1 ? 'ies' : 'y'}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {entry.tags && entry.tags.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {entry.tags.map(tag => (
+                        <span
+                          key={tag}
+                          className="inline-block px-3 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 rounded-full"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="mt-4">
                     <Link
-                      href={`/journal/edit/${entry.id}`}
-                      className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors"
-                      title="Edit entry"
+                      href={`/journal/${entry.id}`}
+                      className="inline-block text-indigo-700 font-medium hover:underline z-20 relative"
                       onClick={e => e.stopPropagation()}
                     >
-                      <FiEdit2 size={16} />
+                      View Details
                     </Link>
-                    <button
-                      onClick={e => { e.stopPropagation(); deleteEntry(entry.id); }}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
-                      title="Delete entry"
-                    >
-                      <FiTrash2 size={16} />
-                    </button>
                   </div>
-                </div>
-
-                {entry.image_url && (
-                  <div className="mt-3 mb-3">
-                    <img
-                      src={entry.image_url}
-                      alt="Journal entry image"
-                      className="w-full max-w-md h-48 object-cover rounded-lg border border-slate-200"
-                    />
-                  </div>
-                )}
-
-                <div className="mt-2 prose max-w-none text-slate-800">
-                  <ReactMarkdown>
-                    {entry.content.length > 300 ? `${entry.content.substring(0, 300)}...` : entry.content}
-                  </ReactMarkdown>
-                </div>
-
-                {/* Attachment indicators */}
-                {((entry.trade_ids && entry.trade_ids.length > 0) || (entry.strategy_ids && entry.strategy_ids.length > 0)) && (
-                  <div className="mt-3 flex items-center gap-4 text-sm text-slate-600">
-                    {entry.trade_ids && entry.trade_ids.length > 0 && (
-                      <div className="flex items-center">
-                        <FiTrendingUp className="mr-1" size={14} />
-                        <span>{entry.trade_ids.length} trade{entry.trade_ids.length !== 1 ? 's' : ''}</span>
-                      </div>
-                    )}
-                    {entry.strategy_ids && entry.strategy_ids.length > 0 && (
-                      <div className="flex items-center">
-                        <FiTarget className="mr-1" size={14} />
-                        <span>{entry.strategy_ids.length} strateg{entry.strategy_ids.length !== 1 ? 'ies' : 'y'}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {entry.tags && entry.tags.length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {entry.tags.map(tag => (
-                      <span
-                        key={tag}
-                        className="inline-block px-3 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 rounded-full"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <div className="mt-4">
-                  <Link
-                    href={`/journal/${entry.id}`}
-                    className="inline-block text-indigo-700 font-medium hover:underline z-20 relative"
-                    onClick={e => e.stopPropagation()}
-                  >
-                    View Details
-                  </Link>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </AppLayout>

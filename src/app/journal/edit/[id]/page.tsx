@@ -9,6 +9,7 @@ import ImageUpload from '@/components/ImageUpload';
 import AttachmentSelector from '@/components/journal/AttachmentSelector';
 import { FiSave, FiX } from 'react-icons/fi';
 import ReactMarkdown from 'react-markdown';
+import { Editor } from '@tinymce/tinymce-react';
 
 export default function EditJournalEntry({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -173,13 +174,20 @@ export default function EditJournalEntry({ params }: { params: { id: string } })
             </button>
           </div>
           {!showPreview ? (
-            <textarea
-              id="content"
+            <Editor
+              apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+              init={{
+                height: 500,
+                menubar: false,
+                plugins: [
+                  'advlist autolink lists link image charmap print preview anchor',
+                  'searchreplace visualblocks code fullscreen',
+                  'insertdatetime media table paste code help wordcount'
+                ],
+                toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help'
+              }}
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              rows={12}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 font-mono"
-              required
+              onEditorChange={(content) => setContent(content)}
             />
           ) : (
             <div className="w-full px-3 py-2 border border-slate-300 rounded-md bg-slate-50 min-h-[180px] prose max-w-none text-slate-800">

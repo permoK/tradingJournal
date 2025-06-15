@@ -7,6 +7,7 @@ import AppLayout from '@/components/AppLayout';
 import { FiPlus, FiEdit, FiTrash2, FiBarChart2, FiTrendingUp, FiTrendingDown, FiFilter, FiEye, FiPieChart, FiLayers, FiCopy } from 'react-icons/fi';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Editor } from '@tinymce/tinymce-react';
 
 export default function Strategies() {
   const router = useRouter();
@@ -15,6 +16,8 @@ export default function Strategies() {
 
   const [filter, setFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editorContents, setEditorContents] = useState<Record<string, string>>({});
 
   const isLoading = authLoading || strategiesLoading;
 
@@ -45,6 +48,10 @@ export default function Strategies() {
     if (rate >= 70) return 'text-emerald-600';
     if (rate >= 50) return 'text-amber-600';
     return 'text-red-600';
+  };
+
+  const handleEditorChange = (id: string, content: string) => {
+    setEditorContents({ ...editorContents, [id]: content });
   };
 
   if (isLoading) {
@@ -116,7 +123,7 @@ export default function Strategies() {
             >
               <option value="all" className="text-slate-900">All Categories</option>
               {categories.map(category => (
-                <option key={category} value={category} className="text-slate-900">{category}</option>
+                <option key={category || ''} value={category || ''} className="text-slate-900">{category || ''}</option>
               ))}
             </select>
           </div>
@@ -190,6 +197,17 @@ export default function Strategies() {
                         <p className="text-slate-700 text-sm mb-2">{strategy.description}</p>
                       )}
 
+                      <div className="prose prose-slate max-w-none text-slate-800">
+                        <div 
+                          className="text-base leading-relaxed whitespace-pre-wrap"
+                          dangerouslySetInnerHTML={{ 
+                            __html: strategy.details 
+                              ? strategy.details.replace(/\n/g, '<br>')
+                              : 'No details available.' 
+                          }} 
+                        />
+                      </div>
+
                       <div className="flex flex-wrap gap-4 text-sm">
                         <div className="flex items-center gap-1">
                           <FiBarChart2 className="text-slate-500" />
@@ -231,7 +249,10 @@ export default function Strategies() {
                     href={`/strategies/edit/${strategy.id}`}
                     className="p-2 text-slate-600 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
                     title="Edit strategy"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsEditing(true);
+                    }}
                   >
                     <FiEdit className="h-4 w-4" />
                   </Link>

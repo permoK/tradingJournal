@@ -9,7 +9,6 @@ import AttachedItems from '@/components/journal/AttachedItems';
 import { FiEdit2, FiTrash2, FiArrowLeft, FiEyeOff, FiPlus, FiMinus } from 'react-icons/fi';
 import { format } from 'date-fns';
 import Link from 'next/link';
-import ReactMarkdown from 'react-markdown';
 
 export default function JournalEntryView({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -172,8 +171,15 @@ export default function JournalEntryView({ params }: { params: { id: string } })
           </div>
         )}
 
-        <div className="prose prose-slate max-w-none text-slate-900">
-          <ReactMarkdown>{entry.content}</ReactMarkdown>
+        <div className="prose prose-slate max-w-none text-slate-800">
+          <div 
+            className="text-base leading-relaxed whitespace-pre-wrap"
+            dangerouslySetInnerHTML={{ 
+              __html: entry.content 
+                ? entry.content.replace(/\n/g, '<br>')
+                : 'No content available.' 
+            }} 
+          />
         </div>
 
         {/* Display attached trades and strategies */}
