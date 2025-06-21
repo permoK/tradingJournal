@@ -14,7 +14,7 @@ import {
 
 // Test function to run all calculator tests
 export function runCalculatorTests(): void {
-  console.log('🧪 Running Calculator Tests...\n');
+  console.log('🧪 Running OANDA-Compliant Calculator Tests...\n');
 
   testForexPLCalculation();
   testGoldPLCalculation();
@@ -23,12 +23,12 @@ export function runCalculatorTests(): void {
   testPipValueCalculation();
   testTradeValidation();
 
-  console.log('✅ All calculator tests completed!\n');
+  console.log('✅ All OANDA-compliant calculator tests completed!\n');
 }
 
-// Test Forex P&L Calculation
+// Test Forex P&L Calculation (OANDA Standard)
 function testForexPLCalculation(): void {
-  console.log('📊 Testing Forex P&L Calculation...');
+  console.log('📊 Testing OANDA-Compliant Forex P&L Calculation...');
 
   const market = getMarketInfo('EUR/USD');
   if (!market) {
@@ -36,13 +36,13 @@ function testForexPLCalculation(): void {
     return;
   }
 
-  // Test Case 1: Buy EUR/USD - Profitable trade
+  // Test Case 1: Buy EUR/USD - Profitable trade (OANDA Standard)
   const buyParams: TradeParams = {
     market,
     tradeType: 'buy',
     entryPrice: 1.1000,
     exitPrice: 1.1050,
-    quantity: 1 // 1 lot
+    quantity: 1 // 1 standard lot (100,000 units)
   };
 
   const buyResult = calculatePL(buyParams);
@@ -52,13 +52,14 @@ function testForexPLCalculation(): void {
     percentage: buyResult.percentage
   });
 
-  // Expected: 50 pips profit, $500 profit for 1 lot
+  // OANDA Standard: 50 pips profit, $500 profit for 1 standard lot EUR/USD
+  // Formula: 1 pip = $10 for 1 standard lot EUR/USD
   const expectedProfit = 500;
   const expectedPips = 50;
-  
-  if (Math.abs(buyResult.profitLoss - expectedProfit) < 1 && 
+
+  if (Math.abs(buyResult.profitLoss - expectedProfit) < 1 &&
       Math.abs(buyResult.pips - expectedPips) < 0.1) {
-    console.log('✅ Buy trade calculation correct');
+    console.log('✅ Buy trade calculation correct (OANDA compliant)');
   } else {
     console.log('❌ Buy trade calculation incorrect');
     console.log(`Expected: $${expectedProfit}, ${expectedPips} pips`);
@@ -81,9 +82,9 @@ function testForexPLCalculation(): void {
     percentage: sellResult.percentage
   });
 
-  if (Math.abs(sellResult.profitLoss - expectedProfit) < 1 && 
+  if (Math.abs(sellResult.profitLoss - expectedProfit) < 1 &&
       Math.abs(sellResult.pips - expectedPips) < 0.1) {
-    console.log('✅ Sell trade calculation correct');
+    console.log('✅ Sell trade calculation correct (OANDA compliant)');
   } else {
     console.log('❌ Sell trade calculation incorrect');
   }
@@ -91,9 +92,9 @@ function testForexPLCalculation(): void {
   console.log('');
 }
 
-// Test Gold P&L Calculation
+// Test Gold P&L Calculation (OANDA Standard)
 function testGoldPLCalculation(): void {
-  console.log('🥇 Testing Gold P&L Calculation...');
+  console.log('🥇 Testing OANDA-Compliant Gold P&L Calculation...');
 
   const market = getMarketInfo('GOLD');
   if (!market) {
@@ -101,37 +102,37 @@ function testGoldPLCalculation(): void {
     return;
   }
 
-  // Test Case: Buy GOLD - $1 move up
-  // Entry: $2000, Exit: $2001, 1 lot
-  // Expected: $1 profit ($1 move × 1 lot = $1 profit)
+  // Test Case: Buy GOLD - Real OANDA Trade Example
+  // Entry: $3384.54, Exit: $3362.91, 0.2 lots (20 ounces)
+  // Expected: $432.60 loss ($21.63 move × 20 ounces = $432.60 loss)
   const goldParams: TradeParams = {
     market,
     tradeType: 'buy',
-    entryPrice: 2000.00,
-    exitPrice: 2001.00,
-    quantity: 1 // 1 lot
+    entryPrice: 3384.54,
+    exitPrice: 3362.91,
+    quantity: 0.2 // 0.2 lots = 20 ounces (100 ounces per lot)
   };
 
   const goldResult = calculatePL(goldParams);
-  console.log('Gold Trade Result:', {
+  console.log('Gold Trade Result (Real OANDA Trade):', {
     profitLoss: goldResult.profitLoss,
     pips: goldResult.pips,
     percentage: goldResult.percentage,
     priceMovement: goldResult.breakdown.priceMovement
   });
 
-  // Expected: $1 move = 100 pips (since pip = 0.01), $1 profit for 1 lot
-  const expectedProfit = 1; // $1 move × 1 lot = $1 profit
-  const expectedPips = 100; // $1.00 / $0.01 = 100 pips
+  // OANDA Standard: $21.63 move × 0.2 lots × 100 ounces = $432.60 loss
+  const expectedLoss = -432.60; // $21.63 move × 20 ounces = $432.60 loss
+  const expectedPips = 2163; // $21.63 / $0.01 = 2163 pips
 
-  if (Math.abs(goldResult.profitLoss - expectedProfit) < 0.01 &&
+  if (Math.abs(goldResult.profitLoss - expectedLoss) < 0.1 &&
       Math.abs(goldResult.pips - expectedPips) < 0.1) {
-    console.log('✅ Gold calculation correct');
-    console.log(`✅ $1 move on 1 lot gold = $${goldResult.profitLoss} profit`);
+    console.log('✅ Gold calculation correct (OANDA compliant)');
+    console.log(`✅ $21.63 move on 0.2 lots (20 ounces) gold = $${Math.abs(goldResult.profitLoss)} loss`);
   } else {
     console.log('❌ Gold calculation incorrect');
-    console.log(`Expected: $${expectedProfit}, ${expectedPips} pips`);
-    console.log(`Got: $${goldResult.profitLoss}, ${goldResult.pips} pips`);
+    console.log(`Expected: $${Math.abs(expectedLoss)}, ${expectedPips} pips`);
+    console.log(`Got: $${Math.abs(goldResult.profitLoss)}, ${goldResult.pips} pips`);
   }
 
   // Test smaller move: $0.10 (10 cents)
@@ -140,11 +141,11 @@ function testGoldPLCalculation(): void {
     tradeType: 'buy',
     entryPrice: 2000.00,
     exitPrice: 2000.10,
-    quantity: 1
+    quantity: 0.01 // 0.01 lots = 1 ounce
   };
 
   const smallResult = calculatePL(smallMoveParams);
-  const expectedSmallProfit = 0.10; // $0.10 move × 1 lot = $0.10 profit
+  const expectedSmallProfit = 0.10; // $0.10 move × 1 ounce = $0.10 profit
   const expectedSmallPips = 10; // $0.10 / $0.01 = 10 pips
 
   console.log('Small Gold Move Result:', {
@@ -159,6 +160,37 @@ function testGoldPLCalculation(): void {
     console.log('❌ Small gold move calculation incorrect');
     console.log(`Expected: $${expectedSmallProfit}, ${expectedSmallPips} pips`);
     console.log(`Got: $${smallResult.profitLoss}, ${smallResult.pips} pips`);
+  }
+
+  // Test Case 3: User's specific example
+  // Entry: 3369.41, Exit: 3373.63, 0.01 lots (1 ounce)
+  // Expected: +$4.22 profit ($4.22 move × 1 ounce = $4.22 profit)
+  const userExampleParams: TradeParams = {
+    market,
+    tradeType: 'sell', // Assuming sell since exit > entry but profit is positive
+    entryPrice: 3369.41,
+    exitPrice: 3373.63,
+    quantity: 0.01 // 0.01 lots = 1 ounce
+  };
+
+  const userResult = calculatePL(userExampleParams);
+  const expectedUserProfit = 4.22; // $4.22 move × 1 ounce = $4.22 profit
+  const expectedUserPips = 422; // $4.22 / $0.01 = 422 pips
+
+  console.log('User Example Result (Entry: 3369.41, Exit: 3373.63, 0.01 lots):');
+  console.log('Result:', {
+    profitLoss: userResult.profitLoss,
+    pips: userResult.pips
+  });
+
+  if (Math.abs(userResult.profitLoss - expectedUserProfit) < 0.01 &&
+      Math.abs(userResult.pips - expectedUserPips) < 0.1) {
+    console.log('✅ User example calculation correct');
+    console.log(`✅ $4.22 move on 0.01 lots (1 ounce) gold = $${userResult.profitLoss} profit`);
+  } else {
+    console.log('❌ User example calculation incorrect');
+    console.log(`Expected: $${expectedUserProfit}, ${expectedUserPips} pips`);
+    console.log(`Got: $${userResult.profitLoss}, ${userResult.pips} pips`);
   }
 
   console.log('');

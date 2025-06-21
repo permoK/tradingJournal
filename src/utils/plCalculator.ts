@@ -120,13 +120,14 @@ const MARKET_CONFIGS: Record<string, MarketInfo> = {
   'GBP/PLN': { symbol: 'GBP/PLN', category: 'forex', pip: 0.0001, contractSize: 100000, quoteCurrency: 'PLN' },
   'GBP/SGD': { symbol: 'GBP/SGD', category: 'forex', pip: 0.0001, contractSize: 100000, quoteCurrency: 'SGD' },
 
-  // Precious Metals (XAU/USD style - treated as forex-like instruments)
+  // Precious Metals (OANDA standard - 100 ounces per lot)
+  // OANDA: 1 pip = 0.01, 1 lot = 100 ounces, profit = price_movement × total_ounces
   'GOLD': { symbol: 'GOLD', category: 'commodities', pip: 0.01, contractSize: 100, tickValue: 1, quoteCurrency: 'USD' },
   'XAU/USD': { symbol: 'XAU/USD', category: 'commodities', pip: 0.01, contractSize: 100, tickValue: 1, quoteCurrency: 'USD' },
-  'SILVER': { symbol: 'SILVER', category: 'commodities', pip: 0.001, contractSize: 5000, tickValue: 5, quoteCurrency: 'USD' },
-  'XAG/USD': { symbol: 'XAG/USD', category: 'commodities', pip: 0.001, contractSize: 5000, tickValue: 5, quoteCurrency: 'USD' },
-  'PLATINUM': { symbol: 'PLATINUM', category: 'commodities', pip: 0.01, contractSize: 50, tickValue: 0.5, quoteCurrency: 'USD' },
-  'PALLADIUM': { symbol: 'PALLADIUM', category: 'commodities', pip: 0.01, contractSize: 100, tickValue: 1, quoteCurrency: 'USD' },
+  'SILVER': { symbol: 'SILVER', category: 'commodities', pip: 0.001, contractSize: 1, tickValue: 1, quoteCurrency: 'USD' },
+  'XAG/USD': { symbol: 'XAG/USD', category: 'commodities', pip: 0.001, contractSize: 1, tickValue: 1, quoteCurrency: 'USD' },
+  'PLATINUM': { symbol: 'PLATINUM', category: 'commodities', pip: 0.01, contractSize: 1, tickValue: 1, quoteCurrency: 'USD' },
+  'PALLADIUM': { symbol: 'PALLADIUM', category: 'commodities', pip: 0.01, contractSize: 1, tickValue: 1, quoteCurrency: 'USD' },
 
   // Energy Commodities
   'OIL': { symbol: 'OIL', category: 'commodities', pip: 0.01, contractSize: 1000, tickValue: 10 },
@@ -279,30 +280,39 @@ export function calculatePL(params: TradeParams): PLResult {
 
   switch (market.category) {
     case 'forex':
-      // Forex calculation: (Pip Movement) × (Pip Value) × (Position Size)
+      // OANDA Standard: 1 standard lot = 100,000 units
+      // For USD quote pairs: 1 pip = $10 per standard lot
+      // Formula: Pip Value = (1 pip / Quote Currency Exchange Rate) × Lot size in units
       contractValue = quantity * (market.contractSize || 100000);
 
-      // Calculate pip value in account currency (USD)
-      let pipValue = market.pip * contractValue;
+      let pipValuePerLot: number;
 
-      // Convert to USD if quote currency is not USD
-      if (market.quoteCurrency && market.quoteCurrency !== 'USD') {
-        const rate = getCurrencyRate(market.quoteCurrency);
-        pipValue = pipValue * rate;
+      if (market.quoteCurrency === 'USD') {
+        // For USD quote pairs (EUR/USD, GBP/USD, etc.): 1 pip = $10 per standard lot
+        pipValuePerLot = market.pip * (market.contractSize || 100000);
+      } else {
+        // For non-USD quote pairs, convert to USD
+        // Example: EUR/GBP - pip value in GBP, convert to USD
+        const baseValue = market.pip * (market.contractSize || 100000);
+        const rate = getCurrencyRate(market.quoteCurrency || 'USD');
+        pipValuePerLot = baseValue * rate;
       }
 
-      profitLoss = pipMovement * pipValue;
+      // Total P&L = pip movement × pip value per lot × position size in lots
+      profitLoss = pipMovement * pipValuePerLot * quantity;
       break;
 
     case 'commodities':
-      // Check if this is a precious metal (special calculation)
+      // Check if this is a precious metal (OANDA standard calculation)
       if (market.symbol.includes('GOLD') || market.symbol.includes('XAU') ||
           market.symbol.includes('SILVER') || market.symbol.includes('XAG') ||
           market.symbol.includes('PLATINUM') || market.symbol.includes('PALLADIUM')) {
-        // Precious metals: $1 move = $1 profit per lot
-        // This means: profitLoss = priceMovement × quantity
-        contractValue = quantity * (market.contractSize || 100);
-        profitLoss = effectiveMovement * quantity; // Simple: $1 move × 1 lot = $1 profit
+        // OANDA Precious Metals: 1 lot = 100 ounces, 1 pip = 0.01
+        // Formula: Profit/Loss = Pip Movement × Pip Value per Ounce × Total Ounces
+        // Example: 422 pips × $0.01 per ounce × 1 ounce = $4.22 profit/loss
+        contractValue = quantity * (market.contractSize || 100); // Total ounces
+        const pipValuePerOunce = market.pip; // $0.01 per pip per ounce
+        profitLoss = pipMovement * pipValuePerOunce * contractValue; // pip movement × pip value per ounce × total ounces
       } else {
         // Traditional commodities: (Price Movement) × (Contract Size) × (Position Size)
         contractValue = quantity * (market.contractSize || 1);
@@ -465,29 +475,33 @@ export function calculatePositionSize(params: PositionSizeParams): PositionSizeR
 
   switch (market.category) {
     case 'forex':
-      // Calculate pip value for 1 lot in account currency
+      // OANDA standard calculation for position sizing
       const contractSize = market.contractSize || 100000;
-      let pipValuePerLot = market.pip * contractSize;
+      let pipValuePerLot: number;
 
-      // Convert to USD if quote currency is not USD
-      if (market.quoteCurrency && market.quoteCurrency !== 'USD') {
-        const rate = getCurrencyRate(market.quoteCurrency);
-        pipValuePerLot = pipValuePerLot * rate;
+      if (market.quoteCurrency === 'USD') {
+        // For USD quote pairs: 1 pip = $10 per standard lot
+        pipValuePerLot = market.pip * contractSize;
+      } else {
+        // For non-USD quote pairs, convert to USD
+        const baseValue = market.pip * contractSize;
+        const rate = getCurrencyRate(market.quoteCurrency || 'USD');
+        pipValuePerLot = baseValue * rate;
       }
 
-      // Calculate position size in lots
+      // Position Size = Risk Amount / (Pip Risk × Pip Value per Lot)
       positionSize = riskAmount / (pipRisk * pipValuePerLot);
       contractValue = entryPrice * positionSize * contractSize;
       break;
 
     case 'commodities':
-      // Check if this is a precious metal (special calculation)
+      // Check if this is a precious metal (OANDA standard)
       if (market.symbol.includes('GOLD') || market.symbol.includes('XAU') ||
           market.symbol.includes('SILVER') || market.symbol.includes('XAG') ||
           market.symbol.includes('PLATINUM') || market.symbol.includes('PALLADIUM')) {
-        // Precious metals: $1 move = $1 profit per lot
-        // So: positionSize = riskAmount / priceRisk
-        positionSize = riskAmount / priceRisk;
+        // OANDA precious metals: 1 lot = 100 ounces
+        // Position Size = Risk Amount / (Price Risk × Contract Size)
+        positionSize = riskAmount / (priceRisk * (market.contractSize || 100));
         contractValue = entryPrice * positionSize * (market.contractSize || 100);
       } else {
         // Traditional commodities
@@ -557,28 +571,36 @@ export function calculateRiskReward(params: RiskRewardParams): RiskRewardResult 
 
   switch (market.category) {
     case 'forex':
-      // Calculate pip value for the position
+      // OANDA standard risk/reward calculation
       const contractSize = market.contractSize || 100000;
-      let pipValue = market.pip * positionSize * contractSize;
+      let pipValuePerLot: number;
 
-      // Convert to USD if quote currency is not USD
-      if (market.quoteCurrency && market.quoteCurrency !== 'USD') {
-        const rate = getCurrencyRate(market.quoteCurrency);
-        pipValue = pipValue * rate;
+      if (market.quoteCurrency === 'USD') {
+        // For USD quote pairs: 1 pip = $10 per standard lot
+        pipValuePerLot = market.pip * contractSize;
+      } else {
+        // For non-USD quote pairs, convert to USD
+        const baseValue = market.pip * contractSize;
+        const rate = getCurrencyRate(market.quoteCurrency || 'USD');
+        pipValuePerLot = baseValue * rate;
       }
 
-      riskAmount = riskPips * pipValue;
-      rewardAmount = rewardPips * pipValue;
+      // Calculate total pip value for the position
+      const totalPipValue = pipValuePerLot * positionSize;
+
+      riskAmount = riskPips * totalPipValue;
+      rewardAmount = rewardPips * totalPipValue;
       break;
 
     case 'commodities':
-      // Check if this is a precious metal (special calculation)
+      // Check if this is a precious metal (OANDA standard)
       if (market.symbol.includes('GOLD') || market.symbol.includes('XAU') ||
           market.symbol.includes('SILVER') || market.symbol.includes('XAG') ||
           market.symbol.includes('PLATINUM') || market.symbol.includes('PALLADIUM')) {
-        // Precious metals: $1 move = $1 profit per lot
-        riskAmount = Math.abs(entryPrice - stopLossPrice) * positionSize;
-        rewardAmount = Math.abs(takeProfitPrice - entryPrice) * positionSize;
+        // OANDA precious metals: 1 lot = 100 ounces
+        const contractSize = market.contractSize || 100;
+        riskAmount = Math.abs(entryPrice - stopLossPrice) * positionSize * contractSize;
+        rewardAmount = Math.abs(takeProfitPrice - entryPrice) * positionSize * contractSize;
       } else {
         // Traditional commodities
         const commodityContractSize = market.contractSize || 1;
@@ -636,25 +658,34 @@ export function calculatePipValue(params: PipValueParams): PipValueResult {
   switch (market.category) {
     case 'forex':
       contractSize = market.contractSize || 100000;
-      pipValue = market.pip * positionSize * contractSize;
 
-      // Convert to USD if quote currency is not USD
-      if (market.quoteCurrency && market.quoteCurrency !== 'USD') {
-        const rate = getCurrencyRate(market.quoteCurrency);
-        pipValue = pipValue * rate;
+      // OANDA Formula: Pip Value = (1 pip / Quote Currency Exchange Rate) × Lot size in units
+      let pipValuePerLot: number;
+
+      if (market.quoteCurrency === 'USD') {
+        // For USD quote pairs: 1 pip = $10 per standard lot (100,000 units)
+        pipValuePerLot = market.pip * contractSize;
+      } else {
+        // For non-USD quote pairs, convert to USD
+        const baseValue = market.pip * contractSize;
+        const rate = getCurrencyRate(market.quoteCurrency || 'USD');
+        pipValuePerLot = baseValue * rate;
       }
+
+      // Total pip value for position = pip value per lot × position size in lots
+      pipValue = pipValuePerLot * positionSize;
       break;
 
     case 'commodities':
-      // Check if this is a precious metal (special calculation)
+      // Check if this is a precious metal (OANDA standard)
       if (market.symbol.includes('GOLD') || market.symbol.includes('XAU') ||
           market.symbol.includes('SILVER') || market.symbol.includes('XAG') ||
           market.symbol.includes('PLATINUM') || market.symbol.includes('PALLADIUM')) {
-        // Precious metals: $1 move = $1 profit per lot
-        // So pip value = positionSize / (1 / pip)
-        // For gold: pip = 0.01, so 1 pip = positionSize * 0.01
+        // OANDA precious metals: 1 pip = 0.01, 1 lot = 100 ounces
+        // Pip Value = Position Size (lots) × Contract Size (100 ounces) × Pip Size (0.01)
+        // Example: 0.01 lots × 100 ounces × 0.01 = $0.01 per pip
         contractSize = market.contractSize || 100;
-        pipValue = positionSize * market.pip; // 1 lot × 0.01 = $0.01 per pip
+        pipValue = positionSize * contractSize * market.pip; // lots × 100 ounces × $0.01 = pip value
       } else {
         // Traditional commodities
         contractSize = market.contractSize || 1;
