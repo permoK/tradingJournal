@@ -43,7 +43,7 @@ export default function Dashboard() {
   const [showWelcome, setShowWelcome] = useState(false);
 
   // Dashboard filter states
-  const [dateFilter, setDateFilter] = useState('7d'); // 7d, 30d, 3m, all, specific
+  const [dateFilter, setDateFilter] = useState('all'); // 7d, 30d, 3m, all, specific
   const [specificDate, setSpecificDate] = useState('');
   const [marketFilter, setMarketFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
