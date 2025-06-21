@@ -499,10 +499,13 @@ export function calculatePositionSize(params: PositionSizeParams): PositionSizeR
       if (market.symbol.includes('GOLD') || market.symbol.includes('XAU') ||
           market.symbol.includes('SILVER') || market.symbol.includes('XAG') ||
           market.symbol.includes('PLATINUM') || market.symbol.includes('PALLADIUM')) {
-        // OANDA precious metals: 1 lot = 100 ounces
-        // Position Size = Risk Amount / (Price Risk × Contract Size)
-        positionSize = riskAmount / (priceRisk * (market.contractSize || 100));
-        contractValue = entryPrice * positionSize * (market.contractSize || 100);
+        // OANDA precious metals: 1 lot = 100 ounces, pip-based calculation
+        // Position Size = Risk Amount / (Pip Risk × Pip Value per Ounce × Contract Size)
+        const pipRisk = priceRisk / market.pip;
+        const pipValuePerOunce = market.pip; // $0.01 per pip per ounce
+        const contractSize = market.contractSize || 100;
+        positionSize = riskAmount / (pipRisk * pipValuePerOunce * contractSize);
+        contractValue = entryPrice * positionSize * contractSize;
       } else {
         // Traditional commodities
         const commodityContractSize = market.contractSize || 1;
@@ -597,10 +600,14 @@ export function calculateRiskReward(params: RiskRewardParams): RiskRewardResult 
       if (market.symbol.includes('GOLD') || market.symbol.includes('XAU') ||
           market.symbol.includes('SILVER') || market.symbol.includes('XAG') ||
           market.symbol.includes('PLATINUM') || market.symbol.includes('PALLADIUM')) {
-        // OANDA precious metals: 1 lot = 100 ounces
+        // OANDA precious metals: 1 lot = 100 ounces, pip-based calculation
         const contractSize = market.contractSize || 100;
-        riskAmount = Math.abs(entryPrice - stopLossPrice) * positionSize * contractSize;
-        rewardAmount = Math.abs(takeProfitPrice - entryPrice) * positionSize * contractSize;
+        const riskPips = Math.abs(entryPrice - stopLossPrice) / market.pip;
+        const rewardPips = Math.abs(takeProfitPrice - entryPrice) / market.pip;
+        const pipValuePerOunce = market.pip; // $0.01 per pip per ounce
+        const totalOunces = positionSize * contractSize;
+        riskAmount = riskPips * pipValuePerOunce * totalOunces;
+        rewardAmount = rewardPips * pipValuePerOunce * totalOunces;
       } else {
         // Traditional commodities
         const commodityContractSize = market.contractSize || 1;
@@ -685,7 +692,8 @@ export function calculatePipValue(params: PipValueParams): PipValueResult {
         // Pip Value = Position Size (lots) × Contract Size (100 ounces) × Pip Size (0.01)
         // Example: 0.01 lots × 100 ounces × 0.01 = $0.01 per pip
         contractSize = market.contractSize || 100;
-        pipValue = positionSize * contractSize * market.pip; // lots × 100 ounces × $0.01 = pip value
+        const totalOunces = positionSize * contractSize;
+        pipValue = totalOunces * market.pip; // total ounces × $0.01 = pip value
       } else {
         // Traditional commodities
         contractSize = market.contractSize || 1;

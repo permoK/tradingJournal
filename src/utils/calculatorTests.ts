@@ -121,14 +121,14 @@ function testGoldPLCalculation(): void {
     priceMovement: goldResult.breakdown.priceMovement
   });
 
-  // OANDA Standard: $21.63 move × 0.2 lots × 100 ounces = $432.60 loss
+  // OANDA Standard: 2163 pips × $0.01 per ounce × 20 ounces = $432.60 loss
   const expectedLoss = -432.60; // $21.63 move × 20 ounces = $432.60 loss
   const expectedPips = 2163; // $21.63 / $0.01 = 2163 pips
 
   if (Math.abs(goldResult.profitLoss - expectedLoss) < 0.1 &&
       Math.abs(goldResult.pips - expectedPips) < 0.1) {
     console.log('✅ Gold calculation correct (OANDA compliant)');
-    console.log(`✅ $21.63 move on 0.2 lots (20 ounces) gold = $${Math.abs(goldResult.profitLoss)} loss`);
+    console.log(`✅ 2163 pips on 0.2 lots (20 ounces) gold = $${Math.abs(goldResult.profitLoss)} loss`);
   } else {
     console.log('❌ Gold calculation incorrect');
     console.log(`Expected: $${Math.abs(expectedLoss)}, ${expectedPips} pips`);
@@ -164,7 +164,7 @@ function testGoldPLCalculation(): void {
 
   // Test Case 3: User's specific example
   // Entry: 3369.41, Exit: 3373.63, 0.01 lots (1 ounce)
-  // Expected: +$4.22 profit ($4.22 move × 1 ounce = $4.22 profit)
+  // Expected: +$4.22 profit (422 pips × $0.01 per ounce × 1 ounce = $4.22 profit)
   const userExampleParams: TradeParams = {
     market,
     tradeType: 'sell', // Assuming sell since exit > entry but profit is positive
@@ -174,7 +174,7 @@ function testGoldPLCalculation(): void {
   };
 
   const userResult = calculatePL(userExampleParams);
-  const expectedUserProfit = 4.22; // $4.22 move × 1 ounce = $4.22 profit
+  const expectedUserProfit = 4.22; // 422 pips × $0.01 per ounce × 1 ounce = $4.22 profit
   const expectedUserPips = 422; // $4.22 / $0.01 = 422 pips
 
   console.log('User Example Result (Entry: 3369.41, Exit: 3373.63, 0.01 lots):');
@@ -186,7 +186,7 @@ function testGoldPLCalculation(): void {
   if (Math.abs(userResult.profitLoss - expectedUserProfit) < 0.01 &&
       Math.abs(userResult.pips - expectedUserPips) < 0.1) {
     console.log('✅ User example calculation correct');
-    console.log(`✅ $4.22 move on 0.01 lots (1 ounce) gold = $${userResult.profitLoss} profit`);
+    console.log(`✅ 422 pips on 0.01 lots (1 ounce) gold = $${userResult.profitLoss} profit`);
   } else {
     console.log('❌ User example calculation incorrect');
     console.log(`Expected: $${expectedUserProfit}, ${expectedUserPips} pips`);
