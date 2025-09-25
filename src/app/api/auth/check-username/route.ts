@@ -1,7 +1,6 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { isUsernameAvailable } from '@/lib/db/auth-utils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,26 +25,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const cookieStore = await cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    // Check if username exists using our database
+    const { available, error } = await isUsernameAvailable(username);
 
-    // Check if username exists
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('username')
-      .eq('username', username)
-      .single();
-
-    if (error && error.code !== 'PGRST116') { // PGRST116 is "not found" error
+    if (error) {
       console.error('Error checking username:', error);
       return NextResponse.json(
         { error: 'Failed to check username availability' },
         { status: 500 }
       );
     }
-
-    // Username is available if no data was found
-    const available = !data;
 
     return NextResponse.json({ available });
   } catch (error) {

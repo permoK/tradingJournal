@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Poppins } from "next/font/google";
 import "./globals.css";
 import ServerCompileLoader from "@/components/ServerCompileLoader";
 import ClientOnly from "@/components/ClientOnly";
+import SessionProvider from "@/components/SessionProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { TradeModeProvider } from "@/contexts/TradeModeContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
@@ -45,17 +46,19 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} antialiased`}
       >
-        <AuthProvider>
-          <TradeModeProvider>
-            <NotificationProvider>
-              <ClientOnly>
-                <ServerCompileLoader />
-              </ClientOnly>
-              {children}
-              <ToastContainer />
-            </NotificationProvider>
-          </TradeModeProvider>
-        </AuthProvider>
+        <SessionProvider>
+          <AuthProvider>
+            <TradeModeProvider>
+              <NotificationProvider>
+                <ClientOnly>
+                  <ServerCompileLoader />
+                </ClientOnly>
+                {children}
+                <ToastContainer />
+              </NotificationProvider>
+            </TradeModeProvider>
+          </AuthProvider>
+        </SessionProvider>
       </body>
     </html>
   );

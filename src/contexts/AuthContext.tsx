@@ -1,128 +1,72 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { createClient } from '@/lib/supabase';
+import { createContext, useContext } from 'react';
+import { useSession, signOut as nextAuthSignOut, signIn as nextAuthSignIn } from 'next-auth/react';
+import type { Session } from 'next-auth';
 
 interface AuthContextType {
-  user: User | null;
+  user: Session['user'] | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, metadata?: any) => Promise<any>;
-  signIn: (email: string, password: string) => Promise<any>;
-  signInWithProvider: (provider: 'google' | 'github') => Promise<any>;
-  signOut: () => Promise<any>;
-  resetPassword: (email: string) => Promise<any>;
-  updatePassword: (password: string) => Promise<any>;
+  signIn: (provider?: 'google' | 'credentials', credentials?: { email: string; password: string }) => Promise<any>;
+  signUp: (userData: { email: string; password: string; fullName: string; username: string }) => Promise<any>;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const { data: session, status } = useSession();
+  const loading = status === 'loading';
+  const user = session?.user || null;
 
-  useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-
-      // Check if the account is disabled
-      if (session?.user?.user_metadata?.account_disabled) {
-        console.log('Disabled account detected on initial load, signing out...');
-        await supabase.auth.signOut();
-        setSession(null);
-        setUser(null);
-      } else {
-        setSession(session);
-        setUser(session?.user ?? null);
-      }
-      setLoading(false);
-    };
-
-    getInitialSession();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        // Check if the account is disabled
-        if (session?.user?.user_metadata?.account_disabled) {
-          console.log('Disabled account detected, signing out...');
-          await supabase.auth.signOut();
-          setSession(null);
-          setUser(null);
-        } else {
-          setSession(session);
-          setUser(session?.user ?? null);
-        }
-        setLoading(false);
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, [supabase.auth]);
-
-  const signUp = async (email: string, password: string, metadata?: any) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: metadata,
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-    return { data, error };
+  const signIn = async (provider: 'google' | 'credentials' = 'google', credentials?: { email: string; password: string }) => {
+    if (provider === 'google') {
+      return await nextAuthSignIn('google', { callbackUrl: '/dashboard' });
+    } else if (provider === 'credentials' && credentials) {
+      return await nextAuthSignIn('credentials', {
+        email: credentials.email,
+        password: credentials.password,
+        callbackUrl: '/dashboard',
+      });
+    }
   };
 
-  const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { data, error };
-  };
+  const signUp = async (userData: { email: string; password: string; fullName: string; username: string }) => {
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+      });
 
-  const signInWithProvider = async (provider: 'google' | 'github') => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-    return { data, error };
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { error: data.error };
+      }
+
+      // After successful registration, sign in the user
+      return await signIn('credentials', {
+        email: userData.email,
+        password: userData.password,
+      });
+    } catch (error: any) {
+      return { error: error.message || 'Registration failed' };
+    }
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    return { error };
-  };
-
-  const resetPassword = async (email: string) => {
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset-password`,
-    });
-    return { data, error };
-  };
-
-  const updatePassword = async (password: string) => {
-    const { data, error } = await supabase.auth.updateUser({
-      password,
-    });
-    return { data, error };
+    await nextAuthSignOut({ callbackUrl: '/' });
   };
 
   const value = {
     user,
     session,
     loading,
-    signUp,
     signIn,
-    signInWithProvider,
+    signUp,
     signOut,
-    resetPassword,
-    updatePassword,
   };
 
   return (

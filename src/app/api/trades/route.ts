@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getServerDB } from '@/lib/db/server';
-import { strategies } from '@/lib/db/schema';
+import { trades } from '@/lib/db/schema';
 import { eq, desc } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
@@ -15,17 +15,25 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const includePrivate = searchParams.get('includePrivate') !== 'false';
+    const isDemoMode = searchParams.get('isDemoMode');
 
     const db = getServerDB();
-    const strategiesData = await db
+    let query = db
       .select()
-      .from(strategies)
-      .where(eq(strategies.userId, session.user.id))
-      .orderBy(desc(strategies.createdAt));
+      .from(trades)
+      .where(eq(trades.userId, session.user.id))
+      .orderBy(desc(trades.tradeDate));
 
-    return NextResponse.json({ data: strategiesData });
+    // Filter by demo mode if specified
+    if (isDemoMode !== null) {
+      query = query.where(eq(trades.isDemo, isDemoMode === 'true'));
+    }
+
+    const tradesData = await query;
+
+    return NextResponse.json({ data: tradesData });
   } catch (error: any) {
-    console.error('Error fetching strategies:', error);
+    console.error('Error fetching trades:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -38,20 +46,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const strategyData = await request.json();
+    const tradeData = await request.json();
     const db = getServerDB();
 
-    const [newStrategy] = await db
-      .insert(strategies)
+    const [newTrade] = await db
+      .insert(trades)
       .values({
-        ...strategyData,
+        ...tradeData,
         userId: session.user.id,
       })
       .returning();
 
-    return NextResponse.json({ data: newStrategy });
+    return NextResponse.json({ data: newTrade });
   } catch (error: any) {
-    console.error('Error creating strategy:', error);
+    console.error('Error creating trade:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

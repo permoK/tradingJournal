@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getServerDB } from '@/lib/db/server';
-import { strategies } from '@/lib/db/schema';
+import { journalEntries } from '@/lib/db/schema';
 import { eq, desc } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
@@ -17,15 +17,22 @@ export async function GET(request: NextRequest) {
     const includePrivate = searchParams.get('includePrivate') !== 'false';
 
     const db = getServerDB();
-    const strategiesData = await db
+    let query = db
       .select()
-      .from(strategies)
-      .where(eq(strategies.userId, session.user.id))
-      .orderBy(desc(strategies.createdAt));
+      .from(journalEntries)
+      .where(eq(journalEntries.userId, session.user.id))
+      .orderBy(desc(journalEntries.createdAt));
 
-    return NextResponse.json({ data: strategiesData });
+    // If not including private, filter them out
+    if (!includePrivate) {
+      query = query.where(eq(journalEntries.isPrivate, false));
+    }
+
+    const data = await query;
+
+    return NextResponse.json({ data });
   } catch (error: any) {
-    console.error('Error fetching strategies:', error);
+    console.error('Error fetching journal entries:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -38,20 +45,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const strategyData = await request.json();
+    const body = await request.json();
     const db = getServerDB();
 
-    const [newStrategy] = await db
-      .insert(strategies)
+    const [newEntry] = await db
+      .insert(journalEntries)
       .values({
-        ...strategyData,
+        ...body,
         userId: session.user.id,
       })
       .returning();
 
-    return NextResponse.json({ data: newStrategy });
+    return NextResponse.json({ data: newEntry });
   } catch (error: any) {
-    console.error('Error creating strategy:', error);
+    console.error('Error creating journal entry:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

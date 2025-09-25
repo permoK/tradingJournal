@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { FiEye, FiEyeOff, FiMail, FiLock, FiGithub } from 'react-icons/fi';
+import { FiEye, FiEyeOff, FiMail, FiLock } from 'react-icons/fi';
 import { FcGoogle } from 'react-icons/fc';
 
 function LoginForm() {
@@ -14,7 +14,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { signIn, signInWithProvider, user } = useAuth();
+  const { signIn, user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirectTo') || '/dashboard';
@@ -30,25 +30,32 @@ function LoginForm() {
     setLoading(true);
     setError(null);
 
-    const { error } = await signIn(email, password);
+    if (!email || !password) {
+      setError('Please fill in all fields');
+      setLoading(false);
+      return;
+    }
 
-    if (error) {
+    try {
+      const result = await signIn('credentials', { email, password });
+      if (result?.error) {
+        setError('Invalid email or password');
+      }
+    } catch (error: any) {
       setError(error.message);
-    } else {
-      router.push(redirectTo);
     }
 
     setLoading(false);
   };
 
-  const handleSocialLogin = async (provider: 'google' | 'github') => {
+  const handleGoogleLogin = async () => {
     setLoading(true);
     setError(null);
 
-    const { error } = await signInWithProvider(provider);
-
-    if (error) {
-      setError(error.message);
+    try {
+      await signIn('google');
+    } catch (error: any) {
+      setError('Failed to sign in with Google');
     }
 
     setLoading(false);
@@ -159,23 +166,14 @@ function LoginForm() {
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-3">
+            <div className="mt-6">
               <button
-                onClick={() => handleSocialLogin('google')}
+                onClick={handleGoogleLogin}
                 disabled={loading}
                 className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
               >
                 <FcGoogle className="h-5 w-5" />
                 <span className="ml-2">Google</span>
-              </button>
-
-              <button
-                onClick={() => handleSocialLogin('github')}
-                disabled={loading}
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-              >
-                <FiGithub className="h-5 w-5" />
-                <span className="ml-2">GitHub</span>
               </button>
             </div>
           </div>

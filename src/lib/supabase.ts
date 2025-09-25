@@ -1,7 +1,12 @@
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+// Temporary stub file for compatibility during migration
+// These functions will be replaced with NextAuth.js and API routes
 
-// Client-side Supabase client
-export const createClient = () => createClientComponentClient();
+export const createClient = () => {
+  throw new Error('Supabase client is no longer available. Please use NextAuth.js and API routes.');
+};
 
-// Default client for backwards compatibility
-export const supabase = createClient();
+export const supabase = {
+  from: () => {
+    throw new Error('Supabase client is no longer available. Please use NextAuth.js and API routes.');
+  }
+};

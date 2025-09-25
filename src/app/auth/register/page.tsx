@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { FiEye, FiEyeOff, FiMail, FiLock, FiUser, FiGithub } from 'react-icons/fi';
+import { FiEye, FiEyeOff, FiMail, FiLock, FiUser } from 'react-icons/fi';
 import { FcGoogle } from 'react-icons/fc';
 
 export default function RegisterPage() {
@@ -19,9 +19,8 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
-  const { signUp, signInWithProvider, user } = useAuth();
+  const { signIn, signUp, user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -67,59 +66,34 @@ export default function RegisterPage() {
       return;
     }
 
-    const { error } = await signUp(formData.email, formData.password, {
-      full_name: formData.fullName,
+    const result = await signUp({
+      email: formData.email,
+      password: formData.password,
+      fullName: formData.fullName,
       username: formData.username,
     });
 
-    if (error) {
-      setError(error.message);
-    } else {
-      setSuccess(true);
+    if (result?.error) {
+      setError(result.error);
     }
 
     setLoading(false);
   };
 
-  const handleSocialLogin = async (provider: 'google' | 'github') => {
+  const handleGoogleSignUp = async () => {
     setLoading(true);
     setError(null);
 
-    const { error } = await signInWithProvider(provider);
-
-    if (error) {
+    try {
+      await signIn('google');
+    } catch (error: any) {
       setError(error.message);
     }
 
     setLoading(false);
   };
 
-  if (success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
-            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
-              <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Check your email</h2>
-            <p className="text-gray-600 mb-6">
-              We've sent a verification link to <strong>{formData.email}</strong>.
-              Please check your email and click the link to verify your account.
-            </p>
-            <Link
-              href="/auth/login"
-              className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Back to Login
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
@@ -129,7 +103,7 @@ export default function RegisterPage() {
             Create your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Join Deriv Progress Tracker and start your trading journey
+            Join TradeFlow and start your trading journey with Google
           </p>
         </div>
 
@@ -294,23 +268,14 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-3">
+            <div className="mt-6">
               <button
-                onClick={() => handleSocialLogin('google')}
+                onClick={handleGoogleSignUp}
                 disabled={loading}
                 className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
               >
                 <FcGoogle className="h-5 w-5" />
                 <span className="ml-2">Google</span>
-              </button>
-
-              <button
-                onClick={() => handleSocialLogin('github')}
-                disabled={loading}
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-              >
-                <FiGithub className="h-5 w-5" />
-                <span className="ml-2">GitHub</span>
               </button>
             </div>
           </div>

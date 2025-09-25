@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
 import Avatar from '@/components/Avatar';
-import { supabase } from '@/lib/supabase';
+// Note: Community features will need to be reimplemented with NextAuth.js and API routes
 import { FiUser, FiBarChart2, FiFileText, FiSearch, FiLayers, FiPlus, FiMinus } from 'react-icons/fi';
 import { format } from 'date-fns';
 import Link from 'next/link';

@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase';
+// Note: Email verification is handled by Google OAuth, this page can be simplified
 
 function VerifyEmailContent() {
   const [loading, setLoading] = useState(true);

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getServerDB } from '@/lib/db/server';
-import { strategies } from '@/lib/db/schema';
+import { activityLogs } from '@/lib/db/schema';
 import { eq, desc } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
@@ -13,19 +13,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const includePrivate = searchParams.get('includePrivate') !== 'false';
-
     const db = getServerDB();
-    const strategiesData = await db
+    const data = await db
       .select()
-      .from(strategies)
-      .where(eq(strategies.userId, session.user.id))
-      .orderBy(desc(strategies.createdAt));
+      .from(activityLogs)
+      .where(eq(activityLogs.userId, session.user.id))
+      .orderBy(desc(activityLogs.activityDate));
 
-    return NextResponse.json({ data: strategiesData });
+    return NextResponse.json({ data });
   } catch (error: any) {
-    console.error('Error fetching strategies:', error);
+    console.error('Error fetching activity logs:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -38,20 +35,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const strategyData = await request.json();
+    const body = await request.json();
     const db = getServerDB();
 
-    const [newStrategy] = await db
-      .insert(strategies)
+    const [newActivity] = await db
+      .insert(activityLogs)
       .values({
-        ...strategyData,
+        ...body,
         userId: session.user.id,
       })
       .returning();
 
-    return NextResponse.json({ data: newStrategy });
+    return NextResponse.json({ data: newActivity });
   } catch (error: any) {
-    console.error('Error creating strategy:', error);
+    console.error('Error creating activity log:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
