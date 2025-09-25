@@ -7,7 +7,7 @@ import { eq } from 'drizzle-orm';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -16,11 +16,12 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id } = await params;
     const db = getServerDB();
     const [profile] = await db
       .select()
       .from(profiles)
-      .where(eq(profiles.id, params.id))
+      .where(eq(profiles.id, id))
       .limit(1);
 
     return NextResponse.json({ data: profile || null });
@@ -32,12 +33,13 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
+    const { id } = await params;
 
-    if (!session?.user || session.user.id !== params.id) {
+    if (!session?.user || session.user.id !== id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -47,7 +49,7 @@ export async function PATCH(
     const [profile] = await db
       .update(profiles)
       .set({ ...updates, updatedAt: new Date() })
-      .where(eq(profiles.id, params.id))
+      .where(eq(profiles.id, id))
       .returning();
 
     return NextResponse.json({ data: profile });

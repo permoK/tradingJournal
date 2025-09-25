@@ -10,22 +10,29 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    const { data: trade, error } = await supabase
-      .from('trades')
-      .select('*')
-      .eq('id', id)
-      .single();
+    const session = await getServerSession(authOptions);
 
-    if (error) {
-      console.error('Error fetching trade:', error);
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const db = getServerDB();
+
+    const [trade] = await db
+      .select()
+      .from(trades)
+      .where(eq(trades.id, id))
+      .limit(1);
+
+    if (!trade) {
       return NextResponse.json(
         { error: 'Trade not found' },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(trade);
+    return NextResponse.json({ data: trade });
   } catch (error) {
     console.error('Error in trade API:', error);
     return NextResponse.json(
@@ -40,28 +47,33 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await params;
     const body = await request.json();
+    const db = getServerDB();
 
-    const { data: trade, error } = await supabase
-      .from('trades')
-      .update({
+    const [trade] = await db
+      .update(trades)
+      .set({
         ...body,
-        updated_at: new Date().toISOString()
+        updatedAt: new Date()
       })
-      .eq('id', id)
-      .select()
-      .single();
+      .where(eq(trades.id, id))
+      .returning();
 
-    if (error) {
-      console.error('Error updating trade:', error);
+    if (!trade) {
       return NextResponse.json(
         { error: 'Failed to update trade' },
         { status: 400 }
       );
     }
 
-    return NextResponse.json(trade);
+    return NextResponse.json({ data: trade });
   } catch (error) {
     console.error('Error in trade update API:', error);
     return NextResponse.json(
@@ -76,19 +88,18 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    const { error } = await supabase
-      .from('trades')
-      .delete()
-      .eq('id', id);
+    const session = await getServerSession(authOptions);
 
-    if (error) {
-      console.error('Error deleting trade:', error);
-      return NextResponse.json(
-        { error: 'Failed to delete trade' },
-        { status: 400 }
-      );
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const { id } = await params;
+    const db = getServerDB();
+
+    await db
+      .delete(trades)
+      .where(eq(trades.id, id));
 
     return NextResponse.json({ success: true });
   } catch (error) {
