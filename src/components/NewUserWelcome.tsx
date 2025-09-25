@@ -13,7 +13,7 @@ export default function NewUserWelcome({ onDismiss }: NewUserWelcomeProps) {
 
   const steps = [
     {
-      title: "Welcome to Deriv Progress Tracker!",
+      title: "Welcome to TradeFlow!",
       description: "Let's get you started on your trading journey. This quick tour will show you the main features.",
       icon: <FiCheckCircle className="h-8 w-8 text-green-500" />,
       action: null

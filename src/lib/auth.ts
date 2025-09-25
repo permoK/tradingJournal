@@ -8,12 +8,13 @@ import { getServerDB } from './db/server';
 import { users, accounts, sessions, verificationTokens, profiles } from './db/schema';
 
 export const authOptions: NextAuthOptions = {
-  adapter: DrizzleAdapter(getServerDB(), {
-    usersTable: users,
-    accountsTable: accounts,
-    sessionsTable: sessions,
-    verificationTokensTable: verificationTokens,
-  }),
+  // Temporarily disable adapter to use JWT sessions
+  // adapter: DrizzleAdapter(getServerDB(), {
+  //   usersTable: users,
+  //   accountsTable: accounts,
+  //   sessionsTable: sessions,
+  //   verificationTokensTable: verificationTokens,
+  // }),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -60,39 +61,74 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id;
+    async jwt({ token, user, account }) {
+      // Persist the OAuth access_token and user id to the token right after signin
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      // Send properties to the client
+      if (token) {
+        session.user.id = token.id as string;
       }
       return session;
     },
-    async signIn({ user, account, profile }) {
-      // Create a profile entry when user signs in for the first time
-      if (user.id) {
-        try {
-          const db = getServerDB();
+    async signIn({ user, account, profile, credentials }) {
+      try {
+        const db = getServerDB();
 
-          // Check if profile already exists
-          const existingProfile = await db
+        // For Google OAuth, create user and profile if they don't exist
+        if (account?.provider === 'google' && user.email) {
+          // Check if user exists
+          const [existingUser] = await db
             .select()
-            .from(profiles)
-            .where(eq(profiles.id, user.id))
+            .from(users)
+            .where(eq(users.email, user.email))
             .limit(1);
 
-          if (existingProfile.length === 0) {
-            // Create new profile for both Google and credentials users
+          let userId = existingUser?.id;
+
+          if (!existingUser) {
+            // Create new user
+            const [newUser] = await db
+              .insert(users)
+              .values({
+                email: user.email,
+                name: user.name,
+                image: user.image,
+                emailVerified: new Date(),
+              })
+              .returning();
+            userId = newUser.id;
+            user.id = userId;
+          } else {
+            user.id = userId;
+          }
+
+          // Check if profile exists
+          const [existingProfile] = await db
+            .select()
+            .from(profiles)
+            .where(eq(profiles.id, userId!))
+            .limit(1);
+
+          if (!existingProfile) {
+            // Create new profile
             await db.insert(profiles).values({
-              id: user.id,
+              id: userId!,
               fullName: user.name,
               avatarUrl: user.image,
             });
           }
-        } catch (error) {
-          console.error('Error creating profile:', error);
-          // Don't block sign in if profile creation fails
         }
+
+        return true;
+      } catch (error) {
+        console.error('Error in signIn callback:', error);
+        return true; // Don't block sign in
       }
-      return true;
     },
   },
   pages: {
@@ -100,7 +136,7 @@ export const authOptions: NextAuthOptions = {
     error: '/auth/error',
   },
   session: {
-    strategy: 'database',
+    strategy: 'jwt',
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
