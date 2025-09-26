@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { getServerDB } from '@/lib/db/server';
+import { strategies, trades } from '@/lib/db/schema';
+import { eq, and } from 'drizzle-orm';
 
 export async function GET(
   request: NextRequest,
@@ -11,13 +14,9 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const isDemoMode = searchParams.get('isDemoMode') === 'true';
 
-    const cookieStore = await cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const session = await getServerSession(authOptions);
 
-    // Get the current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-    if (userError || !user) {
+    if (!session?.user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -25,14 +24,19 @@ export async function GET(
     }
 
     // Get strategy details and verify ownership
-    const { data: strategy, error: strategyError } = await supabase
-      .from('strategies')
-      .select('*')
-      .eq('id', id)
-      .eq('user_id', user.id)
-      .single();
+    const db = getServerDB();
+    const [strategy] = await db
+      .select()
+      .from(strategies)
+      .where(
+        and(
+          eq(strategies.id, id),
+          eq(strategies.userId, session.user.id)
+        )
+      )
+      .limit(1);
 
-    if (strategyError || !strategy) {
+    if (!strategy) {
       return NextResponse.json(
         { error: 'Strategy not found' },
         { status: 404 }
@@ -40,35 +44,29 @@ export async function GET(
     }
 
     // Get trades for this strategy filtered by demo mode
-    let tradesQuery = supabase
-      .from('trades')
-      .select('*')
-      .eq('strategy_id', id)
-      .eq('user_id', user.id)
-      .eq('is_demo', isDemoMode)
-      .order('trade_date', { ascending: true });
+    const tradesData = await db
+      .select()
+      .from(trades)
+      .where(
+        and(
+          eq(trades.strategyId, id),
+          eq(trades.userId, session.user.id),
+          eq(trades.isDemo, isDemoMode)
+        )
+      )
+      .orderBy(trades.tradeDate);
 
-    const { data: trades, error: tradesError } = await tradesQuery;
-
-    if (tradesError) {
-      console.error('Error fetching trades:', tradesError);
-      return NextResponse.json(
-        { error: 'Failed to fetch trade data' },
-        { status: 500 }
-      );
-    }
-
-    const closedTrades = trades.filter(trade => trade.status === 'closed' && trade.profit_loss !== null);
-    const openTrades = trades.filter(trade => trade.status === 'open');
+    const closedTrades = tradesData.filter(trade => trade.status === 'closed' && trade.profitLoss !== null);
+    const openTrades = tradesData.filter(trade => trade.status === 'open');
 
     // Calculate basic metrics
     const totalTrades = closedTrades.length;
-    const profitableTrades = closedTrades.filter(trade => trade.profit_loss! > 0);
-    const losingTrades = closedTrades.filter(trade => trade.profit_loss! < 0);
-    const breakEvenTrades = closedTrades.filter(trade => trade.profit_loss === 0);
+    const profitableTrades = closedTrades.filter(trade => Number(trade.profitLoss!) > 0);
+    const losingTrades = closedTrades.filter(trade => Number(trade.profitLoss!) < 0);
+    const breakEvenTrades = closedTrades.filter(trade => Number(trade.profitLoss!) === 0);
 
-    const totalProfit = profitableTrades.reduce((sum, trade) => sum + trade.profit_loss!, 0);
-    const totalLoss = Math.abs(losingTrades.reduce((sum, trade) => sum + trade.profit_loss!, 0));
+    const totalProfit = profitableTrades.reduce((sum, trade) => sum + Number(trade.profitLoss!), 0);
+    const totalLoss = Math.abs(losingTrades.reduce((sum, trade) => sum + Number(trade.profitLoss!), 0));
     const netProfitLoss = totalProfit - totalLoss;
 
     const successRate = totalTrades > 0 ? (profitableTrades.length / totalTrades) * 100 : 0;
@@ -77,7 +75,7 @@ export async function GET(
     const profitFactor = totalLoss > 0 ? totalProfit / totalLoss : totalProfit > 0 ? Infinity : 0;
 
     // Market analysis
-    const marketPerformance = trades.reduce((acc, trade) => {
+    const marketPerformance = tradesData.reduce((acc, trade) => {
       if (!acc[trade.market]) {
         acc[trade.market] = {
           totalTrades: 0,
@@ -90,11 +88,11 @@ export async function GET(
       acc[trade.market].totalTrades++;
       acc[trade.market].trades.push(trade);
 
-      if (trade.status === 'closed' && trade.profit_loss !== null) {
-        if (trade.profit_loss > 0) {
+      if (trade.status === 'closed' && trade.profitLoss !== null) {
+        if (Number(trade.profitLoss) > 0) {
           acc[trade.market].profitableTrades++;
         }
-        acc[trade.market].totalProfitLoss += trade.profit_loss;
+        acc[trade.market].totalProfitLoss += Number(trade.profitLoss);
       }
 
       return acc;
@@ -103,7 +101,7 @@ export async function GET(
     // Calculate success rate for each market
     Object.keys(marketPerformance).forEach(market => {
       const marketData = marketPerformance[market];
-      const closedMarketTrades = marketData.trades.filter((t: any) => t.status === 'closed' && t.profit_loss !== null);
+      const closedMarketTrades = marketData.trades.filter((t: any) => t.status === 'closed' && t.profitLoss !== null);
       marketData.successRate = closedMarketTrades.length > 0
         ? (marketData.profitableTrades / closedMarketTrades.length) * 100
         : 0;
@@ -126,12 +124,12 @@ export async function GET(
     };
 
     closedTrades.forEach(trade => {
-      const type = trade.trade_type as 'buy' | 'sell';
+      const type = trade.tradeType as 'buy' | 'sell';
       tradeTypePerformance[type].totalTrades++;
-      if (trade.profit_loss! > 0) {
+      if (Number(trade.profitLoss!) > 0) {
         tradeTypePerformance[type].profitableTrades++;
       }
-      tradeTypePerformance[type].totalProfitLoss += trade.profit_loss!;
+      tradeTypePerformance[type].totalProfitLoss += Number(trade.profitLoss!);
     });
 
     tradeTypePerformance.buy.successRate = tradeTypePerformance.buy.totalTrades > 0
@@ -143,7 +141,7 @@ export async function GET(
 
     // Monthly performance
     const monthlyPerformance = closedTrades.reduce((acc, trade) => {
-      const month = new Date(trade.trade_date).toISOString().slice(0, 7); // YYYY-MM
+      const month = new Date(trade.tradeDate).toISOString().slice(0, 7); // YYYY-MM
       if (!acc[month]) {
         acc[month] = {
           totalTrades: 0,
@@ -154,10 +152,10 @@ export async function GET(
       }
 
       acc[month].totalTrades++;
-      if (trade.profit_loss! > 0) {
+      if (Number(trade.profitLoss!) > 0) {
         acc[month].profitableTrades++;
       }
-      acc[month].totalProfitLoss += trade.profit_loss!;
+      acc[month].totalProfitLoss += Number(trade.profitLoss!);
       acc[month].successRate = (acc[month].profitableTrades / acc[month].totalTrades) * 100;
 
       return acc;
@@ -177,7 +175,7 @@ export async function GET(
     // Recent performance trend (last 10 trades)
     const recentTrades = closedTrades.slice(-10);
     const recentSuccessRate = recentTrades.length > 0
-      ? (recentTrades.filter(trade => trade.profit_loss! > 0).length / recentTrades.length) * 100
+      ? (recentTrades.filter(trade => Number(trade.profitLoss!) > 0).length / recentTrades.length) * 100
       : 0;
 
     // Longest winning/losing streaks
@@ -187,11 +185,11 @@ export async function GET(
     let maxLossStreak = 0;
 
     closedTrades.forEach(trade => {
-      if (trade.profit_loss! > 0) {
+      if (Number(trade.profitLoss!) > 0) {
         currentWinStreak++;
         currentLossStreak = 0;
         maxWinStreak = Math.max(maxWinStreak, currentWinStreak);
-      } else if (trade.profit_loss! < 0) {
+      } else if (Number(trade.profitLoss!) < 0) {
         currentLossStreak++;
         currentWinStreak = 0;
         maxLossStreak = Math.max(maxLossStreak, currentLossStreak);
@@ -227,9 +225,9 @@ export async function GET(
       recentTrades: recentTrades.map(trade => ({
         id: trade.id,
         market: trade.market,
-        trade_type: trade.trade_type,
-        profit_loss: trade.profit_loss,
-        trade_date: trade.trade_date
+        trade_type: trade.tradeType,
+        profit_loss: trade.profitLoss,
+        trade_date: trade.tradeDate
       }))
     };
 

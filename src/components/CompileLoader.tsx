@@ -39,8 +39,8 @@ export default function CompileLoader() {
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // Check if we're in development mode and if the module has hot reloading
-    if (process.env.NODE_ENV === 'development' && module.hot) {
-      module.hot.addStatusHandler((status) => {
+    if (process.env.NODE_ENV === 'development' && typeof module !== 'undefined' && (module as any).hot) {
+      (module as any).hot.addStatusHandler((status: string) => {
         if (status === 'check' || status === 'prepare') {
           setIsCompiling(true);
         } else if (status === 'idle') {

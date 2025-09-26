@@ -13,7 +13,7 @@ import { format } from 'date-fns';
 import { calculatePL, getMarketInfo, formatPL, formatPips, formatPercentage, validateTradeInputs, getSuggestedLotSizes } from '@/utils/plCalculator';
 import ReactMarkdown from 'react-markdown';
 
-export default function EditTrade({ params }: { params: { id: string } }) {
+export default function EditTrade({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { user } = useAuth();
   const { isDemoMode } = useTradeMode();
@@ -44,6 +44,16 @@ export default function EditTrade({ params }: { params: { id: string } }) {
   const [showPreview, setShowPreview] = useState(false);
   const [expectedTPProfit, setExpectedTPProfit] = useState<number | null>(null);
   const [expectedSLLoss, setExpectedSLLoss] = useState<number | null>(null);
+  const [id, setId] = useState<string | null>(null);
+
+  // Get params
+  useEffect(() => {
+    const getParams = async () => {
+      const resolvedParams = await params;
+      setId(resolvedParams.id);
+    };
+    getParams();
+  }, [params]);
 
   // Load recent markets from localStorage
   useEffect(() => {
@@ -77,7 +87,7 @@ export default function EditTrade({ params }: { params: { id: string } }) {
         try {
           const result = calculatePL({
             market: marketInfo,
-            tradeType,
+            tradeType: tradeType as 'buy' | 'sell',
             entryPrice: entry,
             exitPrice: exit,
             quantity: qty
@@ -117,7 +127,7 @@ export default function EditTrade({ params }: { params: { id: string } }) {
             // Calculate take profit scenario
             const tpResult = calculatePL({
               market: marketInfo,
-              tradeType,
+              tradeType: tradeType as 'buy' | 'sell',
               entryPrice: entry,
               exitPrice: tp,
               quantity: qty
@@ -126,7 +136,7 @@ export default function EditTrade({ params }: { params: { id: string } }) {
             // Calculate stop loss scenario
             const slResult = calculatePL({
               market: marketInfo,
-              tradeType,
+              tradeType: tradeType as 'buy' | 'sell',
               entryPrice: entry,
               exitPrice: sl,
               quantity: qty
@@ -161,11 +171,11 @@ export default function EditTrade({ params }: { params: { id: string } }) {
   };
 
   useEffect(() => {
-    // Only check for trade if trades have been loaded
-    if (trades.length === 0) return;
+    // Only check for trade if trades have been loaded and id is available
+    if (trades.length === 0 || !id) return;
 
     // Find the trade with the matching ID
-    const trade = trades.find(t => t.id === params.id);
+    const trade = trades.find(t => t.id === id);
 
     if (trade) {
       setMarket(trade.market);
@@ -191,7 +201,7 @@ export default function EditTrade({ params }: { params: { id: string } }) {
       // Only set not found if trades have loaded but trade not found
       setNotFound(true);
     }
-  }, [trades, params.id]);
+  }, [trades, id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -214,7 +224,7 @@ export default function EditTrade({ params }: { params: { id: string } }) {
 
     try {
       // Update the trade using the hook
-      const { error } = await updateTrade(params.id, {
+      const { error } = await updateTrade(id!, {
         trade_date: new Date(tradeDate).toISOString(),
         market,
         trade_type: tradeType,

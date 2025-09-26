@@ -50,13 +50,7 @@ export default function ProfitLossCalculator() {
       const exitNum = parseFloat(exitPrice);
       const quantityNum = parseFloat(quantity);
 
-      const validation = validateTradeInputs({
-        market: selectedMarket,
-        tradeType,
-        entryPrice: entryNum,
-        exitPrice: exitNum,
-        quantity: quantityNum
-      });
+      const validation = validateTradeInputs(entryNum, exitNum, quantityNum);
 
       if (validation) {
         setValidationError(validation);

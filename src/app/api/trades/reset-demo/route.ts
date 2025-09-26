@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { getServerDB } from '@/lib/db/server';
+import { trades } from '@/lib/db/schema';
+import { eq, and } from 'drizzle-orm';
 
 export async function DELETE(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const session = await getServerSession(authOptions);
 
-    // Get the current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-    if (userError || !user) {
+    if (!session?.user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -18,22 +17,20 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete all demo trades for the user
-    const { error: deleteError } = await supabase
-      .from('trades')
-      .delete()
-      .eq('user_id', user.id)
-      .eq('is_demo', true);
+    const db = getServerDB();
+    const deletedTrades = await db
+      .delete(trades)
+      .where(
+        and(
+          eq(trades.userId, session.user.id),
+          eq(trades.isDemo, true)
+        )
+      )
+      .returning();
 
-    if (deleteError) {
-      console.error('Error deleting demo trades:', deleteError);
-      return NextResponse.json(
-        { error: 'Failed to reset demo trades' },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ 
-      message: 'Demo trades reset successfully' 
+    return NextResponse.json({
+      message: 'Demo trades reset successfully',
+      deletedCount: deletedTrades.length
     });
   } catch (error) {
     console.error('Error in demo trades reset API:', error);

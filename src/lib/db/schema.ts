@@ -91,7 +91,7 @@ export const strategies = pgTable('strategies', {
   successRate: decimal('success_rate', { precision: 5, scale: 2 }).default('0'),
   totalTrades: integer('total_trades').default(0),
   profitableTrades: integer('profitable_trades').default(0),
-  originalStrategyId: uuid('original_strategy_id').references(() => strategies.id, { onDelete: 'set null' }),
+  originalStrategyId: uuid('original_strategy_id'),
   duplicateCount: integer('duplicate_count').default(0),
   isDuplicate: boolean('is_duplicate').default(false),
 });

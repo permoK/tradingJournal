@@ -1,262 +1,78 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useJournalEntries, useActivityLogs } from '@/lib/hooks';
-import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
-import ImageUpload from '@/components/ImageUpload';
-import AttachmentSelector from '@/components/journal/AttachmentSelector';
-import { FiSave, FiX } from 'react-icons/fi';
-import ReactMarkdown from 'react-markdown';
-import { Editor } from '@tinymce/tinymce-react';
+import { FiArrowLeft, FiEdit3 } from 'react-icons/fi';
+import Link from 'next/link';
 
-export default function EditJournalEntry({ params }: { params: { id: string } }) {
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default function EditJournalEntry({ params }: PageProps) {
+  const { data: session, status } = useSession();
   const router = useRouter();
-  const { user } = useAuth();
-  const { entries, updateEntry } = useJournalEntries(user?.id);
-  const { logActivity } = useActivityLogs(user?.id);
 
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [isPrivate, setIsPrivate] = useState(false);
-  const [tags, setTags] = useState('');
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [selectedTradeIds, setSelectedTradeIds] = useState<string[]>([]);
-  const [selectedStrategyIds, setSelectedStrategyIds] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [notFound, setNotFound] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
-
-  useEffect(() => {
-    // Only check for entry if entries have been loaded
-    if (entries.length === 0) return;
-
-    // Find the entry with the matching ID
-    const entry = entries.find(e => e.id === params.id);
-
-    if (entry) {
-      setTitle(entry.title);
-      setContent(entry.content);
-      setIsPrivate(entry.is_private);
-      setTags(entry.tags ? entry.tags.join(', ') : '');
-      setImageUrl(entry.image_url || null);
-      setSelectedTradeIds(entry.trade_ids || []);
-      setSelectedStrategyIds(entry.strategy_ids || []);
-      setNotFound(false);
-    } else if (entries.length > 0) {
-      // Only set not found if entries have loaded but entry not found
-      setNotFound(true);
-    }
-  }, [entries, params.id]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!user) {
-      setError('You must be logged in to edit a journal entry');
-      return;
-    }
-
-    if (!title.trim() || !content.trim()) {
-      setError('Title and content are required');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    // Process tags
-    const tagArray = tags
-      .split(',')
-      .map(tag => tag.trim())
-      .filter(tag => tag.length > 0);
-
-    try {
-      // Update the journal entry using the hook
-      const { error } = await updateEntry(params.id, {
-        title,
-        content,
-        is_private: isPrivate,
-        tags: tagArray.length > 0 ? tagArray : null,
-        image_url: imageUrl,
-        trade_ids: selectedTradeIds.length > 0 ? selectedTradeIds : null,
-        strategy_ids: selectedStrategyIds.length > 0 ? selectedStrategyIds : null
-      });
-
-      if (error) {
-        throw new Error(error);
-      }
-
-      // Log activity for streak tracking
-      await logActivity('journal', `Updated journal entry: ${title}`);
-
-      // Redirect to journal page
-      router.push('/journal');
-    } catch (err: any) {
-      console.error('Error updating journal entry:', err);
-      setError(err.message || 'Failed to update journal entry');
-      setLoading(false);
-    }
-  };
-
-  if (notFound) {
+  if (status === 'loading') {
     return (
       <AppLayout>
-        <div className="bg-white p-6 rounded-lg shadow-sm text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Entry Not Found</h1>
-          <p className="text-gray-600 mb-4">The journal entry you're looking for doesn't exist or you don't have permission to view it.</p>
-          <button
-            onClick={() => router.push('/journal')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Back to Journal
-          </button>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
         </div>
       </AppLayout>
     );
   }
 
+  if (!session) {
+    router.push('/auth/login');
+    return null;
+  }
   return (
     <AppLayout>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Edit Journal Entry</h1>
-        <button
-          onClick={() => router.push('/journal')}
-          className="flex items-center px-3 py-2 border border-slate-300 rounded-md hover:bg-slate-50 text-slate-700"
-        >
-          <FiX className="mr-2" />
-          Cancel
-        </button>
-      </div>
-
-      {error && (
-        <div className="p-4 mb-6 bg-red-50 border border-red-200 text-red-800 rounded-md">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-        <div className="mb-4">
-          <label htmlFor="title" className="block text-sm font-medium text-slate-700 mb-1">
-            Title *
-          </label>
-          <input
-            id="title"
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter a descriptive title for your journal entry"
-            className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
-            required
-          />
-        </div>
-
-        <div className="mb-4">
-          <label htmlFor="content" className="block text-sm font-medium text-slate-700 mb-1">
-            Content *
-          </label>
-          <div className="flex justify-between items-center mb-1">
-            <button
-              type="button"
-              className={`text-xs px-2 py-1 rounded ${showPreview ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-700'}`}
-              onClick={() => setShowPreview(false)}
-            >
-              Edit
-            </button>
-            <button
-              type="button"
-              className={`text-xs px-2 py-1 rounded ${showPreview ? 'bg-slate-100 text-slate-700' : 'bg-indigo-100 text-indigo-700'}`}
-              onClick={() => setShowPreview(true)}
-            >
-              Preview
-            </button>
-          </div>
-          {!showPreview ? (
-            <Editor
-              apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
-              init={{
-                height: 500,
-                menubar: false,
-                plugins: [
-                  'advlist autolink lists link image charmap print preview anchor',
-                  'searchreplace visualblocks code fullscreen',
-                  'insertdatetime media table paste code help wordcount'
-                ],
-                toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help'
-              }}
-              value={content}
-              onEditorChange={(content) => setContent(content)}
-            />
-          ) : (
-            <div className="w-full px-3 py-2 border border-slate-300 rounded-md bg-slate-50 min-h-[180px] prose max-w-none text-slate-800">
-              <ReactMarkdown>{content || 'Nothing to preview.'}</ReactMarkdown>
-            </div>
-          )}
-        </div>
-
-        <div className="mb-4">
-          <label htmlFor="tags" className="block text-sm font-medium text-slate-700 mb-1">
-            Tags (comma separated)
-          </label>
-          <input
-            id="tags"
-            type="text"
-            value={tags}
-            onChange={(e) => setTags(e.target.value)}
-            placeholder="e.g. forex, analysis, psychology, strategy"
-            className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
-          />
-        </div>
-
-        {user && (
-          <div className="mb-4">
-            <ImageUpload
-              onImageUpload={setImageUrl}
-              currentImage={imageUrl}
-              userId={user.id}
-              bucket="journal-images"
-              label="Journal Image (Optional)"
-              description="PNG, JPG up to 5MB"
-              maxSizeMB={5}
-              disabled={loading}
-            />
-          </div>
-        )}
-
-        <div className="mb-6">
-          <AttachmentSelector
-            selectedTradeIds={selectedTradeIds}
-            selectedStrategyIds={selectedStrategyIds}
-            onTradeIdsChange={setSelectedTradeIds}
-            onStrategyIdsChange={setSelectedStrategyIds}
-          />
-        </div>
-
-        <div className="mb-6">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={isPrivate}
-              onChange={(e) => setIsPrivate(e.target.checked)}
-              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-slate-300 rounded"
-            />
-            <span className="ml-2 text-sm text-slate-700 font-medium">Make this entry private</span>
-          </label>
-        </div>
-
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 transition-colors"
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <Link
+            href="/journal"
+            className="inline-flex items-center text-slate-600 hover:text-slate-900"
           >
-            <FiSave className="mr-2" />
-            {loading ? 'Saving...' : 'Save Changes'}
-          </button>
+            <FiArrowLeft className="mr-2" />
+            Back to Journal
+          </Link>
         </div>
-      </form>
+
+        {/* Placeholder Content */}
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-8">
+          <div className="text-center">
+            <FiEdit3 className="mx-auto h-16 w-16 text-slate-400 mb-4" />
+            <h1 className="text-2xl font-bold text-slate-900 mb-2">Edit Journal Entry</h1>
+            <p className="text-slate-600 mb-6">
+              This feature is currently under development. Journal entry editing will be available soon.
+            </p>
+            <div className="bg-slate-50 rounded-lg p-4 mb-6">
+              <h3 className="font-medium text-slate-900 mb-2">Coming Soon:</h3>
+              <ul className="text-sm text-slate-600 space-y-1">
+                <li>• Rich text editor with markdown support</li>
+                <li>• Image upload and management</li>
+                <li>• Attach trades and strategies</li>
+                <li>• Tag management</li>
+                <li>• Privacy settings</li>
+                <li>• Live preview mode</li>
+              </ul>
+            </div>
+            <Link
+              href="/journal"
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              <FiArrowLeft className="mr-2" />
+              Back to Journal
+            </Link>
+          </div>
+        </div>
+      </div>
     </AppLayout>
   );
 }
+
+

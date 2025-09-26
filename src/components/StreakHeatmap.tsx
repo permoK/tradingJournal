@@ -54,11 +54,14 @@ const StreakHeatmap: React.FC<StreakHeatmapProps> = ({ userId }) => {
     }, {} as Record<string, Activity[]>);
 
     // Convert to ActivityData format
-    const data: ActivityData[] = Object.entries(groupedByDate).map(([date, dateActivities]) => ({
-      date,
-      count: dateActivities.length,
-      activities: dateActivities
-    }));
+    const data: ActivityData[] = Object.entries(groupedByDate).map(([date, dateActivities]) => {
+      const activities = dateActivities as Activity[];
+      return {
+        date,
+        count: activities.length,
+        activities
+      };
+    });
 
     setActivityData(data);
   }, [activities]);

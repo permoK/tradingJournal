@@ -3,7 +3,6 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
 import { FiEye, FiEyeOff, FiLock } from 'react-icons/fi';
 
 function ResetPasswordContent() {
@@ -15,18 +14,12 @@ function ResetPasswordContent() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const { updatePassword } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // Check if we have the required tokens/session for password reset
-    const accessToken = searchParams.get('access_token');
-    const refreshToken = searchParams.get('refresh_token');
-
-    if (!accessToken || !refreshToken) {
-      setError('Invalid or expired reset link. Please request a new password reset.');
-    }
+    // Password reset is not available with NextAuth
+    setError('Password reset is currently not available. Please contact support.');
   }, [searchParams]);
 
   const validateForm = () => {
@@ -51,18 +44,8 @@ function ResetPasswordContent() {
       return;
     }
 
-    const { error } = await updatePassword(password);
-
-    if (error) {
-      setError(error.message);
-    } else {
-      setSuccess(true);
-      // Redirect to login after 3 seconds
-      setTimeout(() => {
-        router.push('/auth/login');
-      }, 3000);
-    }
-
+    // TODO: Implement password reset with NextAuth
+    setError('Password reset is currently not available. Please contact support.');
     setLoading(false);
   };
 

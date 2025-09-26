@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getServerDB } from '@/lib/db/server';
 import { trades } from '@/lib/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,18 +18,20 @@ export async function GET(request: NextRequest) {
     const isDemoMode = searchParams.get('isDemoMode');
 
     const db = getServerDB();
-    let query = db
-      .select()
-      .from(trades)
-      .where(eq(trades.userId, session.user.id))
-      .orderBy(desc(trades.tradeDate));
+
+    // Build where conditions
+    let whereConditions = [eq(trades.userId, session.user.id)];
 
     // Filter by demo mode if specified
     if (isDemoMode !== null) {
-      query = query.where(eq(trades.isDemo, isDemoMode === 'true'));
+      whereConditions.push(eq(trades.isDemo, isDemoMode === 'true'));
     }
 
-    const tradesData = await query;
+    const tradesData = await db
+      .select()
+      .from(trades)
+      .where(and(...whereConditions))
+      .orderBy(desc(trades.tradeDate));
 
     return NextResponse.json({ data: tradesData });
   } catch (error: any) {

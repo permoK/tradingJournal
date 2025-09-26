@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getServerDB } from '@/lib/db/server';
 import { journalEntries } from '@/lib/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,18 +17,20 @@ export async function GET(request: NextRequest) {
     const includePrivate = searchParams.get('includePrivate') !== 'false';
 
     const db = getServerDB();
-    let query = db
-      .select()
-      .from(journalEntries)
-      .where(eq(journalEntries.userId, session.user.id))
-      .orderBy(desc(journalEntries.createdAt));
+
+    // Build where conditions
+    const whereConditions = [eq(journalEntries.userId, session.user.id)];
 
     // If not including private, filter them out
     if (!includePrivate) {
-      query = query.where(eq(journalEntries.isPrivate, false));
+      whereConditions.push(eq(journalEntries.isPrivate, false));
     }
 
-    const data = await query;
+    const data = await db
+      .select()
+      .from(journalEntries)
+      .where(and(...whereConditions))
+      .orderBy(desc(journalEntries.createdAt));
 
     return NextResponse.json({ data });
   } catch (error: any) {

@@ -133,7 +133,7 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({ trades }) => {
         padding: isMobile ? 12 : 16,
         titleFont: {
           size: isMobile ? 13 : 15,
-          weight: '600'
+          weight: 'bold' as const
         },
         bodyFont: {
           size: isMobile ? 12 : 14
@@ -176,7 +176,7 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({ trades }) => {
         ticks: {
           font: {
             size: isMobile ? 11 : 13,
-            weight: '500'
+            weight: 'normal' as const
           },
           color: '#64748B',
           maxRotation: isMobile ? 45 : 0,
@@ -184,9 +184,9 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({ trades }) => {
           padding: 8,
           callback: function(value: any, index: number, values: any[]) {
             if (isMobile) {
-              return index % 2 === 0 ? this.getLabelForValue(value) : '';
+              return index % 2 === 0 ? value : '';
             }
-            return this.getLabelForValue(value);
+            return value;
           }
         }
       },
@@ -201,7 +201,7 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({ trades }) => {
         ticks: {
           font: {
             size: isMobile ? 11 : 13,
-            weight: '500'
+            weight: 'normal' as const
           },
           color: '#64748B',
           padding: 12,

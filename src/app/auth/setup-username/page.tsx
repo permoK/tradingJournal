@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSession } from 'next-auth/react';
 import { FiCheck, FiX, FiLoader } from 'react-icons/fi';
 
 export default function SetupUsername() {
@@ -13,41 +13,30 @@ export default function SetupUsername() {
   const [error, setError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  const { user, loading } = useAuth();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
   // Redirect if user is not authenticated or already has username
   useEffect(() => {
-    if (!loading && !user) {
+    if (status === 'loading') return;
+
+    if (status === 'unauthenticated') {
       router.push('/auth/login');
       return;
     }
 
     // Check if user already has a username set
-    if (user) {
+    if (session?.user) {
       const checkExistingUsername = async () => {
         try {
-          const response = await fetch('/api/auth/check-username', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ username: 'dummy_check_for_existing' }),
-          });
-
-          // Get user profile to check if username already exists
-          const { createClient } = await import('@/lib/supabase');
-          const supabase = createClient();
-
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('username')
-            .eq('id', user.id)
-            .single();
-
-          if (profile?.username) {
-            // User already has username, redirect to dashboard
-            router.push('/dashboard');
+          // Check if user already has a profile with username
+          const response = await fetch('/api/profiles/me');
+          if (response.ok) {
+            const profile = await response.json();
+            if (profile?.username) {
+              // User already has username, redirect to dashboard
+              router.push('/dashboard');
+            }
           }
         } catch (error) {
           console.error('Error checking existing username:', error);
@@ -56,7 +45,7 @@ export default function SetupUsername() {
 
       checkExistingUsername();
     }
-  }, [user, loading, router]);
+  }, [session, status, router]);
 
   // Validate username format
   const validateUsername = (value: string) => {
@@ -158,7 +147,7 @@ export default function SetupUsername() {
     }
   };
 
-  if (loading) {
+  if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>

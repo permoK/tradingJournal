@@ -16,7 +16,6 @@ import StreakHeatmap from '@/components/StreakHeatmap';
 import ProgressChart from '@/components/ProgressChart';
 import TradingPairsChart from '@/components/TradingPairsChart';
 import ProgressTracker from '@/components/ProgressTracker';
-import AdvancedSearch from '@/components/AdvancedSearch';
 import NewUserWelcome from '@/components/NewUserWelcome';
 import NewsWidget from '@/components/news/NewsWidget';
 import CurrencyStrength from '@/components/news/CurrencyStrength';
@@ -190,7 +189,7 @@ export default function Dashboard() {
           usePointStyle: true,
           font: {
             size: 12,
-            weight: '500' as const,
+            weight: 500,
           },
         },
       },
@@ -267,11 +266,15 @@ export default function Dashboard() {
 
         {/* Universal Real-time Search */}
         <div className="mt-4 sm:mt-0 w-full sm:w-auto">
-          <AdvancedSearch
-            placeholder="Search universally for anything..."
-            className="w-full sm:w-64"
-            minimal={true}
-          />
+          <div className="relative">
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Search functionality coming soon..."
+              className="w-full sm:w-64 pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white text-slate-900 placeholder-slate-500"
+              disabled
+            />
+          </div>
         </div>
       </div>
 

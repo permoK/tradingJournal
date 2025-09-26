@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { newsService } from '@/lib/newsService';
+import { getServerDB } from '@/lib/db/server';
+import { newsPreferences, newsAlerts } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
@@ -50,13 +53,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const session = await getServerSession(authOptions);
 
-    // Get the current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-    if (userError || !user) {
+    if (!session?.user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -74,25 +73,37 @@ export async function POST(request: NextRequest) {
 
     if (action === 'save-preferences') {
       // Save user news preferences
-      const { data, error } = await supabase
-        .from('news_preferences')
-        .upsert({
-          user_id: user.id,
-          categories: preferences.categories || [],
-          importance_levels: preferences.importanceLevels || [],
-          notifications_enabled: preferences.notificationsEnabled || false,
-          updated_at: new Date().toISOString(),
-        });
+      const db = getServerDB();
 
-      if (error) {
-        console.error('Error saving preferences:', error);
+      try {
+        const [result] = await db
+          .insert(newsPreferences)
+          .values({
+            userId: session.user.id,
+            categories: preferences.categories || ['forex', 'economic', 'central-bank', 'market'],
+            importanceLevels: preferences.importanceLevels || ['high', 'medium'],
+            notificationsEnabled: preferences.notificationsEnabled || false,
+            updatedAt: new Date(),
+          })
+          .onConflictDoUpdate({
+            target: newsPreferences.userId,
+            set: {
+              categories: preferences.categories || ['forex', 'economic', 'central-bank', 'market'],
+              importanceLevels: preferences.importanceLevels || ['high', 'medium'],
+              notificationsEnabled: preferences.notificationsEnabled || false,
+              updatedAt: new Date(),
+            }
+          })
+          .returning();
+
+        return NextResponse.json({ success: true, data: result });
+      } catch (error) {
+        console.error('Error saving news preferences:', error);
         return NextResponse.json(
           { error: 'Failed to save preferences' },
           { status: 500 }
         );
       }
-
-      return NextResponse.json({ success: true, data });
     }
 
     return NextResponse.json(

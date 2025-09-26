@@ -93,9 +93,9 @@ const TradePerformanceChart: React.FC<TradePerformanceChartProps> = ({
           // Show fewer labels on mobile
           callback: function(value: any, index: number, values: any[]) {
             if (isMobile) {
-              return index % 2 === 0 ? this.getLabelForValue(value) : '';
+              return index % 2 === 0 ? value : '';
             }
-            return this.getLabelForValue(value);
+            return value;
           }
         }
       },

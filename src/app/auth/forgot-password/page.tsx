@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
 import { FiMail, FiArrowLeft } from 'react-icons/fi';
 
 export default function ForgotPasswordPage() {
@@ -11,21 +10,14 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const { resetPassword } = useAuth();
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    const { error } = await resetPassword(email);
-
-    if (error) {
-      setError(error.message);
-    } else {
-      setSuccess(true);
-    }
-
+    // TODO: Implement password reset with NextAuth
+    // For now, just show a message that this feature is not available
+    setError('Password reset is currently not available. Please contact support.');
     setLoading(false);
   };
 

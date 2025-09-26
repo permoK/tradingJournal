@@ -10,6 +10,8 @@ export interface SavedTrade {
   tradeDate: string;
   entryPrice: string;
   exitPrice: string;
+  takeProfit?: string;
+  stopLoss?: string;
   quantity: string;
   status: 'open' | 'closed';
   notes: string;

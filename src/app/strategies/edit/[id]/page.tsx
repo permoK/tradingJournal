@@ -97,7 +97,7 @@ export default function EditStrategy() {
       }
 
       // Log activity for streak tracking
-      await logActivity('strategies', `Updated strategy: ${name}`);
+      await logActivity('learning', `Updated strategy: ${name}`);
 
       // Redirect to strategy detail page
       router.push(`/strategies/${strategy.id}`);
@@ -219,7 +219,7 @@ export default function EditStrategy() {
               {user && (
                 <div>
                   <ImageUpload
-                    onImageUpload={setImageUrl}
+                    onImageUpload={(url) => setImageUrl(url || '')}
                     currentImage={imageUrl}
                     userId={user.id}
                     bucket="strategy-images"

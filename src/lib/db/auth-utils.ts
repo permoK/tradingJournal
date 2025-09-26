@@ -1,7 +1,18 @@
 import { getServerDB } from './server';
 import { profiles } from './schema';
 import { eq } from 'drizzle-orm';
-import type { User } from '@supabase/supabase-js';
+
+interface User {
+  id: string;
+  email?: string;
+  user_metadata?: {
+    full_name?: string;
+    avatar_url?: string;
+    name?: string;
+    picture?: string;
+    username?: string;
+  };
+}
 
 export interface CreateProfileData {
   id: string;
@@ -97,18 +108,21 @@ export async function handleNewUserSignup(user: User) {
 export async function isUsernameAvailable(username: string, excludeUserId?: string) {
   try {
     const db = getServerDB();
-    let query = db
-      .select({ id: profiles.id })
-      .from(profiles)
-      .where(eq(profiles.username, username));
+    const { ne, and } = await import('drizzle-orm');
+
+    let whereCondition = eq(profiles.username, username);
 
     if (excludeUserId) {
       // Add condition to exclude current user when updating
-      const { ne } = await import('drizzle-orm');
-      query = query.where(ne(profiles.id, excludeUserId));
+      const combinedCondition = and(whereCondition, ne(profiles.id, excludeUserId));
+      whereCondition = combinedCondition || whereCondition;
     }
 
-    const [existingProfile] = await query.limit(1);
+    const [existingProfile] = await db
+      .select({ id: profiles.id })
+      .from(profiles)
+      .where(whereCondition)
+      .limit(1);
     return { available: !existingProfile, error: null };
   } catch (error: any) {
     console.error('Error checking username availability:', error);

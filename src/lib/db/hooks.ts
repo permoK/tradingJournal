@@ -245,7 +245,7 @@ export function useTrades(userId: string | undefined, includePrivate = true, isD
     if (!userId) return { error: 'No user ID provided' };
 
     try {
-      const newTrades = [];
+      const newTrades: any[] = [];
       for (const trade of trades) {
         const response = await fetch('/api/trades', {
           method: 'POST',

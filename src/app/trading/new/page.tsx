@@ -98,7 +98,7 @@ export default function NewTrade() {
         try {
           const result = calculatePL({
             market: marketInfo,
-            tradeType,
+            tradeType: tradeType as 'buy' | 'sell',
             entryPrice: entry,
             exitPrice: exit,
             quantity: qty
@@ -138,7 +138,7 @@ export default function NewTrade() {
             // Calculate take profit scenario
             const tpResult = calculatePL({
               market: marketInfo,
-              tradeType,
+              tradeType: tradeType as 'buy' | 'sell',
               entryPrice: entry,
               exitPrice: tp,
               quantity: qty
@@ -147,7 +147,7 @@ export default function NewTrade() {
             // Calculate stop loss scenario
             const slResult = calculatePL({
               market: marketInfo,
-              tradeType,
+              tradeType: tradeType as 'buy' | 'sell',
               entryPrice: entry,
               exitPrice: sl,
               quantity: qty

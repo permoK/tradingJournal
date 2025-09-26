@@ -135,7 +135,7 @@ class NewsService {
   }
 
   private getComprehensiveNews(limit: number = 50): NewsArticle[] {
-    const comprehensiveNews = [
+    const comprehensiveNews: NewsArticle[] = [
       // High Impact Economic News
       {
         id: 'news-1',
@@ -379,7 +379,7 @@ class NewsService {
         date: today.toISOString().split('T')[0],
         time: '14:00',
         impact: 'high',
-        frequency: 'irregular',
+        frequency: 'monthly',
         source: 'European Central Bank',
         volatility: 4,
         marketRelevance: ['EUR', 'European Stocks', 'Bonds'],
@@ -546,7 +546,7 @@ class NewsService {
         forecast: '-0.10%',
         previous: '-0.10%',
         unit: '%',
-        frequency: 'irregular',
+        frequency: 'monthly',
         source: 'Bank of Japan',
         volatility: 4,
         marketRelevance: ['JPY', 'Asian Markets', 'Nikkei'],

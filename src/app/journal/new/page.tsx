@@ -182,7 +182,7 @@ export default function NewJournalEntry() {
         {user && (
           <div className="mb-4">
             <ImageUpload
-              onImageUpload={setImageUrl}
+              onImageUpload={(url) => setImageUrl(url || '')}
               currentImage={imageUrl}
               userId={user.id}
               bucket="journal-images"

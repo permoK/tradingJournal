@@ -36,7 +36,7 @@ function JournalContent() {
     const matchesSearch =
       entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       entry.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (entry.tags && entry.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())));
+      (entry.tags && entry.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase())));
 
     return matchesPrivacy && matchesSearch;
   });
@@ -234,7 +234,7 @@ function JournalContent() {
 
                   {entry.tags && entry.tags.length > 0 && (
                     <div className="mt-4 flex flex-wrap gap-2">
-                      {entry.tags.map(tag => (
+                      {entry.tags.map((tag: string) => (
                         <span
                           key={tag}
                           className="inline-block px-3 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 rounded-full"
