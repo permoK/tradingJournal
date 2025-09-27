@@ -4,13 +4,16 @@ import React, { createContext, useContext, useState, useCallback, ReactNode } fr
 
 export interface Notification {
   id: string;
-  type: 'info' | 'success' | 'warning' | 'error';
+  type: 'info' | 'success' | 'warning' | 'error' | 'news';
   title: string;
   message: string;
   duration?: number; // in milliseconds, 0 means persistent
   action?: {
     label: string;
     onClick: () => void;
+  };
+  newsData?: {
+    importance: 'low' | 'medium' | 'high';
   };
 }
 
