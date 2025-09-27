@@ -17,8 +17,7 @@ import ProgressChart from '@/components/ProgressChart';
 import TradingPairsChart from '@/components/TradingPairsChart';
 import ProgressTracker from '@/components/ProgressTracker';
 import NewUserWelcome from '@/components/NewUserWelcome';
-import NewsWidget from '@/components/news/NewsWidget';
-import CurrencyStrength from '@/components/news/CurrencyStrength';
+
 
 // Register Chart.js components
 ChartJS.register(ArcElement, ChartTooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
@@ -594,11 +593,7 @@ export default function Dashboard() {
         {user && <StreakHeatmap userId={user.id} />}
       </div>
 
-      {/* News and Currency Widgets */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <NewsWidget />
-        <CurrencyStrength />
-      </div>
+
 
       {/* Quick Actions */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 mb-8">

@@ -4,18 +4,13 @@ import React, { createContext, useContext, useState, useCallback, ReactNode } fr
 
 export interface Notification {
   id: string;
-  type: 'info' | 'success' | 'warning' | 'error' | 'news';
+  type: 'info' | 'success' | 'warning' | 'error';
   title: string;
   message: string;
   duration?: number; // in milliseconds, 0 means persistent
   action?: {
     label: string;
     onClick: () => void;
-  };
-  newsData?: {
-    category: string;
-    importance: 'low' | 'medium' | 'high';
-    url?: string;
   };
 }
 
@@ -24,7 +19,6 @@ interface NotificationContextType {
   addNotification: (notification: Omit<Notification, 'id'>) => string;
   removeNotification: (id: string) => void;
   clearAllNotifications: () => void;
-  showNewsAlert: (title: string, message: string, importance: 'low' | 'medium' | 'high', url?: string) => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -64,37 +58,13 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     setNotifications([]);
   }, []);
 
-  const showNewsAlert = useCallback((
-    title: string, 
-    message: string, 
-    importance: 'low' | 'medium' | 'high',
-    url?: string
-  ) => {
-    const duration = importance === 'high' ? 0 : importance === 'medium' ? 10000 : 7000;
-    
-    addNotification({
-      type: 'news',
-      title,
-      message,
-      duration,
-      newsData: {
-        category: 'economic',
-        importance,
-        url,
-      },
-      action: url ? {
-        label: 'Read More',
-        onClick: () => window.open(url, '_blank'),
-      } : undefined,
-    });
-  }, [addNotification]);
+
 
   const value: NotificationContextType = {
     notifications,
     addNotification,
     removeNotification,
     clearAllNotifications,
-    showNewsAlert,
   };
 
   return (
