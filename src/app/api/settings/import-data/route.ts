@@ -75,8 +75,9 @@ export async function POST(request: NextRequest) {
         try {
           await db.insert(trades).values({
             userId: session.user.id,
-            symbol: trade.symbol || 'UNKNOWN',
-            type: trade.type || 'buy',
+            tradeDate: trade.tradeDate ? new Date(trade.tradeDate) : new Date(),
+            market: trade.symbol || trade.market || 'UNKNOWN',
+            tradeType: trade.type || trade.tradeType || 'buy',
             entryPrice: trade.entryPrice?.toString() || '0',
             exitPrice: trade.exitPrice?.toString() || null,
             quantity: trade.quantity?.toString() || '1',
@@ -100,7 +101,6 @@ export async function POST(request: NextRequest) {
             userId: session.user.id,
             title: entry.title || 'Imported Entry',
             content: entry.content || '',
-            mood: entry.mood || 'neutral',
             tags: entry.tags || [],
           });
           importedCount++;

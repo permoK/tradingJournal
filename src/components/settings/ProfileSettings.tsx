@@ -115,7 +115,6 @@ export default function ProfileSettings() {
 
       // Update other profile fields (excluding avatar since it's handled separately)
       const profileUpdates = { ...formData };
-      delete profileUpdates.avatarUrl; // Don't override the avatar URL from the upload
 
       // Only include fields that have values to avoid database constraint errors
       const filteredUpdates = Object.fromEntries(
