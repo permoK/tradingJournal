@@ -106,23 +106,23 @@ export default function Dashboard() {
 
   // Calculate trading statistics based on filtered data
   const tradingStats = {
-    totalTrades: filteredTrades.length,
-    totalPairs: [...new Set(filteredTrades.map(trade => trade.market))].length,
-    totalProfitLoss: filteredTrades
-      .filter(trade => trade.profit_loss !== null)
-      .reduce((total, trade) => total + (trade.profit_loss || 0), 0),
-    winningTrades: filteredTrades.filter(trade => trade.profit_loss !== null && trade.profit_loss > 0).length,
-    losingTrades: filteredTrades.filter(trade => trade.profit_loss !== null && trade.profit_loss < 0).length,
-    winRate: filteredTrades.filter(trade => trade.profit_loss !== null).length > 0
-      ? (filteredTrades.filter(trade => trade.profit_loss !== null && trade.profit_loss > 0).length /
-         filteredTrades.filter(trade => trade.profit_loss !== null).length) * 100
+    totalTrades: filteredTrades?.length || 0,
+    totalPairs: [...new Set((filteredTrades || []).map(trade => trade.market))].length,
+    totalProfitLoss: (filteredTrades || [])
+      .filter(trade => trade.profit_loss !== null && trade.profit_loss !== undefined)
+      .reduce((total, trade) => total + (Number(trade.profit_loss) || 0), 0) || 0,
+    winningTrades: (filteredTrades || []).filter(trade => trade.profit_loss !== null && trade.profit_loss > 0).length,
+    losingTrades: (filteredTrades || []).filter(trade => trade.profit_loss !== null && trade.profit_loss < 0).length,
+    winRate: (filteredTrades || []).filter(trade => trade.profit_loss !== null).length > 0
+      ? ((filteredTrades || []).filter(trade => trade.profit_loss !== null && trade.profit_loss > 0).length /
+         (filteredTrades || []).filter(trade => trade.profit_loss !== null).length) * 100
       : 0,
-    pairData: filteredTrades.reduce((acc, trade) => {
+    pairData: (filteredTrades || []).reduce((acc, trade) => {
       acc[trade.market] = (acc[trade.market] || 0) + 1;
       return acc;
     }, {} as Record<string, number>),
-    profitableTrades: filteredTrades.filter(trade => trade.profit_loss !== null && trade.profit_loss > 0),
-    unprofitableTrades: filteredTrades.filter(trade => trade.profit_loss !== null && trade.profit_loss < 0)
+    profitableTrades: (filteredTrades || []).filter(trade => trade.profit_loss !== null && trade.profit_loss > 0),
+    unprofitableTrades: (filteredTrades || []).filter(trade => trade.profit_loss !== null && trade.profit_loss < 0)
   };
 
   useEffect(() => {
@@ -368,8 +368,8 @@ export default function Dashboard() {
               </p>
             </div>
             <div className="text-right">
-              <div className={`text-2xl font-bold ${tradingStats.totalProfitLoss > 0 ? 'text-emerald-600' : tradingStats.totalProfitLoss < 0 ? 'text-red-600' : 'text-slate-900'}`}>
-                {tradingStats.totalProfitLoss > 0 ? '+' : ''}{tradingStats.totalProfitLoss.toFixed(2)}
+              <div className={`text-2xl font-bold ${(tradingStats.totalProfitLoss || 0) > 0 ? 'text-emerald-600' : (tradingStats.totalProfitLoss || 0) < 0 ? 'text-red-600' : 'text-slate-900'}`}>
+                {(tradingStats.totalProfitLoss || 0) > 0 ? '+' : ''}{(tradingStats.totalProfitLoss || 0).toFixed(2)}
               </div>
               <div className="text-sm text-slate-600">Total P/L</div>
             </div>
@@ -398,8 +398,8 @@ export default function Dashboard() {
               <p className="text-sm text-slate-600">Performance metrics</p>
             </div>
             <div className="text-right">
-              <div className={`text-2xl font-bold ${tradingStats.winRate >= 50 ? 'text-emerald-600' : 'text-amber-600'}`}>
-                {tradingStats.winRate.toFixed(1)}%
+              <div className={`text-2xl font-bold ${(tradingStats.winRate || 0) >= 50 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                {(tradingStats.winRate || 0).toFixed(1)}%
               </div>
               <div className="text-sm text-slate-600">Win Rate</div>
             </div>
@@ -410,15 +410,15 @@ export default function Dashboard() {
             <div>
               <div className="flex justify-between text-sm text-slate-600 mb-2">
                 <span>Win Rate</span>
-                <span>{tradingStats.winRate.toFixed(1)}%</span>
+                <span>{(tradingStats.winRate || 0).toFixed(1)}%</span>
               </div>
               <div className="w-full bg-slate-200 rounded-full h-3">
                 <div
                   className={`h-3 rounded-full transition-all duration-500 ${
-                    tradingStats.winRate >= 70 ? 'bg-emerald-500' :
-                    tradingStats.winRate >= 50 ? 'bg-amber-500' : 'bg-red-500'
+                    (tradingStats.winRate || 0) >= 70 ? 'bg-emerald-500' :
+                    (tradingStats.winRate || 0) >= 50 ? 'bg-amber-500' : 'bg-red-500'
                   }`}
-                  style={{ width: `${Math.min(tradingStats.winRate, 100)}%` }}
+                  style={{ width: `${Math.min(tradingStats.winRate || 0, 100)}%` }}
                 ></div>
               </div>
             </div>
@@ -515,10 +515,10 @@ export default function Dashboard() {
                       </span>
                     </td>
                     <td className="py-4 px-4 text-slate-700">
-                      {trade.entry_price ? `$${trade.entry_price.toFixed(4)}` : '-'}
+                      {trade.entry_price ? `$${Number(trade.entry_price).toFixed(4)}` : '-'}
                     </td>
                     <td className="py-4 px-4 text-slate-700">
-                      {trade.exit_price ? `$${trade.exit_price.toFixed(4)}` : '-'}
+                      {trade.exit_price ? `$${Number(trade.exit_price).toFixed(4)}` : '-'}
                     </td>
                     <td className="py-4 px-4">
                       {trade.profit_loss !== null ? (
@@ -529,7 +529,7 @@ export default function Dashboard() {
                             ? 'text-red-600'
                             : 'text-slate-700'
                         }`}>
-                          {trade.profit_loss > 0 ? '+' : ''}{trade.profit_loss.toFixed(2)}
+                          {trade.profit_loss > 0 ? '+' : ''}{Number(trade.profit_loss).toFixed(2)}
                         </span>
                       ) : (
                         <span className="text-slate-500">-</span>
