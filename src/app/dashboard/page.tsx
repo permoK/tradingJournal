@@ -567,7 +567,14 @@ export default function Dashboard() {
                       )}
                     </td>
                     <td className="py-4 px-4 text-slate-700 text-sm">
-                      {format(new Date(trade.trade_date), 'MMM dd, yyyy')}
+                      {(() => {
+                        try {
+                          const date = new Date(trade.trade_date);
+                          return isNaN(date.getTime()) ? 'Invalid date' : format(date, 'MMM dd, yyyy');
+                        } catch {
+                          return 'Invalid date';
+                        }
+                      })()}
                     </td>
                     <td className="py-4 px-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${

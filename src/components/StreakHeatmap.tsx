@@ -43,11 +43,21 @@ const StreakHeatmap: React.FC<StreakHeatmapProps> = ({ userId }) => {
       }
 
       // Convert database activity to component format
+      let timeString = 'Unknown';
+      try {
+        const parsedDate = parseISO(activity.created_at);
+        if (!isNaN(parsedDate.getTime())) {
+          timeString = format(parsedDate, 'HH:mm');
+        }
+      } catch {
+        timeString = 'Unknown';
+      }
+
       acc[dateStr].push({
         id: activity.id,
         type: activity.activity_type,
         title: activity.activity_title,
-        time: format(parseISO(activity.created_at), 'HH:mm')
+        time: timeString
       });
 
       return acc;
@@ -201,7 +211,17 @@ const StreakHeatmap: React.FC<StreakHeatmapProps> = ({ userId }) => {
         <div className="flex items-center mb-2 sm:mb-3">
           <div className="w-1 h-5 sm:h-6 bg-indigo-600 rounded-full mr-2"></div>
           <h4 className="font-semibold text-slate-900 text-sm sm:text-base">
-            Activities on {format(date, window.innerWidth < 640 ? 'MMM d, yyyy' : 'MMMM d, yyyy')}
+            Activities on {(() => {
+              try {
+                const parsedDate = new Date(date);
+                if (isNaN(parsedDate.getTime())) {
+                  return 'Invalid date';
+                }
+                return format(parsedDate, window.innerWidth < 640 ? 'MMM d, yyyy' : 'MMMM d, yyyy');
+              } catch {
+                return 'Invalid date';
+              }
+            })()}
           </h4>
         </div>
         <ul className="space-y-2">
