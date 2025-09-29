@@ -42,7 +42,7 @@ export default function AttachedItems({ tradeIds, strategyIds }: AttachedItemsPr
   }, [strategies, strategyIds]);
 
   const formatTradeDisplay = (trade: Trade) => {
-    const profitLoss = trade.profit_loss || 0;
+    const profitLoss = Number(trade.profit_loss) || 0;
     const isProfit = profitLoss >= 0;
     return {
       title: `${trade.market} - ${trade.trade_type}`,

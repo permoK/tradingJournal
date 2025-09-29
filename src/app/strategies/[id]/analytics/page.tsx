@@ -259,7 +259,11 @@ export default function StrategyAnalytics() {
             <div>
               <p className="text-sm text-slate-600">Profit Factor</p>
               <p className="text-2xl font-bold text-slate-900">
-                {overview.profitFactor === Infinity ? '∞' : overview.profitFactor.toFixed(2)}
+                {(() => {
+                  const profitFactor = overview.profitFactor;
+                  if (profitFactor === Infinity) return '∞';
+                  return (Number(profitFactor) || 0).toFixed(2);
+                })()}
               </p>
             </div>
             <FiTrendingUp className="h-8 w-8 text-emerald-600" />

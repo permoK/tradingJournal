@@ -149,7 +149,7 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({ trades }) => {
             const isProfit = value >= 0;
             const prefix = isProfit ? '+$' : '-$';
             const color = isProfit ? '🟢' : '🔴';
-            return `${color} Cumulative P/L: ${prefix}${Math.abs(value).toFixed(2)}`;
+            return `${color} Cumulative P/L: ${prefix}${Math.abs(Number(value) || 0).toFixed(2)}`;
           },
           afterLabel: function(context: any) {
             const currentIndex = context.dataIndex;

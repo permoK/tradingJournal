@@ -155,7 +155,7 @@ export default function Trading() {
         <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
           <h3 className="text-sm font-medium text-slate-600">Total P/L</h3>
           <p className={`text-2xl font-bold ${totalProfitLoss > 0 ? 'text-emerald-600' : totalProfitLoss < 0 ? 'text-red-600' : 'text-slate-900'}`}>
-            {totalProfitLoss > 0 ? '+' : ''}{totalProfitLoss.toFixed(2)}
+            {totalProfitLoss > 0 ? '+' : ''}{(totalProfitLoss || 0).toFixed(2)}
           </p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
@@ -283,7 +283,14 @@ export default function Trading() {
                       onClick={() => router.push(`/trading/${trade.id}`)}
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 font-medium">
-                        {format(new Date(trade.trade_date), 'MMM d, yyyy')}
+                        {(() => {
+                          try {
+                            const date = new Date(trade.trade_date);
+                            return isNaN(date.getTime()) ? 'Invalid date' : format(date, 'MMM d, yyyy');
+                          } catch {
+                            return 'Invalid date';
+                          }
+                        })()}
                         {trade.is_private && (
                           <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800 border border-slate-200">
                             <FiEyeOff className="mr-1" size={10} />
@@ -309,7 +316,7 @@ export default function Trading() {
                               ? 'text-red-600 font-semibold'
                               : 'text-slate-900'
                         }`}>
-                          {trade.profit_loss !== null ? (trade.profit_loss > 0 ? '+' : '') + trade.profit_loss.toFixed(2) : '-'}
+                          {trade.profit_loss !== null && trade.profit_loss !== undefined ? (trade.profit_loss > 0 ? '+' : '') + (Number(trade.profit_loss) || 0).toFixed(2) : '-'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -409,7 +416,7 @@ export default function Trading() {
                             ? 'text-red-600 font-semibold'
                             : 'text-slate-900'
                       }`}>
-                        {trade.profit_loss !== null ? (trade.profit_loss > 0 ? '+' : '') + trade.profit_loss.toFixed(2) : '-'}
+                        {trade.profit_loss !== null && trade.profit_loss !== undefined ? (trade.profit_loss > 0 ? '+' : '') + (Number(trade.profit_loss) || 0).toFixed(2) : '-'}
                       </span>
                     </div>
                   </div>

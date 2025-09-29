@@ -401,10 +401,11 @@ export default function StrategyComparison() {
                     <p className="text-sm text-slate-600">Best Profit Factor</p>
                     <p className="font-semibold text-slate-900">{comparisonData.summary.bestProfitFactor.strategy.name}</p>
                     <p className="text-sm text-slate-600">
-                      {comparisonData.summary.bestProfitFactor.metrics.profitFactor === Infinity
-                        ? '∞'
-                        : (comparisonData.summary.bestProfitFactor.metrics.profitFactor || 0).toFixed(2)
-                      }
+                      {(() => {
+                        const profitFactor = comparisonData.summary.bestProfitFactor.metrics.profitFactor;
+                        if (profitFactor === Infinity) return '∞';
+                        return (Number(profitFactor) || 0).toFixed(2);
+                      })()}
                     </p>
                   </div>
                   <FiDollarSign className="h-8 w-8 text-purple-600" />
@@ -451,26 +452,27 @@ export default function StrategyComparison() {
                       <td className="py-3 px-4 text-slate-700">{strategyData.metrics.totalTrades}</td>
                       <td className="py-3 px-4">
                         <span className={`font-medium ${getSuccessRateColor(strategyData.metrics.successRate || 0)}`}>
-                          {(strategyData.metrics.successRate || 0).toFixed(1)}%
+                          {(Number(strategyData.metrics.successRate) || 0).toFixed(1)}%
                         </span>
                       </td>
                       <td className="py-3 px-4">
                         <span className={`font-medium ${getProfitLossColor(strategyData.metrics.netProfitLoss || 0)}`}>
-                          {(strategyData.metrics.netProfitLoss || 0) > 0 ? '+' : ''}
-                          {(strategyData.metrics.netProfitLoss || 0).toFixed(2)}
+                          {(Number(strategyData.metrics.netProfitLoss) || 0) > 0 ? '+' : ''}
+                          {(Number(strategyData.metrics.netProfitLoss) || 0).toFixed(2)}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-emerald-600 font-medium">
-                        +{(strategyData.metrics.averageWin || 0).toFixed(2)}
+                        +{(Number(strategyData.metrics.averageWin) || 0).toFixed(2)}
                       </td>
                       <td className="py-3 px-4 text-red-600 font-medium">
-                        -{(strategyData.metrics.averageLoss || 0).toFixed(2)}
+                        -{(Number(strategyData.metrics.averageLoss) || 0).toFixed(2)}
                       </td>
                       <td className="py-3 px-4 text-slate-700 font-medium">
-                        {strategyData.metrics.profitFactor === Infinity
-                          ? '∞'
-                          : (strategyData.metrics.profitFactor || 0).toFixed(2)
-                        }
+                        {(() => {
+                          const profitFactor = strategyData.metrics.profitFactor;
+                          if (profitFactor === Infinity) return '∞';
+                          return (Number(profitFactor) || 0).toFixed(2);
+                        })()}
                       </td>
                     </tr>
                   ))}
@@ -497,7 +499,7 @@ export default function StrategyComparison() {
                         </div>
                         <div className="text-right">
                           <p className={`font-medium ${getProfitLossColor(market.totalProfitLoss || 0)}`}>
-                            {(market.totalProfitLoss || 0) > 0 ? '+' : ''}{(market.totalProfitLoss || 0).toFixed(2)}
+                            {(Number(market.totalProfitLoss) || 0) > 0 ? '+' : ''}{(Number(market.totalProfitLoss) || 0).toFixed(2)}
                           </p>
                           <p className="text-xs text-slate-500">{market.totalTrades || 0} trades</p>
                         </div>

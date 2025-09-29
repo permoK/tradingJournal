@@ -74,7 +74,7 @@ const TradePerformanceChart: React.FC<TradePerformanceChartProps> = ({
         cornerRadius: 4,
         callbacks: {
           label: function(context: any) {
-            return `Profit/Loss: ${context.raw.toFixed(2)}`;
+            return `Profit/Loss: ${(Number(context.raw) || 0).toFixed(2)}`;
           }
         }
       }
