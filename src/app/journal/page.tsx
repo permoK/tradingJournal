@@ -144,7 +144,14 @@ function JournalContent() {
                     <div>
                       <h3 className="text-lg font-semibold text-slate-900 group-hover:text-indigo-700 transition-colors">{entry.title}</h3>
                       <p className="text-sm text-slate-600 mb-2">
-                        {format(new Date(entry.created_at), 'MMMM d, yyyy')}
+                        {(() => {
+                          try {
+                            const date = new Date(entry.created_at);
+                            return isNaN(date.getTime()) ? 'Invalid date' : format(date, 'MMMM d, yyyy');
+                          } catch {
+                            return 'Invalid date';
+                          }
+                        })()}
                         {entry.is_private && (
                           <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-200 text-slate-800">
                             <FiEyeOff className="mr-1" />

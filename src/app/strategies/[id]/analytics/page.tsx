@@ -138,7 +138,14 @@ export default function StrategyAnalytics() {
   const marketSuccessRates = marketLabels.map(market => marketPerformance[market].successRate);
 
   const performanceData = {
-    labels: monthlyLabels.map(month => new Date(month + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })),
+    labels: monthlyLabels.map(month => {
+      try {
+        const date = new Date(month + '-01');
+        return isNaN(date.getTime()) ? 'Invalid' : date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      } catch {
+        return 'Invalid';
+      }
+    }),
     datasets: [
       {
         label: 'Monthly P/L',
@@ -479,7 +486,14 @@ export default function StrategyAnalytics() {
                       </span>
                     </td>
                     <td className="py-2 px-3 text-slate-600 text-sm">
-                      {new Date(trade.trade_date).toLocaleDateString()}
+                      {(() => {
+                        try {
+                          const date = new Date(trade.trade_date);
+                          return isNaN(date.getTime()) ? 'Invalid date' : date.toLocaleDateString();
+                        } catch {
+                          return 'Invalid date';
+                        }
+                      })()}
                     </td>
                   </tr>
                 ))}

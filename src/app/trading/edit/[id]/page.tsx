@@ -180,7 +180,12 @@ export default function EditTrade({ params }: { params: Promise<{ id: string }> 
     if (trade) {
       setMarket(trade.market);
       setTradeType(trade.tradeType);
-      setTradeDate(format(new Date(trade.tradeDate), 'yyyy-MM-dd'));
+      try {
+        const date = new Date(trade.tradeDate);
+        setTradeDate(isNaN(date.getTime()) ? new Date().toISOString().split('T')[0] : format(date, 'yyyy-MM-dd'));
+      } catch {
+        setTradeDate(new Date().toISOString().split('T')[0]);
+      }
       setEntryPrice(trade.entryPrice.toString());
       setExitPrice(trade.exitPrice ? trade.exitPrice.toString() : '');
       setTakeProfit(''); // takeProfit field doesn't exist in schema

@@ -262,7 +262,14 @@ export default function StrategyDetail() {
                 <div className="flex items-center gap-2 mt-1">
                   <FiCalendar className="text-slate-400 h-4 w-4" />
                   <span className="text-sm font-medium text-slate-900">
-                    {new Date(strategy.created_at).toLocaleDateString()}
+                    {(() => {
+                      try {
+                        const date = new Date(strategy.created_at);
+                        return isNaN(date.getTime()) ? 'Invalid date' : date.toLocaleDateString();
+                      } catch {
+                        return 'Invalid date';
+                      }
+                    })()}
                   </span>
                 </div>
               </div>
@@ -272,7 +279,14 @@ export default function StrategyDetail() {
                 <div className="flex items-center gap-2 mt-1">
                   <FiCalendar className="text-slate-400 h-4 w-4" />
                   <span className="text-sm font-medium text-slate-900">
-                    {new Date(strategy.updated_at).toLocaleDateString()}
+                    {(() => {
+                      try {
+                        const date = new Date(strategy.updated_at);
+                        return isNaN(date.getTime()) ? 'Invalid date' : date.toLocaleDateString();
+                      } catch {
+                        return 'Invalid date';
+                      }
+                    })()}
                   </span>
                 </div>
               </div>

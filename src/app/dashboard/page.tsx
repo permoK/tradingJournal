@@ -258,7 +258,14 @@ export default function Dashboard() {
             <TradeModeToggle />
           </div>
           <p className="text-slate-700 font-medium text-sm sm:text-base">
-            {format(new Date(), 'EEEE, MMMM d, yyyy')}
+            {(() => {
+              try {
+                const date = new Date();
+                return isNaN(date.getTime()) ? 'Invalid date' : format(date, 'EEEE, MMMM d, yyyy');
+              } catch {
+                return 'Invalid date';
+              }
+            })()}
           </p>
           {isDemoMode && (
             <p className="text-amber-600 text-sm font-medium mt-1">
