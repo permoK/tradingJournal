@@ -34,7 +34,17 @@ export default function Trading() {
       // Get closed trades with profit/loss data
       const closedTrades = trades
         .filter(trade => trade.status === 'closed' && trade.profit_loss !== null)
-        .sort((a, b) => new Date(a.trade_date).getTime() - new Date(b.trade_date).getTime());
+        .sort((a, b) => {
+          try {
+            const dateA = new Date(a.trade_date);
+            const dateB = new Date(b.trade_date);
+            const timeA = isNaN(dateA.getTime()) ? 0 : dateA.getTime();
+            const timeB = isNaN(dateB.getTime()) ? 0 : dateB.getTime();
+            return timeA - timeB;
+          } catch {
+            return 0;
+          }
+        });
 
       if (closedTrades.length > 0) {
         // Get the last 10 trades or all if less than 10
@@ -375,7 +385,14 @@ export default function Trading() {
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <div className="font-medium text-slate-900">
-                        {format(new Date(trade.trade_date), 'MMM d, yyyy')}
+                        {(() => {
+                          try {
+                            const date = new Date(trade.trade_date);
+                            return isNaN(date.getTime()) ? 'Invalid date' : format(date, 'MMM d, yyyy');
+                          } catch {
+                            return 'Invalid date';
+                          }
+                        })()}
                         {trade.is_private && (
                           <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800 border border-slate-200">
                             <FiEyeOff className="mr-1" size={10} />
