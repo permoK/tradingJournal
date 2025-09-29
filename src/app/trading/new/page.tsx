@@ -334,7 +334,7 @@ export default function NewTrade() {
       }
 
       // Update profile balance
-      const totalPL = tradesToRecord.reduce((sum, t) => sum + (t.profitLoss || 0), 0);
+      const totalPL = tradesToRecord.reduce((sum, t) => sum + (parseFloat(t.profitLoss as string) || 0), 0);
       if (profile && typeof profile.balance === 'number') {
         await updateProfile({ balance: profile.balance + totalPL });
       }

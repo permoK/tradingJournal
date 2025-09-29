@@ -4,7 +4,7 @@ import B2 from 'backblaze-b2';
 let b2Client: B2 | null = null;
 
 // Initialize B2 client
-async function getB2Client(): Promise<B2> {
+export async function getB2Client(): Promise<B2> {
   if (!b2Client) {
     const applicationKeyId = process.env.B2_APPLICATION_KEY_ID;
     const applicationKey = process.env.B2_APPLICATION_KEY;
