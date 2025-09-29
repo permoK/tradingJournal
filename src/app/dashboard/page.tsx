@@ -61,11 +61,21 @@ export default function Dashboard() {
     // Date filter
     if (dateFilter === 'specific' && specificDate) {
       // Filter for specific date
-      const selectedDate = new Date(specificDate);
-      filtered = filtered.filter(trade => {
-        const tradeDate = new Date(trade.trade_date);
-        return tradeDate.toDateString() === selectedDate.toDateString();
-      });
+      try {
+        const selectedDate = new Date(specificDate);
+        if (!isNaN(selectedDate.getTime())) {
+          filtered = filtered.filter(trade => {
+            try {
+              const tradeDate = new Date(trade.trade_date);
+              return !isNaN(tradeDate.getTime()) && tradeDate.toDateString() === selectedDate.toDateString();
+            } catch {
+              return false;
+            }
+          });
+        }
+      } catch {
+        // Invalid date, don't filter
+      }
     } else if (dateFilter !== 'all') {
       // Range-based filtering
       const now = new Date();
@@ -85,7 +95,14 @@ export default function Dashboard() {
           startDate = new Date(0); // All time
       }
 
-      filtered = filtered.filter(trade => new Date(trade.trade_date) >= startDate);
+      filtered = filtered.filter(trade => {
+        try {
+          const tradeDate = new Date(trade.trade_date);
+          return !isNaN(tradeDate.getTime()) && tradeDate >= startDate;
+        } catch {
+          return false;
+        }
+      });
     }
 
     // Market filter
@@ -364,7 +381,14 @@ export default function Dashboard() {
                  dateFilter === '7d' ? 'Last 7 days' :
                  dateFilter === '30d' ? 'Last 30 days' :
                  dateFilter === '3m' ? 'Last 3 months' :
-                 dateFilter === 'specific' && specificDate ? format(new Date(specificDate), 'MMMM dd, yyyy') : 'Select a date'}
+                 dateFilter === 'specific' && specificDate ? (() => {
+                   try {
+                     const date = new Date(specificDate);
+                     return isNaN(date.getTime()) ? 'Invalid date' : format(date, 'MMMM dd, yyyy');
+                   } catch {
+                     return 'Invalid date';
+                   }
+                 })() : 'Select a date'}
               </p>
             </div>
             <div className="text-right">
@@ -466,7 +490,14 @@ export default function Dashboard() {
             <h2 className="text-lg font-semibold text-slate-900">Recent Trades</h2>
             <p className="text-sm text-slate-600">
               Showing {filteredTrades.length} trades
-              {dateFilter === 'specific' && specificDate ? ` for ${format(new Date(specificDate), 'MMMM dd, yyyy')}` :
+              {dateFilter === 'specific' && specificDate ? (() => {
+                try {
+                  const date = new Date(specificDate);
+                  return isNaN(date.getTime()) ? '' : ` for ${format(date, 'MMMM dd, yyyy')}`;
+                } catch {
+                  return '';
+                }
+              })() :
                dateFilter === '7d' ? ' from last 7 days' :
                dateFilter === '30d' ? ' from last 30 days' :
                dateFilter === '3m' ? ' from last 3 months' : ''}

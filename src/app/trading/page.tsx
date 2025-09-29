@@ -40,7 +40,14 @@ export default function Trading() {
         // Get the last 10 trades or all if less than 10
         const recentTrades = closedTrades.slice(-10);
 
-        const labels = recentTrades.map(trade => format(new Date(trade.trade_date), 'MMM d'));
+        const labels = recentTrades.map(trade => {
+          try {
+            const date = new Date(trade.trade_date);
+            return isNaN(date.getTime()) ? 'Invalid' : format(date, 'MMM d');
+          } catch {
+            return 'Invalid';
+          }
+        });
         const data = recentTrades.map(trade => trade.profit_loss || 0);
 
         setPerformanceLabels(labels);

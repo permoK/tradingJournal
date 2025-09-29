@@ -76,7 +76,14 @@ export default function SavedTradeCard({ trade, onEdit, onDelete }: SavedTradeCa
             )}
           </div>
           <p className="text-sm text-slate-600">
-            {format(new Date(trade.tradeDate), 'MMM d, yyyy')}
+            {(() => {
+              try {
+                const date = new Date(trade.tradeDate);
+                return isNaN(date.getTime()) ? 'Invalid date' : format(date, 'MMM d, yyyy');
+              } catch {
+                return 'Invalid date';
+              }
+            })()}
           </p>
         </div>
 

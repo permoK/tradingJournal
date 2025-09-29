@@ -108,7 +108,14 @@ export default function TradeDetail() {
             <div>
               <h1 className="text-2xl font-bold text-slate-900">{trade.market} Trade</h1>
               <p className="text-slate-600">
-                {format(new Date(trade.trade_date), 'MMMM dd, yyyy')}
+                {(() => {
+                  try {
+                    const date = new Date(trade.trade_date);
+                    return isNaN(date.getTime()) ? 'Invalid date' : format(date, 'MMMM dd, yyyy');
+                  } catch {
+                    return 'Invalid date';
+                  }
+                })()}
               </p>
             </div>
           </div>
@@ -340,7 +347,14 @@ export default function TradeDetail() {
             <FiCalendar className="text-slate-400 mr-2 h-4 w-4" />
             <span className="text-slate-600">Created:</span>
             <span className="ml-2 text-slate-900">
-              {format(new Date(trade.created_at), 'MMMM dd, yyyy \'at\' h:mm a')}
+              {(() => {
+                try {
+                  const date = new Date(trade.created_at);
+                  return isNaN(date.getTime()) ? 'Invalid date' : format(date, 'MMMM dd, yyyy \'at\' h:mm a');
+                } catch {
+                  return 'Invalid date';
+                }
+              })()}
             </span>
           </div>
           {trade.updated_at !== trade.created_at && (
@@ -348,7 +362,14 @@ export default function TradeDetail() {
               <FiCalendar className="text-slate-400 mr-2 h-4 w-4" />
               <span className="text-slate-600">Last updated:</span>
               <span className="ml-2 text-slate-900">
-                {format(new Date(trade.updated_at), 'MMMM dd, yyyy \'at\' h:mm a')}
+                {(() => {
+                  try {
+                    const date = new Date(trade.updated_at);
+                    return isNaN(date.getTime()) ? 'Invalid date' : format(date, 'MMMM dd, yyyy \'at\' h:mm a');
+                  } catch {
+                    return 'Invalid date';
+                  }
+                })()}
               </span>
             </div>
           )}
