@@ -158,9 +158,9 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({ trades }) => {
               const previousValue = chartData.data[currentIndex - 1];
               const change = currentValue - previousValue;
               const changePrefix = change >= 0 ? '+$' : '-$';
-              return `Trade P/L: ${changePrefix}${Math.abs(change).toFixed(2)}`;
+              return `Trade P/L: ${changePrefix}${Math.abs(Number(change) || 0).toFixed(2)}`;
             }
-            return `Starting P/L: $${context.raw.toFixed(2)}`;
+            return `Starting P/L: $${(Number(context.raw) || 0).toFixed(2)}`;
           }
         }
       }
@@ -208,9 +208,9 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({ trades }) => {
           callback: function(value: any) {
             const numValue = Number(value);
             if (numValue >= 0) {
-              return `+$${numValue.toFixed(0)}`;
+              return `+$${(Number(numValue) || 0).toFixed(0)}`;
             } else {
-              return `-$${Math.abs(numValue).toFixed(0)}`;
+              return `-$${Math.abs(Number(numValue) || 0).toFixed(0)}`;
             }
           }
         }

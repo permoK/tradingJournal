@@ -369,18 +369,21 @@ export function calculatePL(params: TradeParams): PLResult {
 // Helper function to format P&L display
 export function formatPL(amount: number, currency: string = 'USD'): string {
   const sign = amount >= 0 ? '+' : '';
-  return `${sign}${currency === 'USD' ? '$' : ''}${amount.toFixed(2)}${currency !== 'USD' ? ` ${currency}` : ''}`;
+  const safeAmount = Number(amount) || 0;
+  return `${sign}${currency === 'USD' ? '$' : ''}${safeAmount.toFixed(2)}${currency !== 'USD' ? ` ${currency}` : ''}`;
 }
 
 // Helper function to format pips
 export function formatPips(pips: number): string {
-  return `${pips.toFixed(1)} pip${Math.abs(pips) !== 1 ? 's' : ''}`;
+  const safePips = Number(pips) || 0;
+  return `${safePips.toFixed(1)} pip${Math.abs(safePips) !== 1 ? 's' : ''}`;
 }
 
 // Helper function to format percentage
 export function formatPercentage(percentage: number): string {
   const sign = percentage >= 0 ? '+' : '';
-  return `${sign}${percentage.toFixed(2)}%`;
+  const safePercentage = Number(percentage) || 0;
+  return `${sign}${safePercentage.toFixed(2)}%`;
 }
 
 // Validation function

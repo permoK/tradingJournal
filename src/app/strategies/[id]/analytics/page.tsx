@@ -286,7 +286,7 @@ export default function StrategyAnalytics() {
                   legend: { display: false },
                   tooltip: {
                     callbacks: {
-                      label: (context) => `P/L: ${context.parsed.y.toFixed(2)}`
+                      label: (context) => `P/L: ${(Number(context.parsed.y) || 0).toFixed(2)}`
                     }
                   }
                 },

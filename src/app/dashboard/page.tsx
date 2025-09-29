@@ -215,7 +215,7 @@ export default function Dashboard() {
             const label = context.label || '';
             const value = context.parsed;
             const total = tradingStats.winningTrades + tradingStats.losingTrades;
-            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
+            const percentage = total > 0 ? ((Number(value) || 0) / total * 100).toFixed(1) : '0';
             return `${label}: ${value} trades (${percentage}%)`;
           }
         }
@@ -400,7 +400,7 @@ export default function Dashboard() {
             </div>
             <div className="text-right">
               <div className={`text-2xl font-bold ${(tradingStats.totalProfitLoss || 0) > 0 ? 'text-emerald-600' : (tradingStats.totalProfitLoss || 0) < 0 ? 'text-red-600' : 'text-slate-900'}`}>
-                {(tradingStats.totalProfitLoss || 0) > 0 ? '+' : ''}{(tradingStats.totalProfitLoss || 0).toFixed(2)}
+                {(Number(tradingStats.totalProfitLoss) || 0) > 0 ? '+' : ''}{(Number(tradingStats.totalProfitLoss) || 0).toFixed(2)}
               </div>
               <div className="text-sm text-slate-600">Total P/L</div>
             </div>
@@ -430,7 +430,7 @@ export default function Dashboard() {
             </div>
             <div className="text-right">
               <div className={`text-2xl font-bold ${(tradingStats.winRate || 0) >= 50 ? 'text-emerald-600' : 'text-amber-600'}`}>
-                {(tradingStats.winRate || 0).toFixed(1)}%
+                {(Number(tradingStats.winRate) || 0).toFixed(1)}%
               </div>
               <div className="text-sm text-slate-600">Win Rate</div>
             </div>
@@ -441,7 +441,7 @@ export default function Dashboard() {
             <div>
               <div className="flex justify-between text-sm text-slate-600 mb-2">
                 <span>Win Rate</span>
-                <span>{(tradingStats.winRate || 0).toFixed(1)}%</span>
+                <span>{(Number(tradingStats.winRate) || 0).toFixed(1)}%</span>
               </div>
               <div className="w-full bg-slate-200 rounded-full h-3">
                 <div
@@ -449,7 +449,7 @@ export default function Dashboard() {
                     (tradingStats.winRate || 0) >= 70 ? 'bg-emerald-500' :
                     (tradingStats.winRate || 0) >= 50 ? 'bg-amber-500' : 'bg-red-500'
                   }`}
-                  style={{ width: `${Math.min(tradingStats.winRate || 0, 100)}%` }}
+                  style={{ width: `${Math.min(Number(tradingStats.winRate) || 0, 100)}%` }}
                 ></div>
               </div>
             </div>
@@ -553,10 +553,10 @@ export default function Dashboard() {
                       </span>
                     </td>
                     <td className="py-4 px-4 text-slate-700">
-                      {trade.entry_price ? `$${Number(trade.entry_price).toFixed(4)}` : '-'}
+                      {trade.entry_price ? `$${(Number(trade.entry_price) || 0).toFixed(4)}` : '-'}
                     </td>
                     <td className="py-4 px-4 text-slate-700">
-                      {trade.exit_price ? `$${Number(trade.exit_price).toFixed(4)}` : '-'}
+                      {trade.exit_price ? `$${(Number(trade.exit_price) || 0).toFixed(4)}` : '-'}
                     </td>
                     <td className="py-4 px-4">
                       {trade.profit_loss !== null ? (
@@ -567,7 +567,7 @@ export default function Dashboard() {
                             ? 'text-red-600'
                             : 'text-slate-700'
                         }`}>
-                          {trade.profit_loss > 0 ? '+' : ''}{Number(trade.profit_loss).toFixed(2)}
+                          {trade.profit_loss > 0 ? '+' : ''}{(Number(trade.profit_loss) || 0).toFixed(2)}
                         </span>
                       ) : (
                         <span className="text-slate-500">-</span>
