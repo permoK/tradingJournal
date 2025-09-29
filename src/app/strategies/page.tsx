@@ -220,7 +220,7 @@ export default function Strategies() {
                             <FiTrendingDown className={getSuccessRateColor(strategy.success_rate)} />
                           )}
                           <span className={`font-medium ${getSuccessRateColor(strategy.success_rate)}`}>
-                            Success Rate: {strategy.success_rate.toFixed(1)}%
+                            Success Rate: {(Number(strategy.success_rate) || 0).toFixed(1)}%
                           </span>
                         </div>
                       </div>

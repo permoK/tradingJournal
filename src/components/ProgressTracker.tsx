@@ -94,9 +94,14 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({ trades }) => {
   const chartData = useMemo(() => {
     if (filteredTrades.length === 0) return { labels: [], data: [] };
 
-    const labels = filteredTrades.map(trade =>
-      format(new Date(trade.tradeDate), 'MMM d')
-    );
+    const labels = filteredTrades.map(trade => {
+      try {
+        const date = new Date(trade.tradeDate);
+        return isNaN(date.getTime()) ? 'Invalid' : format(date, 'MMM d');
+      } catch {
+        return 'Invalid';
+      }
+    });
 
     const cumulativeData = filteredTrades.reduce(
       (acc: number[], trade, index) => {

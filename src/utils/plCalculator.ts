@@ -739,7 +739,8 @@ export function formatCurrency(amount: number, currency: string = 'USD'): string
 
 // Helper function to format ratio
 export function formatRatio(ratio: number): string {
-  return `1:${ratio.toFixed(2)}`;
+  const safeRatio = Number(ratio) || 0;
+  return `1:${safeRatio.toFixed(2)}`;
 }
 
 // Currency conversion rates (in a real app, these would come from an API)
