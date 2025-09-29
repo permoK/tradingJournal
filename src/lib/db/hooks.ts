@@ -62,7 +62,28 @@ export function useProfile(userId: string | undefined) {
     }
   };
 
-  return { profile, loading, error, updateProfile };
+  const refreshProfile = async () => {
+    if (!userId) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/profiles/${userId}`);
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to fetch profile');
+      }
+
+      setProfile(result.data);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { profile, loading, error, updateProfile, refreshProfile };
 }
 
 // Hook for fetching strategies

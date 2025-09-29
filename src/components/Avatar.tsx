@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { FiUser } from 'react-icons/fi';
+import { getAvatarUrl } from '@/lib/avatar-utils';
 
 interface AvatarProps {
   username: string;
@@ -25,15 +26,18 @@ const iconSizes = {
   xl: 'w-12 h-12'
 };
 
-export default function Avatar({ 
-  username, 
-  avatarUrl, 
-  size = 'md', 
+export default function Avatar({
+  username,
+  avatarUrl,
+  size = 'md',
   className = '',
-  showFallback = true 
+  showFallback = true
 }: AvatarProps) {
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
+
+  // Process avatar URL to ensure it's properly formatted
+  const processedAvatarUrl = getAvatarUrl(avatarUrl);
 
   const handleImageError = () => {
     setImageError(true);
@@ -45,7 +49,7 @@ export default function Avatar({
   };
 
   // Show profile picture if available and not errored
-  if (avatarUrl && !imageError) {
+  if (processedAvatarUrl && !imageError) {
     return (
       <div className={`${sizeClasses[size]} rounded-full overflow-hidden bg-slate-200 flex items-center justify-center relative ${className}`}>
         {imageLoading && (
@@ -54,7 +58,7 @@ export default function Avatar({
           </div>
         )}
         <img
-          src={avatarUrl}
+          src={processedAvatarUrl}
           alt={`${username}'s profile picture`}
           className="w-full h-full object-cover"
           onError={handleImageError}

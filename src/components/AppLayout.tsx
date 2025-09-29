@@ -18,7 +18,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, loading, signOut } = useAuth();
-  const { profile, loading: profileLoading } = useProfile(user?.id);
+  const { profile, loading: profileLoading, refreshProfile } = useProfile(user?.id);
 
   const handleSignOut = async () => {
     await signOut();
@@ -94,8 +94,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     <div className="flex items-center px-3 py-2 text-sm font-medium text-slate-800 rounded-md hover:bg-slate-100 border border-transparent hover:border-slate-200 group transition-colors">
                       <div className="mr-3">
                         <Avatar
+                          key={profile.avatarUrl} // Force re-render when avatar changes
                           username={profile.username}
-                          avatarUrl={profile.avatar_url}
+                          avatarUrl={profile.avatarUrl}
                           size="sm"
                         />
                       </div>
@@ -209,8 +210,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
                       <div className="flex items-center px-3 py-3 text-base font-medium text-slate-800 rounded-md hover:bg-slate-100 border border-transparent hover:border-slate-200 group transition-colors">
                         <div className="mr-3">
                           <Avatar
+                            key={profile.avatarUrl} // Force re-render when avatar changes
                             username={profile.username}
-                            avatarUrl={profile.avatar_url}
+                            avatarUrl={profile.avatarUrl}
                             size="sm"
                           />
                         </div>

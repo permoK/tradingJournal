@@ -19,7 +19,18 @@ export async function GET(
     const { id } = await params;
     const db = getServerDB();
     const [profile] = await db
-      .select()
+      .select({
+        id: profiles.id,
+        createdAt: profiles.createdAt,
+        updatedAt: profiles.updatedAt,
+        username: profiles.username,
+        fullName: profiles.fullName,
+        avatarUrl: profiles.avatarUrl,
+        bio: profiles.bio,
+        streakCount: profiles.streakCount,
+        lastActive: profiles.lastActive,
+        balance: profiles.balance,
+      })
       .from(profiles)
       .where(eq(profiles.id, id))
       .limit(1);
@@ -50,7 +61,18 @@ export async function PATCH(
       .update(profiles)
       .set({ ...updates, updatedAt: new Date() })
       .where(eq(profiles.id, id))
-      .returning();
+      .returning({
+        id: profiles.id,
+        createdAt: profiles.createdAt,
+        updatedAt: profiles.updatedAt,
+        username: profiles.username,
+        fullName: profiles.fullName,
+        avatarUrl: profiles.avatarUrl,
+        bio: profiles.bio,
+        streakCount: profiles.streakCount,
+        lastActive: profiles.lastActive,
+        balance: profiles.balance,
+      });
 
     return NextResponse.json({ data: profile });
   } catch (error: any) {

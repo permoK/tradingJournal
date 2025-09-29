@@ -153,3 +153,84 @@ export async function fileToBuffer(file: File): Promise<Buffer> {
   const arrayBuffer = await file.arrayBuffer();
   return Buffer.from(arrayBuffer);
 }
+
+// Download file from B2
+export async function downloadFileByName(fileName: string, folder: string = ''): Promise<{ data: Buffer }> {
+  try {
+    const b2 = await getB2Client();
+    const bucketName = process.env.B2_BUCKET_NAME;
+
+    if (!bucketName) {
+      throw new Error('Backblaze B2 bucket name not configured.');
+    }
+
+    // Create the full file path with folder
+    const fullFileName = folder ? `${folder}/${fileName}` : fileName;
+
+    // Use the correct Backblaze B2 download URL format
+    const downloadUrl = `https://f005.backblazeb2.com/file/${bucketName}/${fullFileName}`;
+
+    // Get download authorization for private bucket
+    const bucketId = process.env.B2_BUCKET_ID;
+    if (!bucketId) {
+      throw new Error('Backblaze B2 bucket ID not configured.');
+    }
+
+    const authResponse = await b2.getDownloadAuthorization({
+      bucketId: bucketId,
+      fileNamePrefix: fullFileName,
+      validDurationInSeconds: 3600,
+    });
+
+    // Fetch the file with authorization
+    const response = await fetch(downloadUrl, {
+      headers: {
+        'Authorization': authResponse.data.authorizationToken,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to download file: ${response.status} ${response.statusText}`);
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    return { data: Buffer.from(arrayBuffer) };
+  } catch (error) {
+    console.error('Error downloading from Backblaze B2:', error);
+    throw new Error(`Failed to download file from Backblaze B2: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+// Generate signed URL for private bucket access
+export async function generateSignedUrl(fileName: string, folder: string = '', durationInSeconds: number = 3600): Promise<string> {
+  try {
+    const b2 = await getB2Client();
+    const bucketId = process.env.B2_BUCKET_ID;
+
+    if (!bucketId) {
+      throw new Error('Backblaze B2 bucket ID not configured.');
+    }
+
+    // Create the full file path with folder
+    const fullFileName = folder ? `${folder}/${fileName}` : fileName;
+
+    // Get download authorization
+    const authResponse = await b2.getDownloadAuthorization({
+      bucketId: bucketId,
+      fileNamePrefix: fullFileName,
+      validDurationInSeconds: durationInSeconds,
+    });
+
+    // Get the download URL
+    const downloadUrl = process.env.NEXT_PUBLIC_B2_DOWNLOAD_URL;
+    if (!downloadUrl) {
+      throw new Error('B2 download URL not configured. Please set NEXT_PUBLIC_B2_DOWNLOAD_URL.');
+    }
+
+    // Return the signed URL
+    return `${downloadUrl}/${fullFileName}?Authorization=${authResponse.data.authorizationToken}`;
+  } catch (error) {
+    console.error('Error generating signed URL:', error);
+    throw new Error(`Failed to generate signed URL: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}

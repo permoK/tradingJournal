@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
 import { getServerDB } from './db/server';
 import { users, accounts, sessions, verificationTokens, profiles } from './db/schema';
+import { processGoogleAvatar } from './avatar-utils';
 
 export const authOptions: NextAuthOptions = {
   // Temporarily disable adapter to use JWT sessions
@@ -115,12 +116,47 @@ export const authOptions: NextAuthOptions = {
             .limit(1);
 
           if (!existingProfile) {
+            // Process Google avatar and upload to Backblaze B2
+            let avatarUrl = user.image;
+            if (user.image) {
+              try {
+                const processedAvatarUrl = await processGoogleAvatar(
+                  user.image,
+                  userId!,
+                  user.name
+                );
+                if (processedAvatarUrl) {
+                  avatarUrl = processedAvatarUrl;
+                }
+              } catch (error) {
+                console.error('Failed to process Google avatar:', error);
+                // Continue with original URL if processing fails
+              }
+            }
+
             // Create new profile
             await db.insert(profiles).values({
               id: userId!,
               fullName: user.name,
-              avatarUrl: user.image,
+              avatarUrl: avatarUrl,
             });
+          } else if (existingProfile && user.image && !existingProfile.avatarUrl?.includes(process.env.NEXT_PUBLIC_B2_DOWNLOAD_URL || '')) {
+            // If profile exists but avatar is not from Backblaze, migrate it
+            try {
+              const processedAvatarUrl = await processGoogleAvatar(
+                user.image,
+                userId!,
+                user.name
+              );
+              if (processedAvatarUrl) {
+                await db
+                  .update(profiles)
+                  .set({ avatarUrl: processedAvatarUrl, updatedAt: new Date() })
+                  .where(eq(profiles.id, userId!));
+              }
+            } catch (error) {
+              console.error('Failed to migrate existing Google avatar:', error);
+            }
           }
         }
 
