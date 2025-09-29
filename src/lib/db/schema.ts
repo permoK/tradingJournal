@@ -250,3 +250,6 @@ export const newsAlertsRelations = relations(newsAlerts, ({ one }) => ({
     references: [profiles.id],
   }),
 }));
+
+// Export settings tables and relations
+export * from './settings-schema';

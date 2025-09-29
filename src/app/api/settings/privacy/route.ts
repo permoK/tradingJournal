@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getServerDB } from '@/lib/db/server';
-import { profiles } from '@/lib/db/schema';
+import { userPrivacySettings } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
@@ -13,8 +13,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Return default privacy settings
-    // In a real implementation, these would be stored in the database
+    const db = getServerDB();
+
+    // Get user's privacy settings
+    const [settings] = await db
+      .select()
+      .from(userPrivacySettings)
+      .where(eq(userPrivacySettings.userId, session.user.id))
+      .limit(1);
+
+    // Return default settings if none exist
     const defaultSettings = {
       profileVisibility: 'public',
       showTradingStats: true,
@@ -25,7 +33,22 @@ export async function GET(request: NextRequest) {
       marketingEmails: false,
     };
 
-    return NextResponse.json(defaultSettings);
+    if (!settings) {
+      return NextResponse.json(defaultSettings);
+    }
+
+    // Map database fields to frontend format
+    const mappedSettings = {
+      profileVisibility: settings.profileVisibility || 'public',
+      showTradingStats: settings.showTradingStats,
+      showOnlineStatus: settings.showOnlineStatus,
+      allowDirectMessages: settings.allowDirectMessages,
+      dataCollection: settings.dataCollection,
+      analyticsTracking: settings.analyticsTracking,
+      marketingEmails: settings.marketingEmails,
+    };
+
+    return NextResponse.json(mappedSettings);
   } catch (error: any) {
     console.error('Error fetching privacy settings:', error);
     return NextResponse.json(
@@ -44,10 +67,41 @@ export async function POST(request: NextRequest) {
     }
 
     const settings = await request.json();
+    const db = getServerDB();
 
-    // In a real implementation, you would store these settings in the database
-    // For now, we'll just return success
-    console.log('Privacy settings updated for user:', session.user.id, settings);
+    // Check if settings already exist
+    const [existingSettings] = await db
+      .select()
+      .from(userPrivacySettings)
+      .where(eq(userPrivacySettings.userId, session.user.id))
+      .limit(1);
+
+    const updateData = {
+      profileVisibility: settings.profileVisibility,
+      showTradingStats: settings.showTradingStats,
+      showOnlineStatus: settings.showOnlineStatus,
+      allowDirectMessages: settings.allowDirectMessages,
+      dataCollection: settings.dataCollection,
+      analyticsTracking: settings.analyticsTracking,
+      marketingEmails: settings.marketingEmails,
+      updatedAt: new Date(),
+    };
+
+    if (existingSettings) {
+      // Update existing settings
+      await db
+        .update(userPrivacySettings)
+        .set(updateData)
+        .where(eq(userPrivacySettings.userId, session.user.id));
+    } else {
+      // Create new settings
+      await db
+        .insert(userPrivacySettings)
+        .values({
+          userId: session.user.id,
+          ...updateData,
+        });
+    }
 
     return NextResponse.json({ message: 'Privacy settings updated successfully' });
   } catch (error: any) {

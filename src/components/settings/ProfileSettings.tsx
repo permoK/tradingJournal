@@ -157,7 +157,7 @@ export default function ProfileSettings() {
             name="username"
             value={formData.username}
             onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-slate-300 rounded-md bg-white text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Enter your username"
           />
           <p className="text-xs text-slate-500 mt-1">
@@ -176,7 +176,7 @@ export default function ProfileSettings() {
             name="fullName"
             value={formData.fullName}
             onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-slate-300 rounded-md bg-white text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Enter your full name"
           />
         </div>
@@ -192,7 +192,7 @@ export default function ProfileSettings() {
             rows={4}
             value={formData.bio}
             onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-slate-300 rounded-md bg-white text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Tell others about yourself and your trading experience..."
           />
           <p className="text-xs text-slate-500 mt-1">

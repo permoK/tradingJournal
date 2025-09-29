@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNotifications, Notification } from '@/contexts/NotificationContext';
 import { FiX, FiInfo, FiCheckCircle, FiAlertTriangle, FiAlertCircle, FiGlobe } from 'react-icons/fi';
 
@@ -44,15 +45,15 @@ function Toast({ notification }: ToastProps) {
   const getBackgroundColor = () => {
     switch (notification.type) {
       case 'success':
-        return 'bg-green-50 border-green-200';
+        return 'bg-green-50 border-green-300';
       case 'warning':
-        return 'bg-yellow-50 border-yellow-200';
+        return 'bg-yellow-50 border-yellow-300';
       case 'error':
-        return 'bg-red-50 border-red-200';
+        return 'bg-red-50 border-red-300';
       case 'news':
-        return 'bg-blue-50 border-blue-200';
+        return 'bg-blue-50 border-blue-300';
       default:
-        return 'bg-blue-50 border-blue-200';
+        return 'bg-blue-50 border-blue-300';
     }
   };
 
@@ -81,7 +82,7 @@ function Toast({ notification }: ToastProps) {
         ${isExiting ? 'translate-x-full opacity-0' : ''}
       `}
     >
-      <div className={`max-w-sm w-full bg-white shadow-lg rounded-lg border ${getBackgroundColor()}`}>
+      <div className={`max-w-sm w-full bg-white shadow-lg rounded-lg border ${getBackgroundColor()}`} style={{ minWidth: '320px' }}>
         <div className="p-4">
           <div className="flex items-start">
             <div className="flex-shrink-0">
@@ -89,18 +90,18 @@ function Toast({ notification }: ToastProps) {
             </div>
             <div className="ml-3 w-0 flex-1">
               <div className="flex items-center justify-between mb-1">
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-slate-900">
                   {notification.title}
                 </p>
                 {getImportanceBadge()}
               </div>
-              <p className="text-sm text-gray-700 mb-2">
+              <p className="text-sm text-slate-700 mb-2">
                 {notification.message}
               </p>
               {notification.action && (
                 <button
                   onClick={notification.action.onClick}
-                  className="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
+                  className="text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors"
                 >
                   {notification.action.label}
                 </button>
@@ -109,7 +110,7 @@ function Toast({ notification }: ToastProps) {
             <div className="ml-4 flex-shrink-0 flex">
               <button
                 onClick={handleClose}
-                className="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="bg-white rounded-md inline-flex text-slate-400 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 <span className="sr-only">Close</span>
                 <FiX className="h-5 w-5" />
@@ -124,14 +125,32 @@ function Toast({ notification }: ToastProps) {
 
 export default function ToastContainer() {
   const { notifications } = useNotifications();
+  const [mounted, setMounted] = useState(false);
 
-  if (notifications.length === 0) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  return (
-    <div className="fixed top-4 right-4 z-50 space-y-2">
+  if (!mounted || notifications.length === 0) return null;
+
+  const toastContainer = (
+    <div
+      className="fixed top-4 right-4 z-[9999] space-y-2 pointer-events-none max-w-sm"
+      style={{
+        position: 'fixed',
+        top: '1rem',
+        right: '1rem',
+        zIndex: 9999,
+        maxWidth: '24rem'
+      }}
+    >
       {notifications.map((notification) => (
-        <Toast key={notification.id} notification={notification} />
+        <div key={notification.id} className="pointer-events-auto">
+          <Toast notification={notification} />
+        </div>
       ))}
     </div>
   );
+
+  return createPortal(toastContainer, document.body);
 }

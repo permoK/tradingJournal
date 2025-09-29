@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { getServerDB } from '@/lib/db/server';
+import { userTradingPreferences } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,8 +13,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Return default trading preferences
-    // In a real implementation, these would be stored in the database
+    const db = getServerDB();
+
+    // Get user's trading preferences
+    const [preferences] = await db
+      .select()
+      .from(userTradingPreferences)
+      .where(eq(userTradingPreferences.userId, session.user.id))
+      .limit(1);
+
+    // Return default preferences if none exist
     const defaultPreferences = {
       defaultRiskPercentage: 2,
       defaultLeverage: 1,
@@ -26,7 +37,26 @@ export async function GET(request: NextRequest) {
       confirmBeforeClosing: true,
     };
 
-    return NextResponse.json(defaultPreferences);
+    if (!preferences) {
+      return NextResponse.json(defaultPreferences);
+    }
+
+    // Map database fields to frontend format
+    const mappedPreferences = {
+      defaultRiskPercentage: parseFloat(preferences.defaultRiskPercentage || '2'),
+      defaultLeverage: preferences.defaultLeverage || 1,
+      preferredTimeframe: preferences.preferredTimeframe || '1h',
+      autoCalculatePositionSize: preferences.autoCalculatePositionSize,
+      showPnLInPercentage: preferences.showPnLInPercentage,
+      defaultCurrency: preferences.defaultCurrency || 'USD',
+      riskManagementAlerts: preferences.riskManagementAlerts,
+      maxDailyLoss: parseFloat(preferences.maxDailyLoss || '5'),
+      maxPositionsOpen: preferences.maxPositionsOpen || 5,
+      tradingHoursOnly: preferences.tradingHoursOnly,
+      confirmBeforeClosing: preferences.confirmBeforeClosing,
+    };
+
+    return NextResponse.json(mappedPreferences);
   } catch (error: any) {
     console.error('Error fetching trading preferences:', error);
     return NextResponse.json(
@@ -68,8 +98,45 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // In a real implementation, you would store these preferences in the database
-    console.log('Trading preferences updated for user:', session.user.id, preferences);
+    const db = getServerDB();
+
+    // Check if preferences already exist
+    const [existingPreferences] = await db
+      .select()
+      .from(userTradingPreferences)
+      .where(eq(userTradingPreferences.userId, session.user.id))
+      .limit(1);
+
+    const updateData = {
+      defaultRiskPercentage: preferences.defaultRiskPercentage.toString(),
+      defaultLeverage: preferences.defaultLeverage,
+      preferredTimeframe: preferences.preferredTimeframe,
+      autoCalculatePositionSize: preferences.autoCalculatePositionSize,
+      showPnLInPercentage: preferences.showPnLInPercentage,
+      defaultCurrency: preferences.defaultCurrency,
+      riskManagementAlerts: preferences.riskManagementAlerts,
+      maxDailyLoss: preferences.maxDailyLoss.toString(),
+      maxPositionsOpen: preferences.maxPositionsOpen,
+      tradingHoursOnly: preferences.tradingHoursOnly,
+      confirmBeforeClosing: preferences.confirmBeforeClosing,
+      updatedAt: new Date(),
+    };
+
+    if (existingPreferences) {
+      // Update existing preferences
+      await db
+        .update(userTradingPreferences)
+        .set(updateData)
+        .where(eq(userTradingPreferences.userId, session.user.id));
+    } else {
+      // Create new preferences
+      await db
+        .insert(userTradingPreferences)
+        .values({
+          userId: session.user.id,
+          ...updateData,
+        });
+    }
 
     return NextResponse.json({ message: 'Trading preferences updated successfully' });
   } catch (error: any) {

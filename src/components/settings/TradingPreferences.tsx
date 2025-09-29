@@ -160,7 +160,7 @@ export default function TradingPreferences() {
                   min="0.1"
                   max="10"
                   step="0.1"
-                  className="w-full px-3 py-2 pr-8 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 pr-8 border border-slate-300 rounded-md bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <FiPercent className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
               </div>
@@ -180,7 +180,7 @@ export default function TradingPreferences() {
                   min="1"
                   max="20"
                   step="0.5"
-                  className="w-full px-3 py-2 pr-8 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 pr-8 border border-slate-300 rounded-md bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <FiPercent className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
               </div>
@@ -195,7 +195,7 @@ export default function TradingPreferences() {
                 name="defaultLeverage"
                 value={preferences.defaultLeverage}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-slate-300 rounded-md bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value={1}>1:1 (No Leverage)</option>
                 <option value={2}>1:2</option>
@@ -219,7 +219,7 @@ export default function TradingPreferences() {
                 onChange={handleInputChange}
                 min="1"
                 max="20"
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-slate-300 rounded-md bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
@@ -238,7 +238,7 @@ export default function TradingPreferences() {
                 name="preferredTimeframe"
                 value={preferences.preferredTimeframe}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-slate-300 rounded-md bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="1m">1 Minute</option>
                 <option value="5m">5 Minutes</option>
@@ -260,7 +260,7 @@ export default function TradingPreferences() {
                 name="defaultCurrency"
                 value={preferences.defaultCurrency}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-slate-300 rounded-md bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="USD">USD - US Dollar</option>
                 <option value="EUR">EUR - Euro</option>
