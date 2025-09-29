@@ -51,12 +51,20 @@ export async function POST(request: NextRequest) {
     const tradeData = await request.json();
     const db = getServerDB();
 
+    // Process the trade data
+    const processedTradeData = {
+      ...tradeData,
+      userId: session.user.id,
+    };
+
+    // Convert tradeDate string back to Date object for Drizzle
+    if (processedTradeData.tradeDate && typeof processedTradeData.tradeDate === 'string') {
+      processedTradeData.tradeDate = new Date(processedTradeData.tradeDate);
+    }
+
     const [newTrade] = await db
       .insert(trades)
-      .values({
-        ...tradeData,
-        userId: session.user.id,
-      })
+      .values(processedTradeData)
       .returning();
 
     return NextResponse.json({ data: newTrade });

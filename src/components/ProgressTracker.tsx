@@ -30,9 +30,9 @@ ChartJS.register(
 
 interface Trade {
   id: string;
-  trade_date: string;
+  tradeDate: string;
   market: string;
-  profit_loss: number | null;
+  profitLoss: number | null;
   status: string;
 }
 
@@ -47,7 +47,7 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({ trades }) => {
   // Filter trades based on selected filters
   const filteredTrades = useMemo(() => {
     let filtered = trades.filter(trade =>
-      trade.status === 'closed' && trade.profit_loss !== null
+      trade.status === 'closed' && trade.profitLoss !== null
     );
 
     // Apply time filter
@@ -75,18 +75,18 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({ trades }) => {
     }
 
     filtered = filtered.filter(trade =>
-      new Date(trade.trade_date) >= startDate
+      new Date(trade.tradeDate) >= startDate
     );
 
     // Apply profit/loss filter
     if (profitLossFilter === 'profit') {
-      filtered = filtered.filter(trade => (trade.profit_loss || 0) > 0);
+      filtered = filtered.filter(trade => (trade.profitLoss || 0) > 0);
     } else if (profitLossFilter === 'loss') {
-      filtered = filtered.filter(trade => (trade.profit_loss || 0) < 0);
+      filtered = filtered.filter(trade => (trade.profitLoss || 0) < 0);
     }
 
     return filtered.sort((a, b) =>
-      new Date(a.trade_date).getTime() - new Date(b.trade_date).getTime()
+      new Date(a.tradeDate).getTime() - new Date(b.tradeDate).getTime()
     );
   }, [trades, timeFilter, profitLossFilter]);
 
@@ -95,13 +95,13 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({ trades }) => {
     if (filteredTrades.length === 0) return { labels: [], data: [] };
 
     const labels = filteredTrades.map(trade =>
-      format(new Date(trade.trade_date), 'MMM d')
+      format(new Date(trade.tradeDate), 'MMM d')
     );
 
     const cumulativeData = filteredTrades.reduce(
       (acc: number[], trade, index) => {
         const prevValue = index > 0 ? acc[index - 1] : 0;
-        acc.push(prevValue + (trade.profit_loss || 0));
+        acc.push(prevValue + (trade.profitLoss || 0));
         return acc;
       },
       []

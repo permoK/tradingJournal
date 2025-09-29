@@ -461,9 +461,9 @@ export function useActivityLogs(userId: string | undefined) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          activity_type: activityType,
-          activity_title: activityTitle,
-          activity_date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+          activityType: activityType,
+          activityTitle: activityTitle,
+          activityDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
         }),
       });
 

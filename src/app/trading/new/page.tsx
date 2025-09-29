@@ -296,21 +296,36 @@ export default function NewTrade() {
     setError(null);
 
     try {
-      const tradesToRecord = savedTrades.map(trade => ({
-        trade_date: new Date(trade.tradeDate).toISOString(),
-        market: trade.market,
-        trade_type: trade.tradeType,
-        entry_price: parseFloat(trade.entryPrice),
-        exit_price: trade.exitPrice ? parseFloat(trade.exitPrice) : null,
-        quantity: parseFloat(trade.quantity),
-        profit_loss: trade.calculatedPL,
-        status: trade.status,
-        notes: trade.notes.trim() || null,
-        screenshot_url: trade.screenshotUrl,
-        is_private: trade.isPrivate,
-        is_demo: trade.isDemo,
-        strategy_id: trade.strategyId || null
-      }));
+      const tradesToRecord = savedTrades.map(trade => {
+        // Ensure tradeDate is a valid date
+        let tradeDate;
+        try {
+          tradeDate = new Date(trade.tradeDate);
+          if (isNaN(tradeDate.getTime())) {
+            throw new Error('Invalid date');
+          }
+          tradeDate = tradeDate.toISOString();
+        } catch (error) {
+          console.error('Invalid trade date:', trade.tradeDate, error);
+          tradeDate = new Date().toISOString(); // fallback to current date
+        }
+
+        return {
+          tradeDate,
+          market: trade.market,
+          tradeType: trade.tradeType,
+          entryPrice: trade.entryPrice,
+          exitPrice: trade.exitPrice || null,
+          quantity: trade.quantity,
+          profitLoss: trade.calculatedPL ? trade.calculatedPL.toString() : null,
+          status: trade.status,
+          notes: trade.notes.trim() || null,
+          screenshotUrl: trade.screenshotUrl,
+          isPrivate: trade.isPrivate,
+          isDemo: trade.isDemo,
+          strategyId: trade.strategyId || null
+        };
+      });
 
       const { error } = await createMultipleTrades(tradesToRecord);
 
@@ -319,7 +334,7 @@ export default function NewTrade() {
       }
 
       // Update profile balance
-      const totalPL = tradesToRecord.reduce((sum, t) => sum + (t.profit_loss || 0), 0);
+      const totalPL = tradesToRecord.reduce((sum, t) => sum + (t.profitLoss || 0), 0);
       if (profile && typeof profile.balance === 'number') {
         await updateProfile({ balance: profile.balance + totalPL });
       }

@@ -136,7 +136,7 @@ export const activityLogs = pgTable('activity_logs', {
   userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
   activityType: activityTypeEnum('activity_type').notNull(),
   activityTitle: text('activity_title').notNull(),
-  activityDate: timestamp('activity_date', { mode: 'date' }).defaultNow(),
+  activityDate: timestamp('activity_date', { withTimezone: true }).defaultNow(),
 });
 
 // News preferences table

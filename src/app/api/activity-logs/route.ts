@@ -38,12 +38,20 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const db = getServerDB();
 
+    // Process the activity data
+    const processedActivityData = {
+      ...body,
+      userId: session.user.id,
+    };
+
+    // Convert activityDate string back to Date object for Drizzle
+    if (processedActivityData.activityDate && typeof processedActivityData.activityDate === 'string') {
+      processedActivityData.activityDate = new Date(processedActivityData.activityDate);
+    }
+
     const [newActivity] = await db
       .insert(activityLogs)
-      .values({
-        ...body,
-        userId: session.user.id,
-      })
+      .values(processedActivityData)
       .returning();
 
     return NextResponse.json({ data: newActivity });

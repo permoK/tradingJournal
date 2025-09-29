@@ -179,17 +179,17 @@ export default function EditTrade({ params }: { params: Promise<{ id: string }> 
 
     if (trade) {
       setMarket(trade.market);
-      setTradeType(trade.trade_type);
-      setTradeDate(format(new Date(trade.trade_date), 'yyyy-MM-dd'));
-      setEntryPrice(trade.entry_price.toString());
-      setExitPrice(trade.exit_price ? trade.exit_price.toString() : '');
-      setTakeProfit(trade.take_profit ? trade.take_profit.toString() : '');
-      setStopLoss(trade.stop_loss ? trade.stop_loss.toString() : '');
+      setTradeType(trade.tradeType);
+      setTradeDate(format(new Date(trade.tradeDate), 'yyyy-MM-dd'));
+      setEntryPrice(trade.entryPrice.toString());
+      setExitPrice(trade.exitPrice ? trade.exitPrice.toString() : '');
+      setTakeProfit(''); // takeProfit field doesn't exist in schema
+      setStopLoss(''); // stopLoss field doesn't exist in schema
       setQuantity(trade.quantity.toString());
       setStatus(trade.status);
       setNotes(trade.notes || '');
-      setIsPrivate(trade.is_private);
-      setStrategyId(trade.strategy_id || '');
+      setIsPrivate(trade.isPrivate);
+      setStrategyId(trade.strategyId || '');
       setNotFound(false);
 
       // Set selected market if it exists in our market list
@@ -223,22 +223,35 @@ export default function EditTrade({ params }: { params: Promise<{ id: string }> 
     const profitLoss = status === 'closed' ? calculatedPL : null;
 
     try {
+      // Ensure tradeDate is valid
+      let validTradeDate;
+      try {
+        validTradeDate = new Date(tradeDate);
+        if (isNaN(validTradeDate.getTime())) {
+          throw new Error('Invalid date');
+        }
+        validTradeDate = validTradeDate.toISOString();
+      } catch (error) {
+        console.error('Invalid trade date:', tradeDate, error);
+        setError('Invalid trade date. Please select a valid date.');
+        setLoading(false);
+        return;
+      }
+
       // Update the trade using the hook
       const { error } = await updateTrade(id!, {
-        trade_date: new Date(tradeDate).toISOString(),
+        tradeDate: validTradeDate,
         market,
-        trade_type: tradeType,
-        entry_price: parseFloat(entryPrice),
-        exit_price: exitPrice ? parseFloat(exitPrice) : null,
-        take_profit: takeProfit ? parseFloat(takeProfit) : null,
-        stop_loss: stopLoss ? parseFloat(stopLoss) : null,
-        quantity: parseFloat(quantity),
-        profit_loss: profitLoss,
+        tradeType: tradeType,
+        entryPrice: entryPrice,
+        exitPrice: exitPrice || null,
+        quantity: quantity,
+        profitLoss: profitLoss ? profitLoss.toString() : null,
         status,
         notes: notes.trim() || null,
-        is_private: isPrivate,
-        is_demo: isDemoMode,
-        strategy_id: strategyId || null
+        isPrivate: isPrivate,
+        isDemo: isDemoMode,
+        strategyId: strategyId || null
       });
 
       if (error) {
