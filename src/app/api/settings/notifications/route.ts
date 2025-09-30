@@ -30,7 +30,6 @@ export async function GET(request: NextRequest) {
       newsAlerts: true,
       marketUpdates: false,
       weeklyReports: true,
-      communityUpdates: false,
       securityAlerts: true,
     };
 
@@ -46,7 +45,6 @@ export async function GET(request: NextRequest) {
       newsAlerts: preferences.notificationsEnabled,
       marketUpdates: false, // This would be a separate field in a real implementation
       weeklyReports: true, // This would be a separate field in a real implementation
-      communityUpdates: false, // This would be a separate field in a real implementation
       securityAlerts: true, // Security alerts should always be enabled
     };
 

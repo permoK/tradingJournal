@@ -29,7 +29,7 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: "TradeFlow",
-  description: "Master your trading journey with comprehensive progress tracking and community collaboration",
+  description: "Master your trading journey with comprehensive progress tracking and analysis tools",
   icons: {
     icon: '/favicon.svg',
     apple: '/favicon.svg',

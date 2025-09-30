@@ -56,7 +56,6 @@ export default function AdvancedSearch({ isOpen, onClose }: AdvancedSearchProps)
             <p>• Search across all your trading data</p>
             <p>• Filter by date, market, and performance</p>
             <p>• Find specific journal entries and strategies</p>
-            <p>• Discover community content</p>
           </div>
         </div>
       </div>

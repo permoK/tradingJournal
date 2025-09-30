@@ -263,7 +263,7 @@ export default function EditStrategy() {
                   </span>
                 </label>
                 <p className="text-xs text-slate-500 mt-1">
-                  Private strategies are only visible to you. Uncheck to share with the community.
+                  Private strategies are only visible to you. Uncheck to make them public.
                 </p>
               </div>
             </div>

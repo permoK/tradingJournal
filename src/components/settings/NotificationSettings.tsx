@@ -12,7 +12,6 @@ interface NotificationPreferences {
   newsAlerts: boolean;
   marketUpdates: boolean;
   weeklyReports: boolean;
-  communityUpdates: boolean;
   securityAlerts: boolean;
 }
 
@@ -27,7 +26,6 @@ export default function NotificationSettings() {
     newsAlerts: true,
     marketUpdates: false,
     weeklyReports: true,
-    communityUpdates: false,
     securityAlerts: true,
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -216,16 +214,7 @@ export default function NotificationSettings() {
               />
             </div>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-900">Community Updates</p>
-                <p className="text-sm text-slate-500">Get notified about community activities and discussions</p>
-              </div>
-              <ToggleSwitch
-                enabled={preferences.communityUpdates}
-                onToggle={() => handleToggle('communityUpdates')}
-              />
-            </div>
+
 
             <div className="flex items-center justify-between">
               <div>

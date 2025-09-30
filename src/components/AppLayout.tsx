@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/lib/hooks';
-import { FiHome, FiBook, FiBarChart2, FiFileText, FiUsers, FiSettings, FiLogOut, FiX, FiGrid, FiUser } from 'react-icons/fi';
+import { FiHome, FiBook, FiBarChart2, FiFileText, FiSettings, FiLogOut, FiX, FiGrid, FiUser } from 'react-icons/fi';
 import TradeFlowLogo from './TradeFlowLogo';
 import Avatar from './Avatar';
 
@@ -34,7 +34,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
     { name: 'Strategies', href: '/strategies', icon: FiBook },
     { name: 'Trading', href: '/trading', icon: FiBarChart2 },
     { name: 'Journal', href: '/journal', icon: FiFileText },
-    { name: 'Community', href: '/community', icon: FiUsers },
     { name: 'Tools', href: '/tools', icon: FiGrid },
     { name: 'Settings', href: '/settings', icon: FiSettings },
   ];
@@ -61,7 +60,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
               <Link href="/dashboard" className="flex items-center">
                 <TradeFlowLogo size="md" variant="full" />
               </Link>
-              <p className="text-sm text-slate-600 font-medium mt-1">Master trading together</p>
+              <p className="text-sm text-slate-600 font-medium mt-1">Master your trading journey</p>
             </div>
             <div className="flex flex-col flex-grow px-4 mt-5">
               <nav className="flex-1 space-y-1">

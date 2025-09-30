@@ -7,7 +7,6 @@ export const config = {
     '/journal/:path*',
     '/trading/:path*',
     '/news/:path*',
-    '/community/:path*',
     '/settings/:path*',
   ],
 };
